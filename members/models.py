@@ -9,6 +9,8 @@ class Member(models.Model):
     mail = models.EmailField()
     fiscalCode = models.CharField(max_length=16, unique=True)
     modifiers = models.TextField(blank=True, null=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
 
     @property
     def latest_medical_certificate(self):
