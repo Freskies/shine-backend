@@ -1,7 +1,6 @@
 from django.db import models
 from django.utils import timezone
 
-
 class Member(models.Model):
     name = models.CharField(max_length=100)
     birth = models.DateField()
@@ -19,6 +18,8 @@ class Member(models.Model):
     @property
     def is_medical_certificate_valid(self):
         latest_certificate = self.latest_medical_certificate
+        if not latest_certificate:
+            return False
         return latest_certificate and latest_certificate.expiration_date >= timezone.now().date()
 
 class MedicalCertificate(models.Model):
