@@ -5,13 +5,19 @@ from members.models import Member, MedicalCertificate
 class MedicalCertificateSerializer(serializers.ModelSerializer):
     class Meta:
         model = MedicalCertificate
-        fields = [
+        fields = (
             "id",
             "issue_date",
             "expiration_date",
             "file",
             "notes",
-        ]
+        )
+
+
+class MemberListSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Member
+        fields = ('id', 'name')
 
 
 class MemberSerializer(serializers.ModelSerializer):
@@ -20,7 +26,7 @@ class MemberSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Member
-        fields = [
+        fields = (
             "id",
             "name",
             "birth",
@@ -32,4 +38,4 @@ class MemberSerializer(serializers.ModelSerializer):
             "updated_at",
             "latest_medical_certificate",
             "is_medical_certificate_valid",
-        ]
+        )
