@@ -1,5 +1,23 @@
 from django.db import models
 from django.utils import timezone
+from .relation_type import RelationType
+
+class MemberRelation(models.Model):
+    from_member = models.ForeignKey(
+        'Member',
+        on_delete=models.CASCADE,
+        related_name='relations_from'
+    )
+    to_member = models.ForeignKey(
+        'Member',
+        on_delete=models.CASCADE,
+        related_name='relations_to'
+    )
+
+    relation_type = models.CharField(
+        max_length=20,
+        choices=RelationType.choices
+    )
 
 class Member(models.Model):
     name = models.CharField(max_length=100)
@@ -21,10 +39,3 @@ class Member(models.Model):
         if not latest_certificate:
             return False
         return latest_certificate and latest_certificate.expiration_date >= timezone.now().date()
-
-class MedicalCertificate(models.Model):
-    member = models.ForeignKey(Member, on_delete=models.CASCADE, related_name='medical_certificates')
-    issue_date = models.DateField()
-    expiration_date = models.DateField()
-    file = models.FileField(upload_to='medical_certificates/')
-    notes = models.TextField(blank=True, null=True)

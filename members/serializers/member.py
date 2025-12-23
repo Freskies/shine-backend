@@ -1,24 +1,6 @@
 from rest_framework import serializers
-from members.models import Member, MedicalCertificate
-
-
-class MedicalCertificateSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = MedicalCertificate
-        fields = (
-            "id",
-            "issue_date",
-            "expiration_date",
-            "file",
-            "notes",
-        )
-
-
-class MemberListSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = Member
-        fields = ('id', 'name')
-
+from members.models import Member
+from .medical_certificate import MedicalCertificateSerializer
 
 class MemberSerializer(serializers.ModelSerializer):
     latest_medical_certificate = MedicalCertificateSerializer(read_only=True)

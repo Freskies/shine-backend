@@ -2,7 +2,7 @@ from drf_spectacular.utils import extend_schema
 from rest_framework.decorators import api_view
 from rest_framework.response import Response
 import members.models as member_models
-from members.serializer import MemberSerializer, MemberListSerializer
+from members.serializers import MemberSerializer, MemberListSerializer
 
 
 @extend_schema(
