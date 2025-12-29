@@ -1,23 +1,5 @@
 from django.db import models
 from django.utils import timezone
-from .relation_type import RelationType
-
-class MemberRelation(models.Model):
-    from_member = models.ForeignKey(
-        'Member',
-        on_delete=models.CASCADE,
-        related_name='relations_from'
-    )
-    to_member = models.ForeignKey(
-        'Member',
-        on_delete=models.CASCADE,
-        related_name='relations_to'
-    )
-
-    relation_type = models.CharField(
-        max_length=20,
-        choices=RelationType.choices
-    )
 
 class Member(models.Model):
     name = models.CharField(max_length=100)

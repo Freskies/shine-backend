@@ -42,3 +42,21 @@ def create_member(request):
         serializer.save()
         return Response(serializer.data, status=201)
     return Response(serializer.errors, status=400)
+
+
+@extend_schema(
+    responses={200: member_models.RelationType.choices},
+    description="Retrieve the list of available member relation types."
+)
+@api_view(['GET'])
+def get_relation_types():
+    return member_models.RelationType.choices
+
+def add_member_relation(from_member, to_member, relation_type):
+    relation = member_models.MemberRelation(
+        from_member=from_member,
+        to_member=to_member,
+        relation_type=relation_type
+    )
+    relation.save()
+    return relation
