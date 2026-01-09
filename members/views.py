@@ -2,7 +2,7 @@ from drf_spectacular.utils import extend_schema
 from rest_framework.decorators import api_view
 from rest_framework.response import Response
 import members.models as member_models
-from members.serializers import MemberSerializer, MemberListSerializer
+from members.serializers import MemberSerializer, MemberListSerializer, RelationshipCreateSerializer
 
 
 @extend_schema(
@@ -45,18 +45,22 @@ def create_member(request):
 
 
 @extend_schema(
-    responses={200: member_models.RelationType.choices},
-    description="Retrieve the list of available member relation types."
+    request=RelationshipCreateSerializer,
+    responses=RelationshipCreateSerializer,
+    description="Create a relationship between two members."
 )
-@api_view(['GET'])
-def get_relation_types():
-    return member_models.RelationType.choices
+@api_view(['POST'])
+def create_relationship(request):
+    """
+    Endpoint to link two members.
+    Payload example: { "from_member": 2, "to_member": 1, "relation_type": "PARENT" }
+    """
+    serializer = RelationshipCreateSerializer(data=request.data)
+    if serializer.is_valid():
+        try:
+            serializer.save()
+            return Response(serializer.data, status=201)
+        except Exception as e:
+            return Response({"error": str(e)}, status=400)
 
-def add_member_relation(from_member, to_member, relation_type):
-    relation = member_models.MemberRelation(
-        from_member=from_member,
-        to_member=to_member,
-        relation_type=relation_type
-    )
-    relation.save()
-    return relation
+    return Response(serializer.errors, status=400)

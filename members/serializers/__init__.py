@@ -1,3 +1,4 @@
 from .medical_certificate import MedicalCertificateSerializer
 from .member import MemberSerializer
 from .member_list import MemberListSerializer
+from .relationship_create import RelationshipCreateSerializer
