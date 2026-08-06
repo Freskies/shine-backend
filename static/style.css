@@ -1,0 +1,37 @@
+* {
+	margin: 0;
+	padding: 0;
+	box-sizing: border-box;
+}
+
+body {
+	font-family: sans-serif;
+	margin: 0;
+	padding: 20px;
+	line-height: 1.6;
+}
+
+header {
+	background: #222;
+	color: #fff;
+	padding: 10px 20px;
+}
+
+nav ul {
+	list-style: none;
+	display: flex;
+	gap: 15px;
+	padding: 0;
+}
+
+nav a {
+	color: #fff;
+	text-decoration: none;
+}
+
+.card-corso {
+	border: 2px solid #ff5722;
+	padding: 15px;
+	border-radius: 8px;
+	margin-top: 15px;
+}

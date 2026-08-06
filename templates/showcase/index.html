@@ -1,0 +1,30 @@
+{% extends "base.html" %}
+
+{% block content %}
+<header>
+	<nav>
+		<h1>Shine Parkour</h1>
+		<ul>
+			<li><a href="/static">Home</a></li>
+			<li><a href="/corsi">Corsi</a></li>
+		</ul>
+	</nav>
+</header>
+
+<main>
+	<section class="hero">
+		<h2>Salta oltre i tuoi limiti</h2>
+		<p>Corsi di Parkour e Art du Déplacement per ragazzi e adulti.</p>
+
+		<button hx-get="/api/dettaglio-corso-demo" hx-target="#risultato-corso">
+			Scopri il corso Base
+		</button>
+	</section>
+
+	<div id="risultato-corso"></div>
+</main>
+
+<footer>
+	<p>&copy; 2026 Associazione Parkour - Tutti i diritti riservati.</p>
+</footer>
+{% endblock %}
