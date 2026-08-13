@@ -1,37 +1,758 @@
+/* ************************************** */
+/* DESIGN SYSTEM - 100% LIGHT & PASTEL    */
+/* ************************************** */
+
+:root {
+	/* Colors */
+	--color-orange: #f97316;
+	--color-orange-hover: #ea580c;
+	--color-orange-pastel: #ffedd5; /* Soft peach */
+
+	--color-green: #059669;
+	--color-green-hover: #047857;
+	--color-green-pastel: #d1fae5; /* Soft mint */
+
+	--color-dark: #1f2937;
+	--color-dark-muted: #4b5563;
+	--color-light: #ffffff;
+
+	/* Typography */
+	--font-base: 'Rubik', system-ui, -apple-system, sans-serif;
+
+	/* Layout Limits */
+	--container-max: 1120px;
+	--radius-full: 9999px;
+}
+
+/* ************************************** */
+/* RESET & BASE                           */
+/* ************************************** */
+
 * {
 	margin: 0;
 	padding: 0;
 	box-sizing: border-box;
 }
 
-body {
-	font-family: sans-serif;
-	margin: 0;
-	padding: 20px;
+html {
+	font-family: var(--font-base);
+	color: var(--color-dark);
+	background-color: var(--color-light);
 	line-height: 1.6;
+	scroll-behavior: smooth;
+	-webkit-text-size-adjust: 100%;
+	interpolate-size: allow-keywords;
 }
 
-header {
-	background: #222;
-	color: #fff;
-	padding: 10px 20px;
+/* Animatable angle driving the sinuous clip-path of the blob cards */
+@property --a {
+	syntax: '<angle>';
+	initial-value: 0deg;
+	inherits: false;
 }
 
-nav ul {
+ul {
 	list-style: none;
-	display: flex;
-	gap: 15px;
-	padding: 0;
 }
 
-nav a {
-	color: #fff;
+a {
+	color: inherit;
 	text-decoration: none;
 }
 
-.card-corso {
-	border: 2px solid #ff5722;
-	padding: 15px;
-	border-radius: 8px;
-	margin-top: 15px;
+.main-wrapper {
+	position: relative;
+	overflow: hidden;
+}
+
+/* ************************************** */
+/* CENTERED CONTAINER & MAX-WIDTH FIX     */
+/* ************************************** */
+
+.container {
+	width: 100%;
+	max-width: var(--container-max);
+	margin: 0 auto;
+	padding: 0 1.5rem;
+}
+
+.container--narrow {
+	max-width: 740px;
+	margin: 0 auto;
+}
+
+.section {
+	padding: 4rem 0;
+	position: relative;
+	z-index: 1;
+}
+
+/* ************************************** */
+/* BACKGROUND LEAVES                      */
+/* ************************************** */
+
+.bg-leaf {
+	position: absolute;
+	color: rgba(16, 185, 129, 0.12);
+	z-index: 0;
+	pointer-events: none;
+}
+
+.bg-leaf--1 {
+	width: 180px;
+	height: 180px;
+	top: 12%;
+	right: -40px;
+	transform: rotate(30deg);
+}
+
+.bg-leaf--2 {
+	width: 230px;
+	height: 230px;
+	top: 60%;
+	left: -50px;
+	transform: rotate(-40deg);
+}
+
+/* ************************************** */
+/* PASTEL BLOBS (NO DARK BORDERS)         */
+/* ************************************** */
+
+.blob-card {
+	border: none;
+	padding: 4rem 3.5rem;
+	box-shadow: none;
+	clip-path: polygon(
+			calc(95.00% + (sin(var(--a) * 2 + 178.0deg) * 7.20px) + (cos(var(--a) * 2 + 99.0deg) * 4.80px)) calc(50.00%  ),
+			calc(94.94% + (sin(var(--a) * 2 + 191.5deg) * 7.18px) + (cos(var(--a) * 2 + 117.0deg) * 4.79px)) calc(64.52% + (sin(var(--a) * 2 + 191.5deg) * 0.56px) + (cos(var(--a) * 2 + 117.0deg) * 0.38px)),
+			calc(94.75% + (sin(var(--a) * 2 + 205.0deg) * 7.11px) + (cos(var(--a) * 2 + 135.0deg) * 4.74px)) calc(69.73% + (sin(var(--a) * 2 + 205.0deg) * 1.13px) + (cos(var(--a) * 2 + 135.0deg) * 0.75px)),
+			calc(94.44% + (sin(var(--a) * 2 + 218.5deg) * 7.00px) + (cos(var(--a) * 2 + 153.0deg) * 4.67px)) calc(73.57% + (sin(var(--a) * 2 + 218.5deg) * 1.68px) + (cos(var(--a) * 2 + 153.0deg) * 1.12px)),
+			calc(94.01% + (sin(var(--a) * 2 + 232.0deg) * 6.85px) + (cos(var(--a) * 2 + 171.0deg) * 4.57px)) calc(76.70% + (sin(var(--a) * 2 + 232.0deg) * 2.22px) + (cos(var(--a) * 2 + 171.0deg) * 1.48px)),
+			calc(93.44% + (sin(var(--a) * 2 + 245.5deg) * 6.65px) + (cos(var(--a) * 2 + 189.0deg) * 4.43px)) calc(79.36% + (sin(var(--a) * 2 + 245.5deg) * 2.76px) + (cos(var(--a) * 2 + 189.0deg) * 1.84px)),
+			calc(92.75% + (sin(var(--a) * 2 + 259.0deg) * 6.42px) + (cos(var(--a) * 2 + 207.0deg) * 4.28px)) calc(81.68% + (sin(var(--a) * 2 + 259.0deg) * 3.27px) + (cos(var(--a) * 2 + 207.0deg) * 2.18px)),
+			calc(91.92% + (sin(var(--a) * 2 + 272.5deg) * 6.14px) + (cos(var(--a) * 2 + 225.0deg) * 4.09px)) calc(83.72% + (sin(var(--a) * 2 + 272.5deg) * 3.76px) + (cos(var(--a) * 2 + 225.0deg) * 2.51px)),
+			calc(90.95% + (sin(var(--a) * 2 + 286.0deg) * 5.82px) + (cos(var(--a) * 2 + 243.0deg) * 3.88px)) calc(85.53% + (sin(var(--a) * 2 + 286.0deg) * 4.23px) + (cos(var(--a) * 2 + 243.0deg) * 2.82px)),
+			calc(89.84% + (sin(var(--a) * 2 + 299.5deg) * 5.47px) + (cos(var(--a) * 2 + 261.0deg) * 3.65px)) calc(87.14% + (sin(var(--a) * 2 + 299.5deg) * 4.68px) + (cos(var(--a) * 2 + 261.0deg) * 3.12px)),
+			calc(88.58% + (sin(var(--a) * 2 + 313.0deg) * 5.09px) + (cos(var(--a) * 2 + 279.0deg) * 3.39px)) calc(88.58% + (sin(var(--a) * 2 + 313.0deg) * 5.09px) + (cos(var(--a) * 2 + 279.0deg) * 3.39px)),
+			calc(87.14% + (sin(var(--a) * 2 + 326.5deg) * 4.68px) + (cos(var(--a) * 2 + 297.0deg) * 3.12px)) calc(89.84% + (sin(var(--a) * 2 + 326.5deg) * 5.47px) + (cos(var(--a) * 2 + 297.0deg) * 3.65px)),
+			calc(85.53% + (sin(var(--a) * 2 + 340.0deg) * 4.23px) + (cos(var(--a) * 2 + 315.0deg) * 2.82px)) calc(90.95% + (sin(var(--a) * 2 + 340.0deg) * 5.82px) + (cos(var(--a) * 2 + 315.0deg) * 3.88px)),
+			calc(83.72% + (sin(var(--a) * 2 + 353.5deg) * 3.76px) + (cos(var(--a) * 2 + 333.0deg) * 2.51px)) calc(91.92% + (sin(var(--a) * 2 + 353.5deg) * 6.14px) + (cos(var(--a) * 2 + 333.0deg) * 4.09px)),
+			calc(81.68% + (sin(var(--a) * 2 + 367.0deg) * 3.27px) + (cos(var(--a) * 2 + 351.0deg) * 2.18px)) calc(92.75% + (sin(var(--a) * 2 + 367.0deg) * 6.42px) + (cos(var(--a) * 2 + 351.0deg) * 4.28px)),
+			calc(79.36% + (sin(var(--a) * 2 + 380.5deg) * 2.76px) + (cos(var(--a) * 2 + 369.0deg) * 1.84px)) calc(93.44% + (sin(var(--a) * 2 + 380.5deg) * 6.65px) + (cos(var(--a) * 2 + 369.0deg) * 4.43px)),
+			calc(76.70% + (sin(var(--a) * 2 + 394.0deg) * 2.22px) + (cos(var(--a) * 2 + 387.0deg) * 1.48px)) calc(94.01% + (sin(var(--a) * 2 + 394.0deg) * 6.85px) + (cos(var(--a) * 2 + 387.0deg) * 4.57px)),
+			calc(73.57% + (sin(var(--a) * 2 + 407.5deg) * 1.68px) + (cos(var(--a) * 2 + 405.0deg) * 1.12px)) calc(94.44% + (sin(var(--a) * 2 + 407.5deg) * 7.00px) + (cos(var(--a) * 2 + 405.0deg) * 4.67px)),
+			calc(69.73% + (sin(var(--a) * 2 + 421.0deg) * 1.13px) + (cos(var(--a) * 2 + 423.0deg) * 0.75px)) calc(94.75% + (sin(var(--a) * 2 + 421.0deg) * 7.11px) + (cos(var(--a) * 2 + 423.0deg) * 4.74px)),
+			calc(64.52% + (sin(var(--a) * 2 + 434.5deg) * 0.56px) + (cos(var(--a) * 2 + 441.0deg) * 0.38px)) calc(94.94% + (sin(var(--a) * 2 + 434.5deg) * 7.18px) + (cos(var(--a) * 2 + 441.0deg) * 4.79px)),
+			calc(50.00%) calc(95.00% + (sin(var(--a) * 2 + 448.0deg) * 7.20px) + (cos(var(--a) * 2 + 459.0deg) * 4.80px)),
+			calc(35.48% - (sin(var(--a) * 2 + 461.5deg) * 0.56px) - (cos(var(--a) * 2 + 477.0deg) * 0.38px)) calc(94.94% + (sin(var(--a) * 2 + 461.5deg) * 7.18px) + (cos(var(--a) * 2 + 477.0deg) * 4.79px)),
+			calc(30.27% - (sin(var(--a) * 2 + 475.0deg) * 1.13px) - (cos(var(--a) * 2 + 495.0deg) * 0.75px)) calc(94.75% + (sin(var(--a) * 2 + 475.0deg) * 7.11px) + (cos(var(--a) * 2 + 495.0deg) * 4.74px)),
+			calc(26.43% - (sin(var(--a) * 2 + 488.5deg) * 1.68px) - (cos(var(--a) * 2 + 513.0deg) * 1.12px)) calc(94.44% + (sin(var(--a) * 2 + 488.5deg) * 7.00px) + (cos(var(--a) * 2 + 513.0deg) * 4.67px)),
+			calc(23.30% - (sin(var(--a) * 2 + 502.0deg) * 2.22px) - (cos(var(--a) * 2 + 531.0deg) * 1.48px)) calc(94.01% + (sin(var(--a) * 2 + 502.0deg) * 6.85px) + (cos(var(--a) * 2 + 531.0deg) * 4.57px)),
+			calc(20.64% - (sin(var(--a) * 2 + 515.5deg) * 2.76px) - (cos(var(--a) * 2 + 549.0deg) * 1.84px)) calc(93.44% + (sin(var(--a) * 2 + 515.5deg) * 6.65px) + (cos(var(--a) * 2 + 549.0deg) * 4.43px)),
+			calc(18.32% - (sin(var(--a) * 2 + 529.0deg) * 3.27px) - (cos(var(--a) * 2 + 567.0deg) * 2.18px)) calc(92.75% + (sin(var(--a) * 2 + 529.0deg) * 6.42px) + (cos(var(--a) * 2 + 567.0deg) * 4.28px)),
+			calc(16.28% - (sin(var(--a) * 2 + 542.5deg) * 3.76px) - (cos(var(--a) * 2 + 585.0deg) * 2.51px)) calc(91.92% + (sin(var(--a) * 2 + 542.5deg) * 6.14px) + (cos(var(--a) * 2 + 585.0deg) * 4.09px)),
+			calc(14.47% - (sin(var(--a) * 2 + 556.0deg) * 4.23px) - (cos(var(--a) * 2 + 603.0deg) * 2.82px)) calc(90.95% + (sin(var(--a) * 2 + 556.0deg) * 5.82px) + (cos(var(--a) * 2 + 603.0deg) * 3.88px)),
+			calc(12.86% - (sin(var(--a) * 2 + 569.5deg) * 4.68px) - (cos(var(--a) * 2 + 621.0deg) * 3.12px)) calc(89.84% + (sin(var(--a) * 2 + 569.5deg) * 5.47px) + (cos(var(--a) * 2 + 621.0deg) * 3.65px)),
+			calc(11.42% - (sin(var(--a) * 2 + 583.0deg) * 5.09px) - (cos(var(--a) * 2 + 639.0deg) * 3.39px)) calc(88.58% + (sin(var(--a) * 2 + 583.0deg) * 5.09px) + (cos(var(--a) * 2 + 639.0deg) * 3.39px)),
+			calc(10.16% - (sin(var(--a) * 2 + 596.5deg) * 5.47px) - (cos(var(--a) * 2 + 657.0deg) * 3.65px)) calc(87.14% + (sin(var(--a) * 2 + 596.5deg) * 4.68px) + (cos(var(--a) * 2 + 657.0deg) * 3.12px)),
+			calc(9.05% - (sin(var(--a) * 2 + 610.0deg) * 5.82px) - (cos(var(--a) * 2 + 675.0deg) * 3.88px)) calc(85.53% + (sin(var(--a) * 2 + 610.0deg) * 4.23px) + (cos(var(--a) * 2 + 675.0deg) * 2.82px)),
+			calc(8.08% - (sin(var(--a) * 2 + 623.5deg) * 6.14px) - (cos(var(--a) * 2 + 693.0deg) * 4.09px)) calc(83.72% + (sin(var(--a) * 2 + 623.5deg) * 3.76px) + (cos(var(--a) * 2 + 693.0deg) * 2.51px)),
+			calc(7.25% - (sin(var(--a) * 2 + 637.0deg) * 6.42px) - (cos(var(--a) * 2 + 711.0deg) * 4.28px)) calc(81.68% + (sin(var(--a) * 2 + 637.0deg) * 3.27px) + (cos(var(--a) * 2 + 711.0deg) * 2.18px)),
+			calc(6.56% - (sin(var(--a) * 2 + 650.5deg) * 6.65px) - (cos(var(--a) * 2 + 729.0deg) * 4.43px)) calc(79.36% + (sin(var(--a) * 2 + 650.5deg) * 2.76px) + (cos(var(--a) * 2 + 729.0deg) * 1.84px)),
+			calc(5.99% - (sin(var(--a) * 2 + 664.0deg) * 6.85px) - (cos(var(--a) * 2 + 747.0deg) * 4.57px)) calc(76.70% + (sin(var(--a) * 2 + 664.0deg) * 2.22px) + (cos(var(--a) * 2 + 747.0deg) * 1.48px)),
+			calc(5.56% - (sin(var(--a) * 2 + 677.5deg) * 7.00px) - (cos(var(--a) * 2 + 765.0deg) * 4.67px)) calc(73.57% + (sin(var(--a) * 2 + 677.5deg) * 1.68px) + (cos(var(--a) * 2 + 765.0deg) * 1.12px)),
+			calc(5.25% - (sin(var(--a) * 2 + 691.0deg) * 7.11px) - (cos(var(--a) * 2 + 783.0deg) * 4.74px)) calc(69.73% + (sin(var(--a) * 2 + 691.0deg) * 1.13px) + (cos(var(--a) * 2 + 783.0deg) * 0.75px)),
+			calc(5.06% - (sin(var(--a) * 2 + 704.5deg) * 7.18px) - (cos(var(--a) * 2 + 801.0deg) * 4.79px)) calc(64.52% + (sin(var(--a) * 2 + 704.5deg) * 0.56px) + (cos(var(--a) * 2 + 801.0deg) * 0.38px)),
+			calc(5.00% - (sin(var(--a) * 2 + 718.0deg) * 7.20px) - (cos(var(--a) * 2 + 819.0deg) * 4.80px)) calc(50.00%  ),
+			calc(5.06% - (sin(var(--a) * 2 + 731.5deg) * 7.18px) - (cos(var(--a) * 2 + 837.0deg) * 4.79px)) calc(35.48% - (sin(var(--a) * 2 + 731.5deg) * 0.56px) - (cos(var(--a) * 2 + 837.0deg) * 0.38px)),
+			calc(5.25% - (sin(var(--a) * 2 + 745.0deg) * 7.11px) - (cos(var(--a) * 2 + 855.0deg) * 4.74px)) calc(30.27% - (sin(var(--a) * 2 + 745.0deg) * 1.13px) - (cos(var(--a) * 2 + 855.0deg) * 0.75px)),
+			calc(5.56% - (sin(var(--a) * 2 + 758.5deg) * 7.00px) - (cos(var(--a) * 2 + 873.0deg) * 4.67px)) calc(26.43% - (sin(var(--a) * 2 + 758.5deg) * 1.68px) - (cos(var(--a) * 2 + 873.0deg) * 1.12px)),
+			calc(5.99% - (sin(var(--a) * 2 + 772.0deg) * 6.85px) - (cos(var(--a) * 2 + 891.0deg) * 4.57px)) calc(23.30% - (sin(var(--a) * 2 + 772.0deg) * 2.22px) - (cos(var(--a) * 2 + 891.0deg) * 1.48px)),
+			calc(6.56% - (sin(var(--a) * 2 + 785.5deg) * 6.65px) - (cos(var(--a) * 2 + 909.0deg) * 4.43px)) calc(20.64% - (sin(var(--a) * 2 + 785.5deg) * 2.76px) - (cos(var(--a) * 2 + 909.0deg) * 1.84px)),
+			calc(7.25% - (sin(var(--a) * 2 + 799.0deg) * 6.42px) - (cos(var(--a) * 2 + 927.0deg) * 4.28px)) calc(18.32% - (sin(var(--a) * 2 + 799.0deg) * 3.27px) - (cos(var(--a) * 2 + 927.0deg) * 2.18px)),
+			calc(8.08% - (sin(var(--a) * 2 + 812.5deg) * 6.14px) - (cos(var(--a) * 2 + 945.0deg) * 4.09px)) calc(16.28% - (sin(var(--a) * 2 + 812.5deg) * 3.76px) - (cos(var(--a) * 2 + 945.0deg) * 2.51px)),
+			calc(9.05% - (sin(var(--a) * 2 + 826.0deg) * 5.82px) - (cos(var(--a) * 2 + 963.0deg) * 3.88px)) calc(14.47% - (sin(var(--a) * 2 + 826.0deg) * 4.23px) - (cos(var(--a) * 2 + 963.0deg) * 2.82px)),
+			calc(10.16% - (sin(var(--a) * 2 + 839.5deg) * 5.47px) - (cos(var(--a) * 2 + 981.0deg) * 3.65px)) calc(12.86% - (sin(var(--a) * 2 + 839.5deg) * 4.68px) - (cos(var(--a) * 2 + 981.0deg) * 3.12px)),
+			calc(11.42% - (sin(var(--a) * 2 + 853.0deg) * 5.09px) - (cos(var(--a) * 2 + 999.0deg) * 3.39px)) calc(11.42% - (sin(var(--a) * 2 + 853.0deg) * 5.09px) - (cos(var(--a) * 2 + 999.0deg) * 3.39px)),
+			calc(12.86% - (sin(var(--a) * 2 + 866.5deg) * 4.68px) - (cos(var(--a) * 2 + 1017.0deg) * 3.12px)) calc(10.16% - (sin(var(--a) * 2 + 866.5deg) * 5.47px) - (cos(var(--a) * 2 + 1017.0deg) * 3.65px)),
+			calc(14.47% - (sin(var(--a) * 2 + 880.0deg) * 4.23px) - (cos(var(--a) * 2 + 1035.0deg) * 2.82px)) calc(9.05% - (sin(var(--a) * 2 + 880.0deg) * 5.82px) - (cos(var(--a) * 2 + 1035.0deg) * 3.88px)),
+			calc(16.28% - (sin(var(--a) * 2 + 893.5deg) * 3.76px) - (cos(var(--a) * 2 + 1053.0deg) * 2.51px)) calc(8.08% - (sin(var(--a) * 2 + 893.5deg) * 6.14px) - (cos(var(--a) * 2 + 1053.0deg) * 4.09px)),
+			calc(18.32% - (sin(var(--a) * 2 + 907.0deg) * 3.27px) - (cos(var(--a) * 2 + 1071.0deg) * 2.18px)) calc(7.25% - (sin(var(--a) * 2 + 907.0deg) * 6.42px) - (cos(var(--a) * 2 + 1071.0deg) * 4.28px)),
+			calc(20.64% - (sin(var(--a) * 2 + 920.5deg) * 2.76px) - (cos(var(--a) * 2 + 1089.0deg) * 1.84px)) calc(6.56% - (sin(var(--a) * 2 + 920.5deg) * 6.65px) - (cos(var(--a) * 2 + 1089.0deg) * 4.43px)),
+			calc(23.30% - (sin(var(--a) * 2 + 934.0deg) * 2.22px) - (cos(var(--a) * 2 + 1107.0deg) * 1.48px)) calc(5.99% - (sin(var(--a) * 2 + 934.0deg) * 6.85px) - (cos(var(--a) * 2 + 1107.0deg) * 4.57px)),
+			calc(26.43% - (sin(var(--a) * 2 + 947.5deg) * 1.68px) - (cos(var(--a) * 2 + 1125.0deg) * 1.12px)) calc(5.56% - (sin(var(--a) * 2 + 947.5deg) * 7.00px) - (cos(var(--a) * 2 + 1125.0deg) * 4.67px)),
+			calc(30.27% - (sin(var(--a) * 2 + 961.0deg) * 1.13px) - (cos(var(--a) * 2 + 1143.0deg) * 0.75px)) calc(5.25% - (sin(var(--a) * 2 + 961.0deg) * 7.11px) - (cos(var(--a) * 2 + 1143.0deg) * 4.74px)),
+			calc(35.48% - (sin(var(--a) * 2 + 974.5deg) * 0.56px) - (cos(var(--a) * 2 + 1161.0deg) * 0.38px)) calc(5.06% - (sin(var(--a) * 2 + 974.5deg) * 7.18px) - (cos(var(--a) * 2 + 1161.0deg) * 4.79px)),
+			calc(50.00%  ) calc(5.00% - (sin(var(--a) * 2 + 988.0deg) * 7.20px) - (cos(var(--a) * 2 + 1179.0deg) * 4.80px)),
+			calc(64.52% + (sin(var(--a) * 2 + 1001.5deg) * 0.56px) + (cos(var(--a) * 2 + 1197.0deg) * 0.38px)) calc(5.06% - (sin(var(--a) * 2 + 1001.5deg) * 7.18px) - (cos(var(--a) * 2 + 1197.0deg) * 4.79px)),
+			calc(69.73% + (sin(var(--a) * 2 + 1015.0deg) * 1.13px) + (cos(var(--a) * 2 + 1215.0deg) * 0.75px)) calc(5.25% - (sin(var(--a) * 2 + 1015.0deg) * 7.11px) - (cos(var(--a) * 2 + 1215.0deg) * 4.74px)),
+			calc(73.57% + (sin(var(--a) * 2 + 1028.5deg) * 1.68px) + (cos(var(--a) * 2 + 1233.0deg) * 1.12px)) calc(5.56% - (sin(var(--a) * 2 + 1028.5deg) * 7.00px) - (cos(var(--a) * 2 + 1233.0deg) * 4.67px)),
+			calc(76.70% + (sin(var(--a) * 2 + 1042.0deg) * 2.22px) + (cos(var(--a) * 2 + 1251.0deg) * 1.48px)) calc(5.99% - (sin(var(--a) * 2 + 1042.0deg) * 6.85px) - (cos(var(--a) * 2 + 1251.0deg) * 4.57px)),
+			calc(79.36% + (sin(var(--a) * 2 + 1055.5deg) * 2.76px) + (cos(var(--a) * 2 + 1269.0deg) * 1.84px)) calc(6.56% - (sin(var(--a) * 2 + 1055.5deg) * 6.65px) - (cos(var(--a) * 2 + 1269.0deg) * 4.43px)),
+			calc(81.68% + (sin(var(--a) * 2 + 1069.0deg) * 3.27px) + (cos(var(--a) * 2 + 1287.0deg) * 2.18px)) calc(7.25% - (sin(var(--a) * 2 + 1069.0deg) * 6.42px) - (cos(var(--a) * 2 + 1287.0deg) * 4.28px)),
+			calc(83.72% + (sin(var(--a) * 2 + 1082.5deg) * 3.76px) + (cos(var(--a) * 2 + 1305.0deg) * 2.51px)) calc(8.08% - (sin(var(--a) * 2 + 1082.5deg) * 6.14px) - (cos(var(--a) * 2 + 1305.0deg) * 4.09px)),
+			calc(85.53% + (sin(var(--a) * 2 + 1096.0deg) * 4.23px) + (cos(var(--a) * 2 + 1323.0deg) * 2.82px)) calc(9.05% - (sin(var(--a) * 2 + 1096.0deg) * 5.82px) - (cos(var(--a) * 2 + 1323.0deg) * 3.88px)),
+			calc(87.14% + (sin(var(--a) * 2 + 1109.5deg) * 4.68px) + (cos(var(--a) * 2 + 1341.0deg) * 3.12px)) calc(10.16% - (sin(var(--a) * 2 + 1109.5deg) * 5.47px) - (cos(var(--a) * 2 + 1341.0deg) * 3.65px)),
+			calc(88.58% + (sin(var(--a) * 2 + 1123.0deg) * 5.09px) + (cos(var(--a) * 2 + 1359.0deg) * 3.39px)) calc(11.42% - (sin(var(--a) * 2 + 1123.0deg) * 5.09px) - (cos(var(--a) * 2 + 1359.0deg) * 3.39px)),
+			calc(89.84% + (sin(var(--a) * 2 + 1136.5deg) * 5.47px) + (cos(var(--a) * 2 + 1377.0deg) * 3.65px)) calc(12.86% - (sin(var(--a) * 2 + 1136.5deg) * 4.68px) - (cos(var(--a) * 2 + 1377.0deg) * 3.12px)),
+			calc(90.95% + (sin(var(--a) * 2 + 1150.0deg) * 5.82px) + (cos(var(--a) * 2 + 1395.0deg) * 3.88px)) calc(14.47% - (sin(var(--a) * 2 + 1150.0deg) * 4.23px) - (cos(var(--a) * 2 + 1395.0deg) * 2.82px)),
+			calc(91.92% + (sin(var(--a) * 2 + 1163.5deg) * 6.14px) + (cos(var(--a) * 2 + 1413.0deg) * 4.09px)) calc(16.28% - (sin(var(--a) * 2 + 1163.5deg) * 3.76px) - (cos(var(--a) * 2 + 1413.0deg) * 2.51px)),
+			calc(92.75% + (sin(var(--a) * 2 + 1177.0deg) * 6.42px) + (cos(var(--a) * 2 + 1431.0deg) * 4.28px)) calc(18.32% - (sin(var(--a) * 2 + 1177.0deg) * 3.27px) - (cos(var(--a) * 2 + 1431.0deg) * 2.18px)),
+			calc(93.44% + (sin(var(--a) * 2 + 1190.5deg) * 6.65px) + (cos(var(--a) * 2 + 1449.0deg) * 4.43px)) calc(20.64% - (sin(var(--a) * 2 + 1190.5deg) * 2.76px) - (cos(var(--a) * 2 + 1449.0deg) * 1.84px)),
+			calc(94.01% + (sin(var(--a) * 2 + 1204.0deg) * 6.85px) + (cos(var(--a) * 2 + 1467.0deg) * 4.57px)) calc(23.30% - (sin(var(--a) * 2 + 1204.0deg) * 2.22px) - (cos(var(--a) * 2 + 1467.0deg) * 1.48px)),
+			calc(94.44% + (sin(var(--a) * 2 + 1217.5deg) * 7.00px) + (cos(var(--a) * 2 + 1485.0deg) * 4.67px)) calc(26.43% - (sin(var(--a) * 2 + 1217.5deg) * 1.68px) - (cos(var(--a) * 2 + 1485.0deg) * 1.12px)),
+			calc(94.75% + (sin(var(--a) * 2 + 1231.0deg) * 7.11px) + (cos(var(--a) * 2 + 1503.0deg) * 4.74px)) calc(30.27% - (sin(var(--a) * 2 + 1231.0deg) * 1.13px) - (cos(var(--a) * 2 + 1503.0deg) * 0.75px)),
+			calc(94.94% + (sin(var(--a) * 2 + 1244.5deg) * 7.18px) + (cos(var(--a) * 2 + 1521.0deg) * 4.79px)) calc(35.48% - (sin(var(--a) * 2 + 1244.5deg) * 0.56px) - (cos(var(--a) * 2 + 1521.0deg) * 0.38px))
+	);
+	animation: blob-wave-loop 12s linear infinite;
+}
+
+/* Perfect 0->360deg loop of the driving angle so the sinuous edges undulate endlessly */
+@keyframes blob-wave-loop {
+	from {
+		--a: 0deg;
+	}
+	to {
+		--a: 360deg;
+	}
+}
+
+/* Respect users who prefer reduced motion: keep the wavy edge but stop the animation */
+@media (prefers-reduced-motion: reduce) {
+	.blob-card {
+		animation: none;
+	}
+}
+
+.blob-card--green-1 {
+	background-color: var(--color-green-pastel);
+	border-radius: 40px 18px 45px 25px;
+}
+
+.blob-card--orange-1 {
+	background-color: var(--color-orange-pastel);
+	border-radius: 38px 22px 48px 20px;
+}
+
+/* Keep a positioning context for inner absolute elements (e.g. badge) */
+.card-organic-corner {
+	position: relative;
+}
+
+.wave-divider {
+	width: 100%;
+	line-height: 0;
+	overflow: hidden;
+}
+
+.wave-divider svg {
+	width: 100%;
+	height: 65px;
+}
+
+.icon-sm {
+	width: 16px;
+	height: 16px;
+}
+
+/* ************************************** */
+/* TYPOGRAPHY & BUTTONS                   */
+/* ************************************** */
+
+.heading-primary {
+	font-size: clamp(2.3rem, 6vw, 3.8rem);
+	font-weight: 800;
+	line-height: 1.15;
+	letter-spacing: -0.02em;
+	margin-bottom: 1.25rem;
+}
+
+.heading-secondary {
+	font-size: clamp(1.6rem, 3.5vw, 2.3rem);
+	font-weight: 700;
+	line-height: 1.2;
+	margin-bottom: 0.75rem;
+}
+
+.subheading {
+	display: inline-block;
+	font-size: 0.85rem;
+	font-weight: 700;
+	text-transform: uppercase;
+	letter-spacing: 0.08em;
+	margin-bottom: 0.35rem;
+}
+
+.subheading--orange {
+	color: var(--color-orange);
+}
+
+.subheading--green {
+	color: var(--color-green);
+}
+
+.text-green {
+	color: var(--color-green);
+}
+
+.text-orange {
+	color: var(--color-orange);
+}
+
+.badge {
+	display: inline-flex;
+	align-items: center;
+	gap: 0.4rem;
+	padding: 0.4rem 0.95rem;
+	border-radius: var(--radius-full);
+	font-weight: 600;
+	font-size: 0.8rem;
+	margin-bottom: 1rem;
+}
+
+.badge--green {
+	background-color: var(--color-green-pastel);
+	color: var(--color-green-hover);
+}
+
+.text-body {
+	font-size: 1rem;
+	color: var(--color-dark-muted);
+	margin-bottom: 1rem;
+}
+
+.btn {
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	padding: 0.95rem 1.9rem;
+	font-weight: 700;
+	font-size: 0.95rem;
+	border-radius: var(--radius-full);
+	transition: all 0.2s ease;
+	cursor: pointer;
+	border: 2px solid transparent;
+}
+
+.btn--sm {
+	padding: 0.5rem 1.25rem;
+	font-size: 0.85rem;
+}
+
+.btn--orange {
+	background-color: var(--color-orange);
+	color: var(--color-light);
+}
+
+.btn--orange:hover {
+	background-color: var(--color-orange-hover);
+}
+
+.btn--green-outline {
+	border-color: var(--color-green);
+	color: var(--color-green);
+	background-color: transparent;
+}
+
+.btn--green-outline:hover {
+	background-color: var(--color-green);
+	color: var(--color-light);
+}
+
+.btn--full {
+	width: 100%;
+}
+
+/* ************************************** */
+/* HEADER                                 */
+/* ************************************** */
+
+.header {
+	padding: 1.1rem 0;
+	background-color: rgba(255, 255, 255, 0.95);
+	backdrop-filter: blur(10px);
+	position: sticky;
+	top: 0;
+	z-index: 100;
+	border-bottom: 1px solid #f3f4f6;
+}
+
+.header__container {
+	display: flex;
+	justify-content: space-between;
+	align-items: center;
+}
+
+.logo {
+	display: flex;
+	align-items: center;
+	gap: 0.4rem;
+	font-size: 1.4rem;
+	font-weight: 800;
+	letter-spacing: -0.02em;
+}
+
+.logo__icon {
+	width: 26px;
+	height: 26px;
+	color: var(--color-green);
+}
+
+.logo__highlight {
+	color: var(--color-orange);
+}
+
+/* ************************************** */
+/* HERO SECTION                           */
+/* ************************************** */
+
+.section--hero {
+	background: linear-gradient(180deg, #ffffff 0%, #ecfdf5 100%);
+	padding: 3.5rem 0 4.5rem 0;
+}
+
+.hero__container {
+	max-width: 780px;
+	margin: 0 auto;
+}
+
+.hero__description {
+	font-size: 1.1rem;
+	color: var(--color-dark-muted);
+	margin-bottom: 2rem;
+}
+
+.hero__cta-group {
+	display: flex;
+	flex-direction: column;
+	gap: 0.85rem;
+}
+
+/* ************************************** */
+/* ABOUT SECTION                          */
+/* ************************************** */
+
+.section--about {
+	background-color: #ecfdf5;
+}
+
+.about__container {
+	display: flex;
+	flex-direction: column;
+	gap: 2rem;
+}
+
+.stats-grid {
+	display: flex;
+	flex-direction: column;
+	gap: 1.5rem;
+}
+
+.stat-box {
+	text-align: center;
+}
+
+.stat-box__number {
+	display: block;
+	font-size: 2.75rem;
+	font-weight: 800;
+	line-height: 1;
+	margin-bottom: 0.35rem;
+}
+
+.stat-box__label {
+	font-size: 0.85rem;
+	font-weight: 700;
+	letter-spacing: 0.05em;
+	color: var(--color-dark-muted);
+}
+
+/* ************************************** */
+/* COURSES SECTION                        */
+/* ************************************** */
+
+.section__header {
+	margin-bottom: 2.5rem;
+}
+
+.section__intro {
+	font-size: 1rem;
+	color: var(--color-dark-muted);
+	max-width: 800px;
+}
+
+.courses-grid {
+	display: flex;
+	flex-direction: column;
+	gap: 2.5rem;
+}
+
+.course-card__age {
+	display: inline-block;
+	font-size: 0.825rem;
+	font-weight: 800;
+	text-transform: uppercase;
+	margin-bottom: 0.5rem;
+	padding: 0.25rem 0.8rem;
+	border-radius: var(--radius-full);
+}
+
+.course-card__age--green {
+	background-color: var(--color-light);
+	color: var(--color-green);
+}
+
+.course-card__age--orange {
+	background-color: var(--color-light);
+	color: var(--color-orange);
+}
+
+.course-card__title {
+	font-size: 1.35rem;
+	margin-bottom: 0.5rem;
+}
+
+.course-card__desc {
+	color: var(--color-dark-muted);
+	font-size: 0.95rem;
+}
+
+/* ************************************** */
+/* JOIN SECTION                           */
+/* ************************************** */
+
+.join-box.blob-card {
+	padding: 5rem 4.2rem;
+}
+
+.join__container {
+	display: flex;
+	flex-direction: column;
+	gap: 2.5rem;
+}
+
+.join-box__title {
+	font-size: 1.5rem;
+	margin-bottom: 0.5rem;
+}
+
+.join-box__text {
+	color: var(--color-dark-muted);
+	font-size: 0.95rem;
+	margin-bottom: 1.5rem;
+}
+
+.form__group {
+	margin-bottom: 1.25rem;
+}
+
+.form__label {
+	display: block;
+	font-size: 0.85rem;
+	margin-bottom: 0.35rem;
+}
+
+.form__input {
+	width: 100%;
+	padding: 0.85rem 1.2rem;
+	border-radius: var(--radius-full);
+	border: none;
+	background-color: var(--color-light);
+	color: var(--color-dark);
+	font-size: 0.95rem;
+}
+
+.join-info-list {
+	display: flex;
+	flex-direction: column;
+	gap: 1.5rem;
+}
+
+.join-info-list li {
+	font-size: 0.95rem;
+	color: var(--color-dark-muted);
+	line-height: 1.6;
+}
+
+.join-info-list strong {
+	display: block;
+	font-size: 1.05rem;
+	margin-bottom: 0.25rem;
+}
+
+/* ************************************** */
+/* PRICING SECTION                        */
+/* ************************************** */
+
+.pricing-grid {
+	display: flex;
+	flex-direction: column;
+	gap: 2.5rem;
+	padding-top: 1rem;
+}
+
+.pricing-card {
+	text-align: center;
+	position: relative;
+}
+
+.pricing-card--featured {
+	/* Extra top room so the badge sits below the fluid clip-path edge */
+	padding-top: 4.5rem !important;
+}
+
+.pricing-card__badge {
+	position: absolute;
+	/* Sit inside the fluid clip-path (which insets ~7% + wave) so the badge isn't cut off */
+	top: 42px;
+	left: 50%;
+	transform: translateX(-50%);
+	background-color: var(--color-orange);
+	color: var(--color-light);
+	font-size: 0.75rem;
+	font-weight: 800;
+	padding: 0.35rem 1rem;
+	border-radius: var(--radius-full);
+	z-index: 10;
+	white-space: nowrap;
+}
+
+.pricing-card__title {
+	font-size: 1.25rem;
+}
+
+.pricing-card__price {
+	font-size: 2.6rem;
+	font-weight: 800;
+	margin: 0.5rem 0;
+	color: var(--color-dark);
+}
+
+.pricing-card__price span {
+	font-size: 0.9rem;
+	font-weight: 400;
+	color: var(--color-dark-muted);
+}
+
+.pricing-card__desc {
+	font-size: 0.9rem;
+	color: var(--color-dark-muted);
+}
+
+/* ************************************** */
+/* FAQS SECTION                           */
+/* ************************************** */
+
+.faq-list {
+	display: flex;
+	flex-direction: column;
+	gap: 1.25rem;
+}
+
+.faq-item {
+	cursor: pointer;
+}
+
+.faq-item__question {
+	font-weight: 600;
+	font-size: 1rem;
+}
+
+/* Smooth open/close animation for the accordion, transitioning height from 0 to auto */
+.faq-item::details-content {
+	height: 0;
+	overflow: hidden;
+	transition: height 0.35s ease, content-visibility 0.35s ease allow-discrete;
+}
+
+.faq-item[open]::details-content {
+	height: auto;
+}
+
+.faq-item__answer {
+	margin-top: 0.65rem;
+	font-size: 0.9rem;
+	color: var(--color-dark-muted);
+}
+
+/* ************************************** */
+/* FOOTER                                 */
+/* ************************************** */
+
+.footer {
+	padding: 2.5rem 0;
+	border-top: 1px solid #f3f4f6;
+	font-size: 0.85rem;
+	color: var(--color-dark-muted);
+}
+
+.footer__container {
+	display: flex;
+	flex-direction: column;
+	gap: 1rem;
+	text-align: center;
+}
+
+.footer__links {
+	display: flex;
+	justify-content: center;
+	gap: 1.25rem;
+}
+
+/* ************************************** */
+/* DESKTOP BREAKPOINTS                    */
+/* ************************************** */
+
+@media (min-width: 640px) {
+	.hero__cta-group {
+		flex-direction: row;
+	}
+
+	.btn--full {
+		width: auto;
+	}
+
+	.stats-grid {
+		flex-direction: row;
+	}
+
+	.stat-box {
+		flex: 1;
+	}
+
+	.footer__container {
+		flex-direction: row;
+		justify-content: space-between;
+	}
+}
+
+@media (min-width: 960px) {
+	.section {
+		padding: 6rem 0;
+	}
+
+	.wave-divider svg {
+		height: 90px;
+	}
+
+	.about__container {
+		display: grid;
+		grid-template-columns: 1.2fr 0.8fr;
+		gap: 4rem;
+		align-items: center;
+	}
+
+	.courses-grid,
+	.pricing-grid {
+		display: grid;
+		grid-template-columns: repeat(3, 1fr);
+		gap: 2rem;
+	}
+
+	.join__container {
+		display: grid;
+		grid-template-columns: 1fr 1fr;
+		gap: 3.5rem;
+		align-items: start;
+	}
 }

@@ -1,32 +1,240 @@
 {% extends "base.html" %}
 
 {% block content %}
-<main>
-	<section class="hero-section">
-		<p>Hero Section</p>
-		<article class="current-event">Event</article>
-		<article class="featured-in">FI</article>
+<header class="header">
+	<div class="container header__container">
+		<a href="#" class="logo">
+			<svg class="logo__icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+				<path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/>
+			</svg>
+			Shine<span class="logo__highlight">Parkour</span>
+		</a>
+	</div>
+</header>
+
+<main class="main-wrapper">
+	<!-- NATURE LEAVES IN PASTEL GREEN -->
+	<svg class="bg-leaf bg-leaf--1" viewBox="0 0 100 100" fill="currentColor">
+		<path
+			d="M50 0C50 0 20 35 20 65C20 81.5 33.5 95 50 95C66.5 95 80 81.5 80 65C80 35 50 0 50 0ZM50 85C48 85 48 50 48 50C48 50 50 85 50 85Z"/>
+	</svg>
+	<svg class="bg-leaf bg-leaf--2" viewBox="0 0 100 100" fill="currentColor">
+		<path
+			d="M50 0C50 0 20 35 20 65C20 81.5 33.5 95 50 95C66.5 95 80 81.5 80 65C80 35 50 0 50 0ZM50 85C48 85 48 50 48 50C48 50 50 85 50 85Z"/>
+	</svg>
+
+	<!-- HERO SECTION -->
+	<section class="section section--hero">
+		<div class="container hero__container">
+			<div class="hero__content">
+				<h1 class="heading-primary">Mettiti in gioco. <br><span class="text-green">Esplora la città.</span></h1>
+				<p class="hero__description">
+					Trasforma lo spazio urbano nella tua palestra naturale. Impara a muoverti superando gli ostacoli con il
+					parkour outdoor in un ambiente rilassato e collaborativo.
+				</p>
+				<div class="hero__cta-group">
+					<a href="#join" class="btn btn--orange btn--full">Prenota Prova Gratuita</a>
+					<a href="#courses" class="btn btn--green-outline btn--full">Scopri i Corsi</a>
+				</div>
+			</div>
+		</div>
 	</section>
-	<section class="about-section">
-		<p>About us</p>
-		<p></p>
+
+	<!-- WAVE DIVIDER TOP -->
+	<div class="wave-divider wave-divider--top">
+		<svg viewBox="0 0 1200 120" preserveAspectRatio="none">
+			<path d="M0,0 C150,90 350,-40 500,60 C650,160 900,10 1200,40 L1200,120 L0,120 Z" fill="#ecfdf5"></path>
+		</svg>
+	</div>
+
+	<!-- ABOUT SECTION -->
+	<section class="section section--about">
+		<div class="container about__container">
+			<div class="about__text">
+				<span class="subheading subheading--orange">Chi Siamo</span>
+				<h2 class="heading-secondary">Natura, movimento e crescita personale.</h2>
+				<p class="text-body">
+					Siamo un gruppo di ragazzi uniti dalla passione per il parkour. Per noi la città non è solo cemento, ma
+					uno spazio da esplorare e reinterpretare in totale libertà.
+				</p>
+				<p class="text-body">
+					Oggi Shine conta circa un centinaio di tesserati all'anno. Manteniamo intatti i nostri valori
+					fondamentali: voglia di mettersi in gioco, nessuna pressione agonistica e massimo rispetto per l'ambiente
+					circostante.
+				</p>
+			</div>
+
+			<div class="stats-grid">
+				<div class="stat-box blob-card blob-card--green-1">
+					<span class="stat-box__number text-green">100+</span>
+					<span class="stat-box__label">SOCI ATTIVI</span>
+				</div>
+				<div class="stat-box blob-card blob-card--orange-1 card-organic-corner">
+					<span class="stat-box__number text-orange">100%</span>
+					<span class="stat-box__label">OUTDOOR</span>
+				</div>
+			</div>
+		</div>
 	</section>
-	<section class="courses-section">
-		<p>Courses</p>
+
+	<!-- WAVE DIVIDER BOTTOM -->
+	<div class="wave-divider wave-divider--bottom">
+		<svg viewBox="0 0 1200 120" preserveAspectRatio="none">
+			<path d="M0,60 C300,120 600,0 900,80 C1050,120 1150,40 1200,20 L1200,0 L0,0 Z" fill="#ecfdf5"></path>
+		</svg>
+	</div>
+
+	<!-- COURSES SECTION -->
+	<section id="courses" class="section section--courses">
+		<div class="container">
+			<div class="section__header">
+				<span class="subheading subheading--green">Classi Miste & Crescita Rapida</span>
+				<h2 class="heading-secondary">I Nostri Corsi di Parkour</h2>
+				<p class="section__intro">
+					Creiamo volutamente gruppi grandi ed eterogenei: i più piccoli imparano per emulazione e crescono più
+					velocemente, mentre i più grandi sviluppano empatia e senso di responsabilità.
+				</p>
+			</div>
+
+			<div class="courses-grid">
+				<article class="course-card blob-card blob-card--green-1">
+					<span class="course-card__age course-card__age--green">6 - 9 Anni</span>
+					<h3 class="course-card__title">Primi Passi & Gioco</h3>
+					<p class="course-card__desc">Coordinazione, equilibrio e primi approcci al salto in totale tranquillità e
+						sicurezza emotiva.</p>
+				</article>
+
+				<article class="course-card blob-card blob-card--orange-1 course-card--highlight card-organic-corner">
+					<span class="course-card__age course-card__age--orange">9 - 14 Anni</span>
+					<h3 class="course-card__title">Tecnica & Esplorazione</h3>
+					<p class="course-card__desc">Fondamenti del parkour urbano, superamento degli ostacoli, potenziamento
+						naturale e lavoro di squadra.</p>
+				</article>
+
+				<article class="course-card blob-card blob-card--green-1">
+					<span class="course-card__age course-card__age--green">14+ Anni & Adulti</span>
+					<h3 class="course-card__title">Fluidità & Espressione</h3>
+					<p class="course-card__desc">Consapevolezza del corpo, condizionamento atletico aperto e ricerca del
+						proprio stile di movimento.</p>
+				</article>
+			</div>
+		</div>
 	</section>
-	<section class="join-section">
-		<section class="join-section-free-trial"></section>
-		<section class="join-section-sign-up"></section>
+
+	<!-- JOIN SECTION (LIGHT PASTEL THEME) -->
+	<section id="join" class="section section--join">
+		<div class="container join__container">
+			<div class="join-box blob-card blob-card--orange-1 card-organic-corner">
+				<h3 class="join-box__title">Richiedi una Prova Gratuita</h3>
+				<p class="join-box__text">Senza impegno. Vieni a conoscerci e prova un allenamento all'aperto.</p>
+
+				<form class="form">
+					<div class="form__group">
+						<label for="name" class="form__label">Nome e Cognome</label>
+						<input type="text" id="name" class="form__input" placeholder="Mario Rossi" required>
+					</div>
+					<div class="form__group">
+						<label for="email" class="form__label">Email</label>
+						<input type="email" id="email" class="form__input" placeholder="mario@example.com" required>
+					</div>
+					<button type="submit" class="btn btn--orange btn--full">Richiedi la prova</button>
+				</form>
+			</div>
+
+			<div class="join-box join-box--info blob-card blob-card--green-1">
+				<h3 class="join-box__title text-green">Flessibilità & Meteo</h3>
+				<ul class="join-info-list">
+					<li>
+						<strong class="text-green">3 Allenamenti a Settimana:</strong>
+						Puoi scegliere liberamente quando venire senza avvisare nessuno. Massima libertà per adattarsi ai tuoi
+						impegni.
+					</li>
+					<li>
+						<strong class="text-green">Recuperi Facili in Caso di Pioggia:</strong>
+						Essendo al 100% all'aperto, se piove la lezione salta per sicurezza. Ma puoi recuperarla quando vuoi
+						sfruttando una qualsiasi delle altre sessioni della settimana!
+					</li>
+				</ul>
+			</div>
+		</div>
 	</section>
-	<section class="pricing-section">
-		<p>Pricing</p>
+
+	<!-- PRICING SECTION -->
+	<section class="section section--pricing">
+		<div class="container">
+			<div class="section__header">
+				<span class="subheading subheading--orange">Modalità di Partecipazione</span>
+				<h2 class="heading-secondary">Tariffe Semplici e Chiare</h2>
+			</div>
+
+			<div class="pricing-grid">
+				<div class="pricing-card blob-card blob-card--green-1">
+					<h3 class="pricing-card__title">Singola</h3>
+					<p class="pricing-card__price">15€ <span>/ lezione</span></p>
+					<p class="pricing-card__desc">Per chi vuole provare una lezione singola ogni tanto.</p>
+				</div>
+
+				<div class="pricing-card blob-card blob-card--green-1">
+					<h3 class="pricing-card__title">1 Volta / Settimana</h3>
+					<p class="pricing-card__price">45€ <span>/ mese</span></p>
+					<p class="pricing-card__desc">Scegli ogni settimana il giorno che ti è più comodo.</p>
+				</div>
+
+				<div class="pricing-card pricing-card--featured blob-card blob-card--orange-1 card-organic-corner">
+					<span class="pricing-card__badge">Più Scelto</span>
+					<h3 class="pricing-card__title">3 Volte / Settimana</h3>
+					<p class="pricing-card__price">60€ <span>/ mese</span></p>
+					<p class="pricing-card__desc">Massimo valore, piena flessibilità e crescita costante.</p>
+				</div>
+			</div>
+		</div>
 	</section>
-	<section class="faqs-section">
-		<p>FAQS</p>
+
+	<!-- FAQS SECTION -->
+	<section class="section section--faqs">
+		<div class="container container--narrow">
+			<div class="section__header">
+				<span class="subheading subheading--green">Domande Frequenti</span>
+				<h2 class="heading-secondary">Risposte alle tue curiosità</h2>
+			</div>
+
+			<div class="faq-list">
+				<details class="faq-item blob-card blob-card--green-1">
+					<summary class="faq-item__question">Come funzionano i recuperi se piove?</summary>
+					<div class="faq-item__answer">
+						<p>Non avendo una palestra al coperto, se piove ci fermiamo per sicurezza. Avendo però 3 allenamenti a
+							settimana, puoi recuperare la lezione persa presentandoti direttamente in un altro giorno a tua
+							scelta.</p>
+					</div>
+				</details>
+
+				<details class="faq-item blob-card blob-card--green-1">
+					<summary class="faq-item__question">Devo avvisare prima di venire ad allenarmi?</summary>
+					<div class="faq-item__answer">
+						<p>No! Puoi scegliere liberamente il giorno in cui allenarti in base alla tua disponibilità
+							settimanale.</p>
+					</div>
+				</details>
+
+				<details class="faq-item blob-card blob-card--green-1">
+					<summary class="faq-item__question">Perché gruppi grandi ed età miste?</summary>
+					<div class="faq-item__answer">
+						<p>Favorisce un apprendimento naturale: i più giovani imparano velocemente guardando i più grandi, e i
+							ragazzi più grandi maturano senso di guida e responsabilità verso i compagni.</p>
+					</div>
+				</details>
+			</div>
+		</div>
 	</section>
 </main>
 
-<footer>
-	<p>&copy; 2026 Shine Parkour ASD - Tutti i diritti riservati.</p>
+<footer class="footer">
+	<div class="container footer__container">
+		<p class="footer__copy">&copy; 2026 Shine Parkour ASD &bull; Esplorazione & Allenamento Outdoor</p>
+		<div class="footer__links">
+			<a href="#">Privacy Policy</a>
+			<a href="#">Statuto ASD</a>
+		</div>
+	</div>
 </footer>
 {% endblock %}
