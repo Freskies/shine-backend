@@ -6,11 +6,13 @@
 	/* Colors */
 	--color-orange: #f97316;
 	--color-orange-hover: #ea580c;
-	--color-orange-pastel: #ffedd5; /* Soft peach */
+	--color-orange-pastel: #ffedd5;
 
 	--color-green: #059669;
 	--color-green-hover: #047857;
-	--color-green-pastel: #d1fae5; /* Soft mint */
+	--color-green-pastel: #d1fae5;
+
+	--color-grey-pastel: #e5e7eb;
 
 	--color-dark: #1f2937;
 	--color-dark-muted: #4b5563;
@@ -122,92 +124,79 @@ a {
 	border: none;
 	padding: 4rem 3.5rem;
 	box-shadow: none;
-	clip-path: polygon(
-			calc(95.00% + (sin(var(--a) * 2 + 178.0deg) * 7.20px) + (cos(var(--a) * 2 + 99.0deg) * 4.80px)) calc(50.00%  ),
-			calc(94.94% + (sin(var(--a) * 2 + 191.5deg) * 7.18px) + (cos(var(--a) * 2 + 117.0deg) * 4.79px)) calc(64.52% + (sin(var(--a) * 2 + 191.5deg) * 0.56px) + (cos(var(--a) * 2 + 117.0deg) * 0.38px)),
-			calc(94.75% + (sin(var(--a) * 2 + 205.0deg) * 7.11px) + (cos(var(--a) * 2 + 135.0deg) * 4.74px)) calc(69.73% + (sin(var(--a) * 2 + 205.0deg) * 1.13px) + (cos(var(--a) * 2 + 135.0deg) * 0.75px)),
-			calc(94.44% + (sin(var(--a) * 2 + 218.5deg) * 7.00px) + (cos(var(--a) * 2 + 153.0deg) * 4.67px)) calc(73.57% + (sin(var(--a) * 2 + 218.5deg) * 1.68px) + (cos(var(--a) * 2 + 153.0deg) * 1.12px)),
-			calc(94.01% + (sin(var(--a) * 2 + 232.0deg) * 6.85px) + (cos(var(--a) * 2 + 171.0deg) * 4.57px)) calc(76.70% + (sin(var(--a) * 2 + 232.0deg) * 2.22px) + (cos(var(--a) * 2 + 171.0deg) * 1.48px)),
-			calc(93.44% + (sin(var(--a) * 2 + 245.5deg) * 6.65px) + (cos(var(--a) * 2 + 189.0deg) * 4.43px)) calc(79.36% + (sin(var(--a) * 2 + 245.5deg) * 2.76px) + (cos(var(--a) * 2 + 189.0deg) * 1.84px)),
-			calc(92.75% + (sin(var(--a) * 2 + 259.0deg) * 6.42px) + (cos(var(--a) * 2 + 207.0deg) * 4.28px)) calc(81.68% + (sin(var(--a) * 2 + 259.0deg) * 3.27px) + (cos(var(--a) * 2 + 207.0deg) * 2.18px)),
-			calc(91.92% + (sin(var(--a) * 2 + 272.5deg) * 6.14px) + (cos(var(--a) * 2 + 225.0deg) * 4.09px)) calc(83.72% + (sin(var(--a) * 2 + 272.5deg) * 3.76px) + (cos(var(--a) * 2 + 225.0deg) * 2.51px)),
-			calc(90.95% + (sin(var(--a) * 2 + 286.0deg) * 5.82px) + (cos(var(--a) * 2 + 243.0deg) * 3.88px)) calc(85.53% + (sin(var(--a) * 2 + 286.0deg) * 4.23px) + (cos(var(--a) * 2 + 243.0deg) * 2.82px)),
-			calc(89.84% + (sin(var(--a) * 2 + 299.5deg) * 5.47px) + (cos(var(--a) * 2 + 261.0deg) * 3.65px)) calc(87.14% + (sin(var(--a) * 2 + 299.5deg) * 4.68px) + (cos(var(--a) * 2 + 261.0deg) * 3.12px)),
-			calc(88.58% + (sin(var(--a) * 2 + 313.0deg) * 5.09px) + (cos(var(--a) * 2 + 279.0deg) * 3.39px)) calc(88.58% + (sin(var(--a) * 2 + 313.0deg) * 5.09px) + (cos(var(--a) * 2 + 279.0deg) * 3.39px)),
-			calc(87.14% + (sin(var(--a) * 2 + 326.5deg) * 4.68px) + (cos(var(--a) * 2 + 297.0deg) * 3.12px)) calc(89.84% + (sin(var(--a) * 2 + 326.5deg) * 5.47px) + (cos(var(--a) * 2 + 297.0deg) * 3.65px)),
-			calc(85.53% + (sin(var(--a) * 2 + 340.0deg) * 4.23px) + (cos(var(--a) * 2 + 315.0deg) * 2.82px)) calc(90.95% + (sin(var(--a) * 2 + 340.0deg) * 5.82px) + (cos(var(--a) * 2 + 315.0deg) * 3.88px)),
-			calc(83.72% + (sin(var(--a) * 2 + 353.5deg) * 3.76px) + (cos(var(--a) * 2 + 333.0deg) * 2.51px)) calc(91.92% + (sin(var(--a) * 2 + 353.5deg) * 6.14px) + (cos(var(--a) * 2 + 333.0deg) * 4.09px)),
-			calc(81.68% + (sin(var(--a) * 2 + 367.0deg) * 3.27px) + (cos(var(--a) * 2 + 351.0deg) * 2.18px)) calc(92.75% + (sin(var(--a) * 2 + 367.0deg) * 6.42px) + (cos(var(--a) * 2 + 351.0deg) * 4.28px)),
-			calc(79.36% + (sin(var(--a) * 2 + 380.5deg) * 2.76px) + (cos(var(--a) * 2 + 369.0deg) * 1.84px)) calc(93.44% + (sin(var(--a) * 2 + 380.5deg) * 6.65px) + (cos(var(--a) * 2 + 369.0deg) * 4.43px)),
-			calc(76.70% + (sin(var(--a) * 2 + 394.0deg) * 2.22px) + (cos(var(--a) * 2 + 387.0deg) * 1.48px)) calc(94.01% + (sin(var(--a) * 2 + 394.0deg) * 6.85px) + (cos(var(--a) * 2 + 387.0deg) * 4.57px)),
-			calc(73.57% + (sin(var(--a) * 2 + 407.5deg) * 1.68px) + (cos(var(--a) * 2 + 405.0deg) * 1.12px)) calc(94.44% + (sin(var(--a) * 2 + 407.5deg) * 7.00px) + (cos(var(--a) * 2 + 405.0deg) * 4.67px)),
-			calc(69.73% + (sin(var(--a) * 2 + 421.0deg) * 1.13px) + (cos(var(--a) * 2 + 423.0deg) * 0.75px)) calc(94.75% + (sin(var(--a) * 2 + 421.0deg) * 7.11px) + (cos(var(--a) * 2 + 423.0deg) * 4.74px)),
-			calc(64.52% + (sin(var(--a) * 2 + 434.5deg) * 0.56px) + (cos(var(--a) * 2 + 441.0deg) * 0.38px)) calc(94.94% + (sin(var(--a) * 2 + 434.5deg) * 7.18px) + (cos(var(--a) * 2 + 441.0deg) * 4.79px)),
-			calc(50.00%) calc(95.00% + (sin(var(--a) * 2 + 448.0deg) * 7.20px) + (cos(var(--a) * 2 + 459.0deg) * 4.80px)),
-			calc(35.48% - (sin(var(--a) * 2 + 461.5deg) * 0.56px) - (cos(var(--a) * 2 + 477.0deg) * 0.38px)) calc(94.94% + (sin(var(--a) * 2 + 461.5deg) * 7.18px) + (cos(var(--a) * 2 + 477.0deg) * 4.79px)),
-			calc(30.27% - (sin(var(--a) * 2 + 475.0deg) * 1.13px) - (cos(var(--a) * 2 + 495.0deg) * 0.75px)) calc(94.75% + (sin(var(--a) * 2 + 475.0deg) * 7.11px) + (cos(var(--a) * 2 + 495.0deg) * 4.74px)),
-			calc(26.43% - (sin(var(--a) * 2 + 488.5deg) * 1.68px) - (cos(var(--a) * 2 + 513.0deg) * 1.12px)) calc(94.44% + (sin(var(--a) * 2 + 488.5deg) * 7.00px) + (cos(var(--a) * 2 + 513.0deg) * 4.67px)),
-			calc(23.30% - (sin(var(--a) * 2 + 502.0deg) * 2.22px) - (cos(var(--a) * 2 + 531.0deg) * 1.48px)) calc(94.01% + (sin(var(--a) * 2 + 502.0deg) * 6.85px) + (cos(var(--a) * 2 + 531.0deg) * 4.57px)),
-			calc(20.64% - (sin(var(--a) * 2 + 515.5deg) * 2.76px) - (cos(var(--a) * 2 + 549.0deg) * 1.84px)) calc(93.44% + (sin(var(--a) * 2 + 515.5deg) * 6.65px) + (cos(var(--a) * 2 + 549.0deg) * 4.43px)),
-			calc(18.32% - (sin(var(--a) * 2 + 529.0deg) * 3.27px) - (cos(var(--a) * 2 + 567.0deg) * 2.18px)) calc(92.75% + (sin(var(--a) * 2 + 529.0deg) * 6.42px) + (cos(var(--a) * 2 + 567.0deg) * 4.28px)),
-			calc(16.28% - (sin(var(--a) * 2 + 542.5deg) * 3.76px) - (cos(var(--a) * 2 + 585.0deg) * 2.51px)) calc(91.92% + (sin(var(--a) * 2 + 542.5deg) * 6.14px) + (cos(var(--a) * 2 + 585.0deg) * 4.09px)),
-			calc(14.47% - (sin(var(--a) * 2 + 556.0deg) * 4.23px) - (cos(var(--a) * 2 + 603.0deg) * 2.82px)) calc(90.95% + (sin(var(--a) * 2 + 556.0deg) * 5.82px) + (cos(var(--a) * 2 + 603.0deg) * 3.88px)),
-			calc(12.86% - (sin(var(--a) * 2 + 569.5deg) * 4.68px) - (cos(var(--a) * 2 + 621.0deg) * 3.12px)) calc(89.84% + (sin(var(--a) * 2 + 569.5deg) * 5.47px) + (cos(var(--a) * 2 + 621.0deg) * 3.65px)),
-			calc(11.42% - (sin(var(--a) * 2 + 583.0deg) * 5.09px) - (cos(var(--a) * 2 + 639.0deg) * 3.39px)) calc(88.58% + (sin(var(--a) * 2 + 583.0deg) * 5.09px) + (cos(var(--a) * 2 + 639.0deg) * 3.39px)),
-			calc(10.16% - (sin(var(--a) * 2 + 596.5deg) * 5.47px) - (cos(var(--a) * 2 + 657.0deg) * 3.65px)) calc(87.14% + (sin(var(--a) * 2 + 596.5deg) * 4.68px) + (cos(var(--a) * 2 + 657.0deg) * 3.12px)),
-			calc(9.05% - (sin(var(--a) * 2 + 610.0deg) * 5.82px) - (cos(var(--a) * 2 + 675.0deg) * 3.88px)) calc(85.53% + (sin(var(--a) * 2 + 610.0deg) * 4.23px) + (cos(var(--a) * 2 + 675.0deg) * 2.82px)),
-			calc(8.08% - (sin(var(--a) * 2 + 623.5deg) * 6.14px) - (cos(var(--a) * 2 + 693.0deg) * 4.09px)) calc(83.72% + (sin(var(--a) * 2 + 623.5deg) * 3.76px) + (cos(var(--a) * 2 + 693.0deg) * 2.51px)),
-			calc(7.25% - (sin(var(--a) * 2 + 637.0deg) * 6.42px) - (cos(var(--a) * 2 + 711.0deg) * 4.28px)) calc(81.68% + (sin(var(--a) * 2 + 637.0deg) * 3.27px) + (cos(var(--a) * 2 + 711.0deg) * 2.18px)),
-			calc(6.56% - (sin(var(--a) * 2 + 650.5deg) * 6.65px) - (cos(var(--a) * 2 + 729.0deg) * 4.43px)) calc(79.36% + (sin(var(--a) * 2 + 650.5deg) * 2.76px) + (cos(var(--a) * 2 + 729.0deg) * 1.84px)),
-			calc(5.99% - (sin(var(--a) * 2 + 664.0deg) * 6.85px) - (cos(var(--a) * 2 + 747.0deg) * 4.57px)) calc(76.70% + (sin(var(--a) * 2 + 664.0deg) * 2.22px) + (cos(var(--a) * 2 + 747.0deg) * 1.48px)),
-			calc(5.56% - (sin(var(--a) * 2 + 677.5deg) * 7.00px) - (cos(var(--a) * 2 + 765.0deg) * 4.67px)) calc(73.57% + (sin(var(--a) * 2 + 677.5deg) * 1.68px) + (cos(var(--a) * 2 + 765.0deg) * 1.12px)),
-			calc(5.25% - (sin(var(--a) * 2 + 691.0deg) * 7.11px) - (cos(var(--a) * 2 + 783.0deg) * 4.74px)) calc(69.73% + (sin(var(--a) * 2 + 691.0deg) * 1.13px) + (cos(var(--a) * 2 + 783.0deg) * 0.75px)),
-			calc(5.06% - (sin(var(--a) * 2 + 704.5deg) * 7.18px) - (cos(var(--a) * 2 + 801.0deg) * 4.79px)) calc(64.52% + (sin(var(--a) * 2 + 704.5deg) * 0.56px) + (cos(var(--a) * 2 + 801.0deg) * 0.38px)),
-			calc(5.00% - (sin(var(--a) * 2 + 718.0deg) * 7.20px) - (cos(var(--a) * 2 + 819.0deg) * 4.80px)) calc(50.00%  ),
-			calc(5.06% - (sin(var(--a) * 2 + 731.5deg) * 7.18px) - (cos(var(--a) * 2 + 837.0deg) * 4.79px)) calc(35.48% - (sin(var(--a) * 2 + 731.5deg) * 0.56px) - (cos(var(--a) * 2 + 837.0deg) * 0.38px)),
-			calc(5.25% - (sin(var(--a) * 2 + 745.0deg) * 7.11px) - (cos(var(--a) * 2 + 855.0deg) * 4.74px)) calc(30.27% - (sin(var(--a) * 2 + 745.0deg) * 1.13px) - (cos(var(--a) * 2 + 855.0deg) * 0.75px)),
-			calc(5.56% - (sin(var(--a) * 2 + 758.5deg) * 7.00px) - (cos(var(--a) * 2 + 873.0deg) * 4.67px)) calc(26.43% - (sin(var(--a) * 2 + 758.5deg) * 1.68px) - (cos(var(--a) * 2 + 873.0deg) * 1.12px)),
-			calc(5.99% - (sin(var(--a) * 2 + 772.0deg) * 6.85px) - (cos(var(--a) * 2 + 891.0deg) * 4.57px)) calc(23.30% - (sin(var(--a) * 2 + 772.0deg) * 2.22px) - (cos(var(--a) * 2 + 891.0deg) * 1.48px)),
-			calc(6.56% - (sin(var(--a) * 2 + 785.5deg) * 6.65px) - (cos(var(--a) * 2 + 909.0deg) * 4.43px)) calc(20.64% - (sin(var(--a) * 2 + 785.5deg) * 2.76px) - (cos(var(--a) * 2 + 909.0deg) * 1.84px)),
-			calc(7.25% - (sin(var(--a) * 2 + 799.0deg) * 6.42px) - (cos(var(--a) * 2 + 927.0deg) * 4.28px)) calc(18.32% - (sin(var(--a) * 2 + 799.0deg) * 3.27px) - (cos(var(--a) * 2 + 927.0deg) * 2.18px)),
-			calc(8.08% - (sin(var(--a) * 2 + 812.5deg) * 6.14px) - (cos(var(--a) * 2 + 945.0deg) * 4.09px)) calc(16.28% - (sin(var(--a) * 2 + 812.5deg) * 3.76px) - (cos(var(--a) * 2 + 945.0deg) * 2.51px)),
-			calc(9.05% - (sin(var(--a) * 2 + 826.0deg) * 5.82px) - (cos(var(--a) * 2 + 963.0deg) * 3.88px)) calc(14.47% - (sin(var(--a) * 2 + 826.0deg) * 4.23px) - (cos(var(--a) * 2 + 963.0deg) * 2.82px)),
-			calc(10.16% - (sin(var(--a) * 2 + 839.5deg) * 5.47px) - (cos(var(--a) * 2 + 981.0deg) * 3.65px)) calc(12.86% - (sin(var(--a) * 2 + 839.5deg) * 4.68px) - (cos(var(--a) * 2 + 981.0deg) * 3.12px)),
-			calc(11.42% - (sin(var(--a) * 2 + 853.0deg) * 5.09px) - (cos(var(--a) * 2 + 999.0deg) * 3.39px)) calc(11.42% - (sin(var(--a) * 2 + 853.0deg) * 5.09px) - (cos(var(--a) * 2 + 999.0deg) * 3.39px)),
-			calc(12.86% - (sin(var(--a) * 2 + 866.5deg) * 4.68px) - (cos(var(--a) * 2 + 1017.0deg) * 3.12px)) calc(10.16% - (sin(var(--a) * 2 + 866.5deg) * 5.47px) - (cos(var(--a) * 2 + 1017.0deg) * 3.65px)),
-			calc(14.47% - (sin(var(--a) * 2 + 880.0deg) * 4.23px) - (cos(var(--a) * 2 + 1035.0deg) * 2.82px)) calc(9.05% - (sin(var(--a) * 2 + 880.0deg) * 5.82px) - (cos(var(--a) * 2 + 1035.0deg) * 3.88px)),
-			calc(16.28% - (sin(var(--a) * 2 + 893.5deg) * 3.76px) - (cos(var(--a) * 2 + 1053.0deg) * 2.51px)) calc(8.08% - (sin(var(--a) * 2 + 893.5deg) * 6.14px) - (cos(var(--a) * 2 + 1053.0deg) * 4.09px)),
-			calc(18.32% - (sin(var(--a) * 2 + 907.0deg) * 3.27px) - (cos(var(--a) * 2 + 1071.0deg) * 2.18px)) calc(7.25% - (sin(var(--a) * 2 + 907.0deg) * 6.42px) - (cos(var(--a) * 2 + 1071.0deg) * 4.28px)),
-			calc(20.64% - (sin(var(--a) * 2 + 920.5deg) * 2.76px) - (cos(var(--a) * 2 + 1089.0deg) * 1.84px)) calc(6.56% - (sin(var(--a) * 2 + 920.5deg) * 6.65px) - (cos(var(--a) * 2 + 1089.0deg) * 4.43px)),
-			calc(23.30% - (sin(var(--a) * 2 + 934.0deg) * 2.22px) - (cos(var(--a) * 2 + 1107.0deg) * 1.48px)) calc(5.99% - (sin(var(--a) * 2 + 934.0deg) * 6.85px) - (cos(var(--a) * 2 + 1107.0deg) * 4.57px)),
-			calc(26.43% - (sin(var(--a) * 2 + 947.5deg) * 1.68px) - (cos(var(--a) * 2 + 1125.0deg) * 1.12px)) calc(5.56% - (sin(var(--a) * 2 + 947.5deg) * 7.00px) - (cos(var(--a) * 2 + 1125.0deg) * 4.67px)),
-			calc(30.27% - (sin(var(--a) * 2 + 961.0deg) * 1.13px) - (cos(var(--a) * 2 + 1143.0deg) * 0.75px)) calc(5.25% - (sin(var(--a) * 2 + 961.0deg) * 7.11px) - (cos(var(--a) * 2 + 1143.0deg) * 4.74px)),
-			calc(35.48% - (sin(var(--a) * 2 + 974.5deg) * 0.56px) - (cos(var(--a) * 2 + 1161.0deg) * 0.38px)) calc(5.06% - (sin(var(--a) * 2 + 974.5deg) * 7.18px) - (cos(var(--a) * 2 + 1161.0deg) * 4.79px)),
-			calc(50.00%  ) calc(5.00% - (sin(var(--a) * 2 + 988.0deg) * 7.20px) - (cos(var(--a) * 2 + 1179.0deg) * 4.80px)),
-			calc(64.52% + (sin(var(--a) * 2 + 1001.5deg) * 0.56px) + (cos(var(--a) * 2 + 1197.0deg) * 0.38px)) calc(5.06% - (sin(var(--a) * 2 + 1001.5deg) * 7.18px) - (cos(var(--a) * 2 + 1197.0deg) * 4.79px)),
-			calc(69.73% + (sin(var(--a) * 2 + 1015.0deg) * 1.13px) + (cos(var(--a) * 2 + 1215.0deg) * 0.75px)) calc(5.25% - (sin(var(--a) * 2 + 1015.0deg) * 7.11px) - (cos(var(--a) * 2 + 1215.0deg) * 4.74px)),
-			calc(73.57% + (sin(var(--a) * 2 + 1028.5deg) * 1.68px) + (cos(var(--a) * 2 + 1233.0deg) * 1.12px)) calc(5.56% - (sin(var(--a) * 2 + 1028.5deg) * 7.00px) - (cos(var(--a) * 2 + 1233.0deg) * 4.67px)),
-			calc(76.70% + (sin(var(--a) * 2 + 1042.0deg) * 2.22px) + (cos(var(--a) * 2 + 1251.0deg) * 1.48px)) calc(5.99% - (sin(var(--a) * 2 + 1042.0deg) * 6.85px) - (cos(var(--a) * 2 + 1251.0deg) * 4.57px)),
-			calc(79.36% + (sin(var(--a) * 2 + 1055.5deg) * 2.76px) + (cos(var(--a) * 2 + 1269.0deg) * 1.84px)) calc(6.56% - (sin(var(--a) * 2 + 1055.5deg) * 6.65px) - (cos(var(--a) * 2 + 1269.0deg) * 4.43px)),
-			calc(81.68% + (sin(var(--a) * 2 + 1069.0deg) * 3.27px) + (cos(var(--a) * 2 + 1287.0deg) * 2.18px)) calc(7.25% - (sin(var(--a) * 2 + 1069.0deg) * 6.42px) - (cos(var(--a) * 2 + 1287.0deg) * 4.28px)),
-			calc(83.72% + (sin(var(--a) * 2 + 1082.5deg) * 3.76px) + (cos(var(--a) * 2 + 1305.0deg) * 2.51px)) calc(8.08% - (sin(var(--a) * 2 + 1082.5deg) * 6.14px) - (cos(var(--a) * 2 + 1305.0deg) * 4.09px)),
-			calc(85.53% + (sin(var(--a) * 2 + 1096.0deg) * 4.23px) + (cos(var(--a) * 2 + 1323.0deg) * 2.82px)) calc(9.05% - (sin(var(--a) * 2 + 1096.0deg) * 5.82px) - (cos(var(--a) * 2 + 1323.0deg) * 3.88px)),
-			calc(87.14% + (sin(var(--a) * 2 + 1109.5deg) * 4.68px) + (cos(var(--a) * 2 + 1341.0deg) * 3.12px)) calc(10.16% - (sin(var(--a) * 2 + 1109.5deg) * 5.47px) - (cos(var(--a) * 2 + 1341.0deg) * 3.65px)),
-			calc(88.58% + (sin(var(--a) * 2 + 1123.0deg) * 5.09px) + (cos(var(--a) * 2 + 1359.0deg) * 3.39px)) calc(11.42% - (sin(var(--a) * 2 + 1123.0deg) * 5.09px) - (cos(var(--a) * 2 + 1359.0deg) * 3.39px)),
-			calc(89.84% + (sin(var(--a) * 2 + 1136.5deg) * 5.47px) + (cos(var(--a) * 2 + 1377.0deg) * 3.65px)) calc(12.86% - (sin(var(--a) * 2 + 1136.5deg) * 4.68px) - (cos(var(--a) * 2 + 1377.0deg) * 3.12px)),
-			calc(90.95% + (sin(var(--a) * 2 + 1150.0deg) * 5.82px) + (cos(var(--a) * 2 + 1395.0deg) * 3.88px)) calc(14.47% - (sin(var(--a) * 2 + 1150.0deg) * 4.23px) - (cos(var(--a) * 2 + 1395.0deg) * 2.82px)),
-			calc(91.92% + (sin(var(--a) * 2 + 1163.5deg) * 6.14px) + (cos(var(--a) * 2 + 1413.0deg) * 4.09px)) calc(16.28% - (sin(var(--a) * 2 + 1163.5deg) * 3.76px) - (cos(var(--a) * 2 + 1413.0deg) * 2.51px)),
-			calc(92.75% + (sin(var(--a) * 2 + 1177.0deg) * 6.42px) + (cos(var(--a) * 2 + 1431.0deg) * 4.28px)) calc(18.32% - (sin(var(--a) * 2 + 1177.0deg) * 3.27px) - (cos(var(--a) * 2 + 1431.0deg) * 2.18px)),
-			calc(93.44% + (sin(var(--a) * 2 + 1190.5deg) * 6.65px) + (cos(var(--a) * 2 + 1449.0deg) * 4.43px)) calc(20.64% - (sin(var(--a) * 2 + 1190.5deg) * 2.76px) - (cos(var(--a) * 2 + 1449.0deg) * 1.84px)),
-			calc(94.01% + (sin(var(--a) * 2 + 1204.0deg) * 6.85px) + (cos(var(--a) * 2 + 1467.0deg) * 4.57px)) calc(23.30% - (sin(var(--a) * 2 + 1204.0deg) * 2.22px) - (cos(var(--a) * 2 + 1467.0deg) * 1.48px)),
-			calc(94.44% + (sin(var(--a) * 2 + 1217.5deg) * 7.00px) + (cos(var(--a) * 2 + 1485.0deg) * 4.67px)) calc(26.43% - (sin(var(--a) * 2 + 1217.5deg) * 1.68px) - (cos(var(--a) * 2 + 1485.0deg) * 1.12px)),
-			calc(94.75% + (sin(var(--a) * 2 + 1231.0deg) * 7.11px) + (cos(var(--a) * 2 + 1503.0deg) * 4.74px)) calc(30.27% - (sin(var(--a) * 2 + 1231.0deg) * 1.13px) - (cos(var(--a) * 2 + 1503.0deg) * 0.75px)),
-			calc(94.94% + (sin(var(--a) * 2 + 1244.5deg) * 7.18px) + (cos(var(--a) * 2 + 1521.0deg) * 4.79px)) calc(35.48% - (sin(var(--a) * 2 + 1244.5deg) * 0.56px) - (cos(var(--a) * 2 + 1521.0deg) * 0.38px))
-	);
-	animation: blob-wave-loop 12s linear infinite;
+	/* Fallback for browsers without trigonometric functions: a soft rounded box */
+	border-radius: 30px;
 }
 
-/* Perfect 0->360deg loop of the driving angle so the sinuous edges undulate endlessly */
+@supports (width: calc(sin(1deg) * 1px)) {
+	.blob-card {
+		border-radius: 0;
+		clip-path: polygon(
+				calc(95.00% + (sin(var(--a) * 2 + 9.0deg) * 1.80%) + (cos(var(--a) * 1 + 245.0deg) * 1.20%)) calc(50.00%),
+				calc(94.91% + (sin(var(--a) * 2 + 27.0deg) * 1.79%) + (cos(var(--a) * 1 + 257.0deg) * 1.19%)) calc(70.09% + (sin(var(--a) * 2 + 27.0deg) * 0.19%) + (cos(var(--a) * 1 + 257.0deg) * 0.13%)),
+				calc(94.65% + (sin(var(--a) * 2 + 45.0deg) * 1.76%) + (cos(var(--a) * 1 + 269.0deg) * 1.17%)) calc(75.68% + (sin(var(--a) * 2 + 45.0deg) * 0.37%) + (cos(var(--a) * 1 + 269.0deg) * 0.25%)),
+				calc(94.20% + (sin(var(--a) * 2 + 63.0deg) * 1.71%) + (cos(var(--a) * 1 + 281.0deg) * 1.14%)) calc(79.58% + (sin(var(--a) * 2 + 63.0deg) * 0.56%) + (cos(var(--a) * 1 + 281.0deg) * 0.37%)),
+				calc(93.57% + (sin(var(--a) * 2 + 81.0deg) * 1.64%) + (cos(var(--a) * 1 + 293.0deg) * 1.10%)) calc(82.63% + (sin(var(--a) * 2 + 81.0deg) * 0.73%) + (cos(var(--a) * 1 + 293.0deg) * 0.49%)),
+				calc(92.75% + (sin(var(--a) * 2 + 99.0deg) * 1.56%) + (cos(var(--a) * 1 + 305.0deg) * 1.04%)) calc(85.13% + (sin(var(--a) * 2 + 99.0deg) * 0.90%) + (cos(var(--a) * 1 + 305.0deg) * 0.60%)),
+				calc(91.72% + (sin(var(--a) * 2 + 117.0deg) * 1.46%) + (cos(var(--a) * 1 + 317.0deg) * 0.97%)) calc(87.22% + (sin(var(--a) * 2 + 117.0deg) * 1.06%) + (cos(var(--a) * 1 + 317.0deg) * 0.71%)),
+				calc(90.47% + (sin(var(--a) * 2 + 135.0deg) * 1.34%) + (cos(var(--a) * 1 + 329.0deg) * 0.89%)) calc(88.98% + (sin(var(--a) * 2 + 135.0deg) * 1.20%) + (cos(var(--a) * 1 + 329.0deg) * 0.80%)),
+				calc(88.98% + (sin(var(--a) * 2 + 153.0deg) * 1.20%) + (cos(var(--a) * 1 + 341.0deg) * 0.80%)) calc(90.47% + (sin(var(--a) * 2 + 153.0deg) * 1.34%) + (cos(var(--a) * 1 + 341.0deg) * 0.89%)),
+				calc(87.22% + (sin(var(--a) * 2 + 171.0deg) * 1.06%) + (cos(var(--a) * 1 + 353.0deg) * 0.71%)) calc(91.72% + (sin(var(--a) * 2 + 171.0deg) * 1.46%) + (cos(var(--a) * 1 + 353.0deg) * 0.97%)),
+				calc(85.13% + (sin(var(--a) * 2 + 189.0deg) * 0.90%) + (cos(var(--a) * 1 + 365.0deg) * 0.60%)) calc(92.75% + (sin(var(--a) * 2 + 189.0deg) * 1.56%) + (cos(var(--a) * 1 + 365.0deg) * 1.04%)),
+				calc(82.63% + (sin(var(--a) * 2 + 207.0deg) * 0.73%) + (cos(var(--a) * 1 + 377.0deg) * 0.49%)) calc(93.57% + (sin(var(--a) * 2 + 207.0deg) * 1.64%) + (cos(var(--a) * 1 + 377.0deg) * 1.10%)),
+				calc(79.58% + (sin(var(--a) * 2 + 225.0deg) * 0.56%) + (cos(var(--a) * 1 + 389.0deg) * 0.37%)) calc(94.20% + (sin(var(--a) * 2 + 225.0deg) * 1.71%) + (cos(var(--a) * 1 + 389.0deg) * 1.14%)),
+				calc(75.68% + (sin(var(--a) * 2 + 243.0deg) * 0.37%) + (cos(var(--a) * 1 + 401.0deg) * 0.25%)) calc(94.65% + (sin(var(--a) * 2 + 243.0deg) * 1.76%) + (cos(var(--a) * 1 + 401.0deg) * 1.17%)),
+				calc(70.09% + (sin(var(--a) * 2 + 261.0deg) * 0.19%) + (cos(var(--a) * 1 + 413.0deg) * 0.13%)) calc(94.91% + (sin(var(--a) * 2 + 261.0deg) * 1.79%) + (cos(var(--a) * 1 + 413.0deg) * 1.19%)),
+				calc(50.00%) calc(95.00% + (sin(var(--a) * 2 + 279.0deg) * 1.80%) + (cos(var(--a) * 1 + 425.0deg) * 1.20%)),
+				calc(29.91% - (sin(var(--a) * 2 + 297.0deg) * 0.19%) - (cos(var(--a) * 1 + 437.0deg) * 0.13%)) calc(94.91% + (sin(var(--a) * 2 + 297.0deg) * 1.79%) + (cos(var(--a) * 1 + 437.0deg) * 1.19%)),
+				calc(24.32% - (sin(var(--a) * 2 + 315.0deg) * 0.37%) - (cos(var(--a) * 1 + 449.0deg) * 0.25%)) calc(94.65% + (sin(var(--a) * 2 + 315.0deg) * 1.76%) + (cos(var(--a) * 1 + 449.0deg) * 1.17%)),
+				calc(20.42% - (sin(var(--a) * 2 + 333.0deg) * 0.56%) - (cos(var(--a) * 1 + 461.0deg) * 0.37%)) calc(94.20% + (sin(var(--a) * 2 + 333.0deg) * 1.71%) + (cos(var(--a) * 1 + 461.0deg) * 1.14%)),
+				calc(17.37% - (sin(var(--a) * 2 + 351.0deg) * 0.73%) - (cos(var(--a) * 1 + 473.0deg) * 0.49%)) calc(93.57% + (sin(var(--a) * 2 + 351.0deg) * 1.64%) + (cos(var(--a) * 1 + 473.0deg) * 1.10%)),
+				calc(14.87% - (sin(var(--a) * 2 + 369.0deg) * 0.90%) - (cos(var(--a) * 1 + 485.0deg) * 0.60%)) calc(92.75% + (sin(var(--a) * 2 + 369.0deg) * 1.56%) + (cos(var(--a) * 1 + 485.0deg) * 1.04%)),
+				calc(12.78% - (sin(var(--a) * 2 + 387.0deg) * 1.06%) - (cos(var(--a) * 1 + 497.0deg) * 0.71%)) calc(91.72% + (sin(var(--a) * 2 + 387.0deg) * 1.46%) + (cos(var(--a) * 1 + 497.0deg) * 0.97%)),
+				calc(11.02% - (sin(var(--a) * 2 + 405.0deg) * 1.20%) - (cos(var(--a) * 1 + 509.0deg) * 0.80%)) calc(90.47% + (sin(var(--a) * 2 + 405.0deg) * 1.34%) + (cos(var(--a) * 1 + 509.0deg) * 0.89%)),
+				calc(9.53% - (sin(var(--a) * 2 + 423.0deg) * 1.34%) - (cos(var(--a) * 1 + 521.0deg) * 0.89%)) calc(88.98% + (sin(var(--a) * 2 + 423.0deg) * 1.20%) + (cos(var(--a) * 1 + 521.0deg) * 0.80%)),
+				calc(8.28% - (sin(var(--a) * 2 + 441.0deg) * 1.46%) - (cos(var(--a) * 1 + 533.0deg) * 0.97%)) calc(87.22% + (sin(var(--a) * 2 + 441.0deg) * 1.06%) + (cos(var(--a) * 1 + 533.0deg) * 0.71%)),
+				calc(7.25% - (sin(var(--a) * 2 + 459.0deg) * 1.56%) - (cos(var(--a) * 1 + 545.0deg) * 1.04%)) calc(85.13% + (sin(var(--a) * 2 + 459.0deg) * 0.90%) + (cos(var(--a) * 1 + 545.0deg) * 0.60%)),
+				calc(6.43% - (sin(var(--a) * 2 + 477.0deg) * 1.64%) - (cos(var(--a) * 1 + 557.0deg) * 1.10%)) calc(82.63% + (sin(var(--a) * 2 + 477.0deg) * 0.73%) + (cos(var(--a) * 1 + 557.0deg) * 0.49%)),
+				calc(5.80% - (sin(var(--a) * 2 + 495.0deg) * 1.71%) - (cos(var(--a) * 1 + 569.0deg) * 1.14%)) calc(79.58% + (sin(var(--a) * 2 + 495.0deg) * 0.56%) + (cos(var(--a) * 1 + 569.0deg) * 0.37%)),
+				calc(5.35% - (sin(var(--a) * 2 + 513.0deg) * 1.76%) - (cos(var(--a) * 1 + 581.0deg) * 1.17%)) calc(75.68% + (sin(var(--a) * 2 + 513.0deg) * 0.37%) + (cos(var(--a) * 1 + 581.0deg) * 0.25%)),
+				calc(5.09% - (sin(var(--a) * 2 + 531.0deg) * 1.79%) - (cos(var(--a) * 1 + 593.0deg) * 1.19%)) calc(70.09% + (sin(var(--a) * 2 + 531.0deg) * 0.19%) + (cos(var(--a) * 1 + 593.0deg) * 0.13%)),
+				calc(5.00% - (sin(var(--a) * 2 + 549.0deg) * 1.80%) - (cos(var(--a) * 1 + 605.0deg) * 1.20%)) calc(50.00%),
+				calc(5.09% - (sin(var(--a) * 2 + 567.0deg) * 1.79%) - (cos(var(--a) * 1 + 617.0deg) * 1.19%)) calc(29.91% - (sin(var(--a) * 2 + 567.0deg) * 0.19%) - (cos(var(--a) * 1 + 617.0deg) * 0.13%)),
+				calc(5.35% - (sin(var(--a) * 2 + 585.0deg) * 1.76%) - (cos(var(--a) * 1 + 629.0deg) * 1.17%)) calc(24.32% - (sin(var(--a) * 2 + 585.0deg) * 0.37%) - (cos(var(--a) * 1 + 629.0deg) * 0.25%)),
+				calc(5.80% - (sin(var(--a) * 2 + 603.0deg) * 1.71%) - (cos(var(--a) * 1 + 641.0deg) * 1.14%)) calc(20.42% - (sin(var(--a) * 2 + 603.0deg) * 0.56%) - (cos(var(--a) * 1 + 641.0deg) * 0.37%)),
+				calc(6.43% - (sin(var(--a) * 2 + 621.0deg) * 1.64%) - (cos(var(--a) * 1 + 653.0deg) * 1.10%)) calc(17.37% - (sin(var(--a) * 2 + 621.0deg) * 0.73%) - (cos(var(--a) * 1 + 653.0deg) * 0.49%)),
+				calc(7.25% - (sin(var(--a) * 2 + 639.0deg) * 1.56%) - (cos(var(--a) * 1 + 665.0deg) * 1.04%)) calc(14.87% - (sin(var(--a) * 2 + 639.0deg) * 0.90%) - (cos(var(--a) * 1 + 665.0deg) * 0.60%)),
+				calc(8.28% - (sin(var(--a) * 2 + 657.0deg) * 1.46%) - (cos(var(--a) * 1 + 677.0deg) * 0.97%)) calc(12.78% - (sin(var(--a) * 2 + 657.0deg) * 1.06%) - (cos(var(--a) * 1 + 677.0deg) * 0.71%)),
+				calc(9.53% - (sin(var(--a) * 2 + 675.0deg) * 1.34%) - (cos(var(--a) * 1 + 689.0deg) * 0.89%)) calc(11.02% - (sin(var(--a) * 2 + 675.0deg) * 1.20%) - (cos(var(--a) * 1 + 689.0deg) * 0.80%)),
+				calc(11.02% - (sin(var(--a) * 2 + 693.0deg) * 1.20%) - (cos(var(--a) * 1 + 701.0deg) * 0.80%)) calc(9.53% - (sin(var(--a) * 2 + 693.0deg) * 1.34%) - (cos(var(--a) * 1 + 701.0deg) * 0.89%)),
+				calc(12.78% - (sin(var(--a) * 2 + 711.0deg) * 1.06%) - (cos(var(--a) * 1 + 713.0deg) * 0.71%)) calc(8.28% - (sin(var(--a) * 2 + 711.0deg) * 1.46%) - (cos(var(--a) * 1 + 713.0deg) * 0.97%)),
+				calc(14.87% - (sin(var(--a) * 2 + 729.0deg) * 0.90%) - (cos(var(--a) * 1 + 725.0deg) * 0.60%)) calc(7.25% - (sin(var(--a) * 2 + 729.0deg) * 1.56%) - (cos(var(--a) * 1 + 725.0deg) * 1.04%)),
+				calc(17.37% - (sin(var(--a) * 2 + 747.0deg) * 0.73%) - (cos(var(--a) * 1 + 737.0deg) * 0.49%)) calc(6.43% - (sin(var(--a) * 2 + 747.0deg) * 1.64%) - (cos(var(--a) * 1 + 737.0deg) * 1.10%)),
+				calc(20.42% - (sin(var(--a) * 2 + 765.0deg) * 0.56%) - (cos(var(--a) * 1 + 749.0deg) * 0.37%)) calc(5.80% - (sin(var(--a) * 2 + 765.0deg) * 1.71%) - (cos(var(--a) * 1 + 749.0deg) * 1.14%)),
+				calc(24.32% - (sin(var(--a) * 2 + 783.0deg) * 0.37%) - (cos(var(--a) * 1 + 761.0deg) * 0.25%)) calc(5.35% - (sin(var(--a) * 2 + 783.0deg) * 1.76%) - (cos(var(--a) * 1 + 761.0deg) * 1.17%)),
+				calc(29.91% - (sin(var(--a) * 2 + 801.0deg) * 0.19%) - (cos(var(--a) * 1 + 773.0deg) * 0.13%)) calc(5.09% - (sin(var(--a) * 2 + 801.0deg) * 1.79%) - (cos(var(--a) * 1 + 773.0deg) * 1.19%)),
+				calc(50.00%) calc(5.00% - (sin(var(--a) * 2 + 819.0deg) * 1.80%) - (cos(var(--a) * 1 + 785.0deg) * 1.20%)),
+				calc(70.09% + (sin(var(--a) * 2 + 837.0deg) * 0.19%) + (cos(var(--a) * 1 + 797.0deg) * 0.13%)) calc(5.09% - (sin(var(--a) * 2 + 837.0deg) * 1.79%) - (cos(var(--a) * 1 + 797.0deg) * 1.19%)),
+				calc(75.68% + (sin(var(--a) * 2 + 855.0deg) * 0.37%) + (cos(var(--a) * 1 + 809.0deg) * 0.25%)) calc(5.35% - (sin(var(--a) * 2 + 855.0deg) * 1.76%) - (cos(var(--a) * 1 + 809.0deg) * 1.17%)),
+				calc(79.58% + (sin(var(--a) * 2 + 873.0deg) * 0.56%) + (cos(var(--a) * 1 + 821.0deg) * 0.37%)) calc(5.80% - (sin(var(--a) * 2 + 873.0deg) * 1.71%) - (cos(var(--a) * 1 + 821.0deg) * 1.14%)),
+				calc(82.63% + (sin(var(--a) * 2 + 891.0deg) * 0.73%) + (cos(var(--a) * 1 + 833.0deg) * 0.49%)) calc(6.43% - (sin(var(--a) * 2 + 891.0deg) * 1.64%) - (cos(var(--a) * 1 + 833.0deg) * 1.10%)),
+				calc(85.13% + (sin(var(--a) * 2 + 909.0deg) * 0.90%) + (cos(var(--a) * 1 + 845.0deg) * 0.60%)) calc(7.25% - (sin(var(--a) * 2 + 909.0deg) * 1.56%) - (cos(var(--a) * 1 + 845.0deg) * 1.04%)),
+				calc(87.22% + (sin(var(--a) * 2 + 927.0deg) * 1.06%) + (cos(var(--a) * 1 + 857.0deg) * 0.71%)) calc(8.28% - (sin(var(--a) * 2 + 927.0deg) * 1.46%) - (cos(var(--a) * 1 + 857.0deg) * 0.97%)),
+				calc(88.98% + (sin(var(--a) * 2 + 945.0deg) * 1.20%) + (cos(var(--a) * 1 + 869.0deg) * 0.80%)) calc(9.53% - (sin(var(--a) * 2 + 945.0deg) * 1.34%) - (cos(var(--a) * 1 + 869.0deg) * 0.89%)),
+				calc(90.47% + (sin(var(--a) * 2 + 963.0deg) * 1.34%) + (cos(var(--a) * 1 + 881.0deg) * 0.89%)) calc(11.02% - (sin(var(--a) * 2 + 963.0deg) * 1.20%) - (cos(var(--a) * 1 + 881.0deg) * 0.80%)),
+				calc(91.72% + (sin(var(--a) * 2 + 981.0deg) * 1.46%) + (cos(var(--a) * 1 + 893.0deg) * 0.97%)) calc(12.78% - (sin(var(--a) * 2 + 981.0deg) * 1.06%) - (cos(var(--a) * 1 + 893.0deg) * 0.71%)),
+				calc(92.75% + (sin(var(--a) * 2 + 999.0deg) * 1.56%) + (cos(var(--a) * 1 + 905.0deg) * 1.04%)) calc(14.87% - (sin(var(--a) * 2 + 999.0deg) * 0.90%) - (cos(var(--a) * 1 + 905.0deg) * 0.60%)),
+				calc(93.57% + (sin(var(--a) * 2 + 1017.0deg) * 1.64%) + (cos(var(--a) * 1 + 917.0deg) * 1.10%)) calc(17.37% - (sin(var(--a) * 2 + 1017.0deg) * 0.73%) - (cos(var(--a) * 1 + 917.0deg) * 0.49%)),
+				calc(94.20% + (sin(var(--a) * 2 + 1035.0deg) * 1.71%) + (cos(var(--a) * 1 + 929.0deg) * 1.14%)) calc(20.42% - (sin(var(--a) * 2 + 1035.0deg) * 0.56%) - (cos(var(--a) * 1 + 929.0deg) * 0.37%)),
+				calc(94.65% + (sin(var(--a) * 2 + 1053.0deg) * 1.76%) + (cos(var(--a) * 1 + 941.0deg) * 1.17%)) calc(24.32% - (sin(var(--a) * 2 + 1053.0deg) * 0.37%) - (cos(var(--a) * 1 + 941.0deg) * 0.25%)),
+				calc(94.91% + (sin(var(--a) * 2 + 1071.0deg) * 1.79%) + (cos(var(--a) * 1 + 953.0deg) * 1.19%)) calc(29.91% - (sin(var(--a) * 2 + 1071.0deg) * 0.19%) - (cos(var(--a) * 1 + 953.0deg) * 0.13%))
+		);
+		animation: blob-wave-loop 12s linear infinite;
+	}
+}
+
 @keyframes blob-wave-loop {
 	from {
 		--a: 0deg;
@@ -217,10 +206,10 @@ a {
 	}
 }
 
-/* Respect users who prefer reduced motion: keep the wavy edge but stop the animation */
 @media (prefers-reduced-motion: reduce) {
 	.blob-card {
-		animation: none;
+		animation: none !important;
+		--a: 75deg;
 	}
 }
 
@@ -487,6 +476,33 @@ a {
 	gap: 2.5rem;
 }
 
+.week-days {
+	display: flex;
+	flex-wrap: wrap;
+	gap: 0.75rem;
+	margin-bottom: 2rem;
+}
+
+.week-day {
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	min-width: 3.5rem;
+	font-size: 0.85rem;
+	font-weight: 700;
+	text-transform: uppercase;
+	letter-spacing: 0.03em;
+	/* Extra padding compensates for the ~5% inset of the fluid blob clip-path */
+	padding: 0.7rem 1.3rem;
+	background-color: var(--color-grey-pastel);
+	color: var(--color-dark-muted);
+}
+
+.week-day--active {
+	background-color: var(--color-orange);
+	color: var(--color-light);
+}
+
 .course-card__age {
 	display: inline-block;
 	font-size: 0.825rem;
@@ -515,6 +531,29 @@ a {
 .course-card__desc {
 	color: var(--color-dark-muted);
 	font-size: 0.95rem;
+}
+
+.course-card__schedule {
+	display: flex;
+	flex-wrap: wrap;
+	gap: 0.75rem;
+	margin-top: 1rem;
+}
+
+.course-card__schedule-days,
+.course-card__schedule-hours {
+	display: inline-flex;
+	align-items: center;
+	font-size: 0.85rem;
+	font-weight: 700;
+	padding: 0.35rem 0.9rem;
+	border-radius: var(--radius-full);
+	background-color: var(--color-light);
+	color: var(--color-dark);
+}
+
+.course-card__schedule-hours {
+	color: var(--color-orange);
 }
 
 /* ************************************** */
@@ -560,6 +599,59 @@ a {
 	background-color: var(--color-light);
 	color: var(--color-dark);
 	font-size: 0.95rem;
+}
+
+.steps-list {
+	list-style: none;
+	display: flex;
+	flex-direction: column;
+	gap: 1.5rem;
+}
+
+.steps-list__item {
+	display: flex;
+	gap: 1rem;
+	align-items: flex-start;
+}
+
+.steps-list__number {
+	flex-shrink: 0;
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	width: 2.25rem;
+	height: 2.25rem;
+	border-radius: var(--radius-full);
+	background-color: var(--color-orange);
+	color: var(--color-light);
+	font-weight: 800;
+	font-size: 1rem;
+}
+
+.steps-list__content {
+	display: flex;
+	flex-direction: column;
+	gap: 0.4rem;
+}
+
+.steps-list__title {
+	font-size: 1.05rem;
+}
+
+.steps-list__text {
+	font-size: 0.95rem;
+	color: var(--color-dark-muted);
+	line-height: 1.6;
+}
+
+.steps-list__link {
+	color: var(--color-orange);
+	font-weight: 700;
+}
+
+.steps-list__content .btn {
+	align-self: flex-start;
+	margin-top: 0.35rem;
 }
 
 .join-info-list {
@@ -742,7 +834,12 @@ a {
 		align-items: center;
 	}
 
-	.courses-grid,
+	.courses-grid {
+		display: grid;
+		grid-template-columns: repeat(2, 1fr);
+		gap: 2rem;
+	}
+
 	.pricing-grid {
 		display: grid;
 		grid-template-columns: repeat(3, 1fr);

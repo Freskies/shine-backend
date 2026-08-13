@@ -96,26 +96,33 @@
 				</p>
 			</div>
 
+			<div class="week-days">
+				<span class="week-day blob-card week-day--active">Lun</span>
+				<span class="week-day blob-card">Mar</span>
+				<span class="week-day blob-card week-day--active">Mer</span>
+				<span class="week-day blob-card week-day--active">Gio</span>
+				<span class="week-day blob-card">Ven</span>
+			</div>
+
 			<div class="courses-grid">
 				<article class="course-card blob-card blob-card--green-1">
-					<span class="course-card__age course-card__age--green">6 - 9 Anni</span>
-					<h3 class="course-card__title">Primi Passi & Gioco</h3>
-					<p class="course-card__desc">Coordinazione, equilibrio e primi approcci al salto in totale tranquillità e
-						sicurezza emotiva.</p>
+					<span class="course-card__age course-card__age--green">6 - 14 Anni</span>
+					<h3 class="course-card__title">Piccoli Esploratori</h3>
+					<p class="course-card__desc">Coordinazione, equilibrio, primi approcci al salto e fondamenti del parkour
+						urbano in totale sicurezza e spirito di squadra.</p>
+					<div class="course-card__schedule">
+						<span class="course-card__schedule-hours">18:00 &ndash; 19:30</span>
+					</div>
 				</article>
 
 				<article class="course-card blob-card blob-card--orange-1 course-card--highlight card-organic-corner">
-					<span class="course-card__age course-card__age--orange">9 - 14 Anni</span>
-					<h3 class="course-card__title">Tecnica & Esplorazione</h3>
-					<p class="course-card__desc">Fondamenti del parkour urbano, superamento degli ostacoli, potenziamento
-						naturale e lavoro di squadra.</p>
-				</article>
-
-				<article class="course-card blob-card blob-card--green-1">
-					<span class="course-card__age course-card__age--green">14+ Anni & Adulti</span>
+					<span class="course-card__age course-card__age--orange">14+ Anni & Adulti</span>
 					<h3 class="course-card__title">Fluidità & Espressione</h3>
 					<p class="course-card__desc">Consapevolezza del corpo, condizionamento atletico aperto e ricerca del
 						proprio stile di movimento.</p>
+					<div class="course-card__schedule">
+						<span class="course-card__schedule-hours">19:30 &ndash; 21:30</span>
+					</div>
 				</article>
 			</div>
 		</div>
@@ -125,20 +132,44 @@
 	<section id="join" class="section section--join">
 		<div class="container join__container">
 			<div class="join-box blob-card blob-card--orange-1 card-organic-corner">
-				<h3 class="join-box__title">Richiedi una Prova Gratuita</h3>
-				<p class="join-box__text">Senza impegno. Vieni a conoscerci e prova un allenamento all'aperto.</p>
+				<h3 class="join-box__title">Come Iscriversi</h3>
+				<p class="join-box__text">Segui questi semplici passi per entrare a far parte di Shine Parkour.</p>
 
-				<form class="form">
-					<div class="form__group">
-						<label for="name" class="form__label">Nome e Cognome</label>
-						<input type="text" id="name" class="form__input" placeholder="Mario Rossi" required>
-					</div>
-					<div class="form__group">
-						<label for="email" class="form__label">Email</label>
-						<input type="email" id="email" class="form__input" placeholder="mario@example.com" required>
-					</div>
-					<button type="submit" class="btn btn--orange btn--full">Richiedi la prova</button>
-				</form>
+				<ol class="steps-list">
+					<li class="steps-list__item">
+						<span class="steps-list__number">1</span>
+						<div class="steps-list__content">
+							<strong class="steps-list__title">Compila il modulo di tesseramento</strong>
+							<p class="steps-list__text">Scarica il modulo, compilalo in ogni sua parte e firmalo.</p>
+							<a href="/static/modulo-tesseramento.pdf" download class="btn btn--green-outline btn--sm">Scarica il modulo</a>
+						</div>
+					</li>
+					<li class="steps-list__item">
+						<span class="steps-list__number">2</span>
+						<div class="steps-list__content">
+							<strong class="steps-list__title">Procurati il certificato medico</strong>
+							<p class="steps-list__text">Ottieni un certificato medico in corso di validità: scarica la richiesta da consegnare al tuo medico.</p>
+							<a href="/static/richiesta-certificato-medico.pdf" download class="btn btn--green-outline btn--sm">Scarica la richiesta</a>
+						</div>
+					</li>
+					<li class="steps-list__item">
+						<span class="steps-list__number">3</span>
+						<div class="steps-list__content">
+							<strong class="steps-list__title">Invia i documenti via email</strong>
+							<p class="steps-list__text">Manda il modulo di tesseramento e il certificato medico a
+								<a href="mailto:shineparkour@yahoo.it" class="steps-list__link">shineparkour@yahoo.it</a>.
+							</p>
+						</div>
+					</li>
+					<li class="steps-list__item">
+						<span class="steps-list__number">4</span>
+						<div class="steps-list__content">
+							<strong class="steps-list__title">Contattaci su WhatsApp</strong>
+							<p class="steps-list__text">Scrivi all'amministrazione di Shine per completare l'iscrizione.</p>
+							<a href="https://wa.me/393000000000" target="_blank" rel="noopener" class="btn btn--orange btn--sm">Scrivici su WhatsApp</a>
+						</div>
+					</li>
+				</ol>
 			</div>
 
 			<div class="join-box join-box--info blob-card blob-card--green-1">

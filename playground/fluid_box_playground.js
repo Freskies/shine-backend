@@ -1,19 +1,16 @@
 let currentClipPath = "";
 let waveData = {};
 
-// Reflect the current slider values in their labels
 function updateUI () {
 	["round", "res", "pad", "amp", "speed"].forEach(id => {
 		document.getElementById("val-" + id).innerText = document.getElementById(id).value;
 	});
 }
 
-// Update the animation speed from the slider
 function updateSpeed () {
 	document.getElementById("box").style.setProperty("--speed", document.getElementById("speed").value + "s");
 }
 
-// Randomize the wave frequencies and phases, then regenerate the shape
 function scrambleWaves () {
 	waveData = {
 		tf1: Math.floor(Math.random() * 2) + 1,
@@ -26,18 +23,22 @@ function scrambleWaves () {
 	generateForm();
 }
 
-// Build a single sin()/cos() term for a clip-path coordinate
+// MODIFICATO: L'unità finale della stringa è ora % invece di px
 function buildMathTerm (func, timeFreq, phaseDeg, amplitude) {
 	if (Math.abs(amplitude) < 0.01) return "";
 	let sign = amplitude >= 0 ? "+" : "-";
-	return `${sign} (${func}(var(--a) * ${timeFreq} + ${phaseDeg.toFixed(1)}deg) * ${Math.abs(amplitude).toFixed(2)}px)`;
+	return `${sign} (${func}(var(--a) * ${timeFreq} + ${phaseDeg.toFixed(1)}deg) * ${Math.abs(amplitude).toFixed(2)}%)`;
 }
 
-// Generate the fluid clip-path polygon from the current settings
 function generateForm () {
 	const res = parseInt(document.getElementById("res").value);
 	const pad = parseInt(document.getElementById("pad").value);
-	const amp = parseInt(document.getElementById("amp").value);
+
+	// MODIFICATO: Preleviamo l'ampiezza e applichiamo una rete di sicurezza
+	let requestedAmp = parseFloat(document.getElementById("amp").value);
+	// SISTEMA ANTI-TAGLIO: L'onda non può mai superare lo spazio di padding (con uno scarto di 0.5% per sicurezza)
+	const amp = Math.min(requestedAmp, pad - 0.5);
+
 	const roundness = parseFloat(document.getElementById("round").value);
 
 	let p = [];
@@ -50,7 +51,6 @@ function generateForm () {
 		let cosT = Math.cos(theta);
 		let sinT = Math.sin(theta);
 
-		// Superellipse base point
 		let maxDist = 50 - pad;
 		let x0 = 50 + maxDist * Math.pow(Math.abs(cosT), e) * Math.sign(cosT);
 		let y0 = 50 + maxDist * Math.pow(Math.abs(sinT), e) * Math.sign(sinT);
@@ -82,7 +82,6 @@ function generateForm () {
 	document.getElementById("box").style.clipPath = currentClipPath;
 }
 
-// Copy the generated clip-path to the clipboard, with a textarea fallback
 function copyCode () {
 	const btn = document.getElementById("copy-btn");
 	const textToCopy = `clip-path: ${currentClipPath};`;
