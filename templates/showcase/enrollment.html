@@ -1,0 +1,35 @@
+{% extends "base.html" %}
+
+{% block title %}Finalizza l'iscrizione &bull; Shine Parkour ASD{% endblock %}
+
+{% block content %}
+<main class="main-wrapper">
+	<section class="section">
+		<div class="container container--narrow">
+			<a href="/" class="btn btn--green-outline btn--sm">Torna indietro</a>
+
+			<div class="section__header">
+				<span class="subheading subheading--orange">Iscrizione</span>
+				<h2 class="heading-secondary">Finalizza la richiesta</h2>
+				<p class="section__intro">
+					Carica il modulo di tesseramento compilato e la foto del certificato medico in corso di validità.
+				</p>
+			</div>
+
+			<form class="enrollment-form" action="/iscrizione" method="post" enctype="multipart/form-data">
+				<label class="form-field">
+					<span class="form-field__label">Modulo di tesseramento</span>
+					<input type="file" name="membership_form" accept="application/pdf,image/*" required>
+				</label>
+
+				<label class="form-field">
+					<span class="form-field__label">Certificato medico</span>
+					<input type="file" name="medical_certificate" accept="application/pdf,image/*" required>
+				</label>
+
+				<button type="submit" class="btn btn--orange btn--full">Invia la richiesta</button>
+			</form>
+		</div>
+	</section>
+</main>
+{% endblock %}

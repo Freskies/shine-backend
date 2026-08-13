@@ -1,0 +1,22 @@
+{% extends "base.html" %}
+
+{% block title %}Modulo di tesseramento &bull; Shine Parkour ASD{% endblock %}
+
+{% block content %}
+<main class="main-wrapper">
+	<section class="section">
+		<div class="container container--narrow">
+			<a href="/" class="btn btn--green-outline btn--sm">Torna indietro</a>
+
+			<div class="section__header">
+				<span class="subheading subheading--green">Tesseramento</span>
+				<h2 class="heading-secondary">Compila il modulo</h2>
+			</div>
+
+			<form class="membership-form" action="/tesseramento" method="post">
+				<!-- Form fields will be added here. On submit the backend generates the signed PDF. -->
+			</form>
+		</div>
+	</section>
+</main>
+{% endblock %}
