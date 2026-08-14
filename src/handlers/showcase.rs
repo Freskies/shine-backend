@@ -41,7 +41,7 @@ pub async fn membership_handler() -> impl IntoResponse {
 }
 
 pub async fn membership_form_post_handler(
-	Form(form): Form<membership_2026_27::templates::Form>,
+	Form(form): Form<membership_2026_27::templates::MembershipForm>,
 ) -> Response {
 	match tokio::task::spawn_blocking(move || membership_2026_27::generator::generate(form)).await {
 		Ok(Ok(pdf_bytes)) => (

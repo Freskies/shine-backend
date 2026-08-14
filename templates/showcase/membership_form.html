@@ -103,7 +103,7 @@
 
 					<label style="cursor: pointer; display: flex; align-items: center; gap: 0.5rem; margin-bottom: 1rem;">
 						<input id="is_minor" name="is_minor" type="checkbox" value="true"
-						       onchange="document.getElementById('minor-fields').style.display = this.checked ? 'block' : 'none'">
+						       onchange="toggleMinor(this.checked)">
 						<strong>Sto compilando questa richiesta per un tesserato minorenne</strong>
 					</label>
 
@@ -170,6 +170,44 @@
 							<input id="minor_fiscal_code" name="minor_fiscal_code" type="text" maxlength="16"
 							       style="width: 100%; text-transform: uppercase;">
 						</div>
+
+						<!-- USCITA AUTONOMA DEL MINORE (SECONDA FIRMA) -->
+						<div style="border-top: 1px solid #e0e0e0; margin-top: 1.5rem; padding-top: 1.5rem;">
+							<label style="cursor: pointer; display: flex; align-items: flex-start; gap: 0.5rem; margin-bottom: 1rem;">
+								<input id="commute_alone" type="checkbox"
+								       onchange="toggleAutonomy(this.checked)">
+								<strong>Il minorenne compie in autonomia i tragitti di andata e ritorno</strong>
+							</label>
+
+							<div id="autonomy-fields" style="display: none;">
+								<p style="color: #666; margin-bottom: 1rem;">
+									Il sottoscritto, in qualità di genitore e/o di legale rappresentante del minore, si assume la
+									piena responsabilità degli spostamenti "casa-luogo di incontro per gli allenamenti" e "luogo di
+									incontro per gli allenamenti-casa" che il minore svolge in autonomia o comunque non accompagnato
+									da legale rappresentante, liberando SHINE a.s.d. da ogni responsabilità.
+								</p>
+
+								<div style="margin-bottom: 1rem;">
+									<label for="autonomy_place_and_date">Luogo e Data</label>
+									<input id="autonomy_place_and_date" name="autonomy_place_and_date" type="text"
+									       placeholder="es. Ravenna, 14/08/2026" style="width: 100%;">
+								</div>
+
+								<div>
+									<label>Traccia la firma del genitore / tutore legale nel riquadro:</label>
+									<div style="border: 1px solid #ccc; border-radius: 4px; background: #fafafa;">
+										<canvas id="autonomy-signature-pad"
+										        style="touch-action: none; width: 100%; height: 140px; display: block; cursor: crosshair;"></canvas>
+									</div>
+									<div style="margin-top: 0.5rem; text-align: right;">
+										<button type="button" class="btn btn--sm" onclick="clearAutonomySignature()"
+										        style="background: #e5e7eb; color: #374151;">Cancella firma
+										</button>
+									</div>
+									<input type="hidden" id="autonomy_signature" name="autonomy_signature">
+								</div>
+							</div>
+						</div>
 					</div>
 				</fieldset>
 
@@ -228,71 +266,120 @@
 
 <script>
 	// Gestione Canvas Firma (Supporto Mouse e Schermi Touch Mobile)
-	const canvas = document.getElementById("signature-pad");
-	const ctx = canvas.getContext("2d");
-	let drawing = false;
+	function setupSignaturePad (canvasId, inputId) {
+		const canvas = document.getElementById(canvasId);
+		const ctx = canvas.getContext("2d");
+		let drawing = false;
+		let dirty = false;
 
-	function resize () {
-		const ratio = Math.max(window.devicePixelRatio || 1, 1);
-		canvas.width = canvas.offsetWidth * ratio;
-		canvas.height = canvas.offsetHeight * ratio;
-		ctx.scale(ratio, ratio);
-		ctx.lineWidth = 2;
-		ctx.lineCap = "round";
-	}
-
-	window.addEventListener("resize", resize);
-	setTimeout(resize, 150);
-
-	function getPos (e) {
-		const r = canvas.getBoundingClientRect();
-		const x = (e.touches ? e.touches[0].clientX : e.clientX) - r.left;
-		const y = (e.touches ? e.touches[0].clientY : e.clientY) - r.top;
-		return { x, y };
-	}
-
-	canvas.addEventListener("mousedown", e => {
-		drawing = true;
-		const p = getPos(e);
-		ctx.beginPath();
-		ctx.moveTo(p.x, p.y);
-	});
-	canvas.addEventListener("mousemove", e => {
-		if (drawing) {
-			const p = getPos(e);
-			ctx.lineTo(p.x, p.y);
-			ctx.stroke();
+		function resize () {
+			const ratio = Math.max(window.devicePixelRatio || 1, 1);
+			canvas.width = canvas.offsetWidth * ratio;
+			canvas.height = canvas.offsetHeight * ratio;
+			ctx.scale(ratio, ratio);
+			ctx.lineWidth = 2;
+			ctx.lineCap = "round";
+			dirty = false;
 		}
-	});
-	window.addEventListener("mouseup", () => drawing = false);
 
-	canvas.addEventListener("touchstart", e => {
-		drawing = true;
-		const p = getPos(e);
-		ctx.beginPath();
-		ctx.moveTo(p.x, p.y);
-		e.preventDefault();
-	}, { passive: false });
-	canvas.addEventListener("touchmove", e => {
-		if (drawing) {
+		window.addEventListener("resize", resize);
+		setTimeout(resize, 150);
+
+		function getPos (e) {
+			const r = canvas.getBoundingClientRect();
+			const x = (e.touches ? e.touches[0].clientX : e.clientX) - r.left;
+			const y = (e.touches ? e.touches[0].clientY : e.clientY) - r.top;
+			return { x, y };
+		}
+
+		canvas.addEventListener("mousedown", e => {
+			drawing = true;
 			const p = getPos(e);
-			ctx.lineTo(p.x, p.y);
-			ctx.stroke();
+			ctx.beginPath();
+			ctx.moveTo(p.x, p.y);
+		});
+		canvas.addEventListener("mousemove", e => {
+			if (drawing) {
+				const p = getPos(e);
+				ctx.lineTo(p.x, p.y);
+				ctx.stroke();
+				dirty = true;
+			}
+		});
+		window.addEventListener("mouseup", () => drawing = false);
+
+		canvas.addEventListener("touchstart", e => {
+			drawing = true;
+			const p = getPos(e);
+			ctx.beginPath();
+			ctx.moveTo(p.x, p.y);
 			e.preventDefault();
-		}
-	}, { passive: false });
-	window.addEventListener("touchend", () => drawing = false);
+		}, { passive: false });
+		canvas.addEventListener("touchmove", e => {
+			if (drawing) {
+				const p = getPos(e);
+				ctx.lineTo(p.x, p.y);
+				ctx.stroke();
+				dirty = true;
+				e.preventDefault();
+			}
+		}, { passive: false });
+		window.addEventListener("touchend", () => drawing = false);
+
+		return {
+			clear () {
+				ctx.clearRect(0, 0, canvas.width, canvas.height);
+				dirty = false;
+				document.getElementById(inputId).value = "";
+			},
+			resize,
+			save () {
+				document.getElementById(inputId).value = dirty ? canvas.toDataURL("image/png") : "";
+			}
+		};
+	}
+
+	const signaturePad = setupSignaturePad("signature-pad", "signature");
+	const autonomyPad = setupSignaturePad("autonomy-signature-pad", "autonomy_signature");
 
 	function clearSignature () {
-		ctx.clearRect(0, 0, canvas.width, canvas.height);
-		document.getElementById("signature").value = "";
+		signaturePad.clear();
 	}
 
-	// Al submit, converte il disegno del canvas in Base64
+	function clearAutonomySignature () {
+		autonomyPad.clear();
+	}
+
+	function toggleMinor (checked) {
+		document.getElementById("minor-fields").style.display = checked ? "block" : "none";
+		if (!checked) {
+			// Se non c'è più il minorenne, azzera anche la sezione di uscita autonoma
+			document.getElementById("commute_alone").checked = false;
+			toggleAutonomy(false);
+		}
+	}
+
+	function toggleAutonomy (checked) {
+		document.getElementById("autonomy-fields").style.display = checked ? "block" : "none";
+		if (checked) {
+			// Il canvas era nascosto (dimensioni nulle): va ridimensionato ora che è visibile
+			setTimeout(autonomyPad.resize, 50);
+		} else {
+			autonomyPad.clear();
+			document.getElementById("autonomy_place_and_date").value = "";
+		}
+	}
+
+	// Al submit, converte i disegni dei canvas in Base64
 	const form = document.getElementById("membership-form");
 	form.addEventListener("submit", function (e) {
 		const sigInput = document.getElementById("signature");
-		sigInput.value = canvas.toDataURL("image/png");
+		sigInput.value = canvasToDataUrlRequired();
+		autonomyPad.save();
 	});
+
+	function canvasToDataUrlRequired () {
+		return document.getElementById("signature-pad").toDataURL("image/png");
+	}
 </script>
 {% endblock %}

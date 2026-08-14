@@ -3,7 +3,7 @@ use askama::Template;
 
 #[derive(Deserialize, Template)]
 #[template(path = "pdf/membership_2026_27.typ", escape = "none")]
-pub struct Form {
+pub struct MembershipForm {
 	// --- Applicant (adult or parent/legal guardian) ---
 	pub last_name: String,
 	pub first_name: String,
