@@ -4,7 +4,7 @@ pub mod pdf;
 pub mod render;
 
 use crate::handlers::showcase::{
-	enrollment_handler, index_handler, membership_handler, membership_pdf_handler,
+	enrollment_handler, index_handler, membership_handler, membership_form_post_handler,
 };
 use axum::Router;
 use axum::routing::{get, post};
@@ -18,7 +18,7 @@ async fn main() {
 	let app = Router::new()
 		.route("/", get(index_handler))
 		.route("/membership_form", get(membership_handler))
-		.route("/membership_form", post(membership_pdf_handler))
+		.route("/membership_form", post(membership_form_post_handler))
 		.route("/enrollment", get(enrollment_handler))
 		.nest_service("/static", static_files);
 

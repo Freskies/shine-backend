@@ -21,6 +21,12 @@ pub struct EnrollmentTemplate;
 #[template(path = "showcase/membership_form.html")]
 pub struct MembershipTemplate;
 
+#[derive(Template)]
+#[template(path = "partials/membership_success.html")]
+pub struct MembershipSuccessTemplate {
+	pub pdf_id: String,
+}
+
 // Handlers
 pub async fn index_handler() -> impl IntoResponse {
 	HtmlTemplate(IndexTemplate)
@@ -34,8 +40,8 @@ pub async fn membership_handler() -> impl IntoResponse {
 	HtmlTemplate(MembershipTemplate)
 }
 
-pub async fn membership_pdf_handler(
-	Form(form): Form<membership_2026_27::templates::MembershipForm>,
+pub async fn membership_form_post_handler(
+	Form(form): Form<membership_2026_27::templates::Form>,
 ) -> Response {
 	match tokio::task::spawn_blocking(move || membership_2026_27::generator::generate(form)).await {
 		Ok(Ok(pdf_bytes)) => (
@@ -44,7 +50,7 @@ pub async fn membership_pdf_handler(
 				(header::CONTENT_TYPE, "application/pdf"),
 				(
 					header::CONTENT_DISPOSITION,
-					"inline; filename=\"tesseramento-shine.pdf\"",
+					"attachment; filename=\"tesseramento-shine-2026-27.pdf\"",
 				),
 			],
 			pdf_bytes,

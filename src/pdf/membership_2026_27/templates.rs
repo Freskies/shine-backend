@@ -1,9 +1,9 @@
-use askama::Template;
 use serde::Deserialize;
+use askama::Template;
 
 #[derive(Deserialize, Template)]
-#[template(path = "pdf/membership_2026_27.html")]
-pub struct MembershipForm {
+#[template(path = "pdf/membership_2026_27.typ", escape = "none")]
+pub struct Form {
 	// --- Applicant (adult or parent/legal guardian) ---
 	pub last_name: String,
 	pub first_name: String,

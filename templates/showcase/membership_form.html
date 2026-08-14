@@ -1,22 +1,298 @@
 {% extends "base.html" %}
 
-{% block title %}Modulo di tesseramento &bull; Shine Parkour ASD{% endblock %}
+{% block title %}Compila Modulo di Tesseramento &bull; Shine Parkour ASD{% endblock %}
 
 {% block content %}
 <main class="main-wrapper">
 	<section class="section">
 		<div class="container container--narrow">
-			<a href="/" class="btn btn--green-outline btn--sm">Torna indietro</a>
+			<a href="/" class="btn btn--green-outline btn--sm">← Torna alla home</a>
 
-			<div class="section__header">
+			<header class="section__header" style="margin-top: 1.5rem; margin-bottom: 2rem;">
 				<span class="subheading subheading--green">Tesseramento</span>
-				<h2 class="heading-secondary">Compila il modulo</h2>
-			</div>
+				<h2 class="heading-secondary">Compila la domanda di iscrizione</h2>
+				<p style="color: #666; margin-top: 0.5rem;">
+					Inserisci i tuoi dati e firma nel riquadro in fondo. Premendo il pulsante il file PDF ufficiale verrà
+					scaricato direttamente sul tuo dispositivo.
+				</p>
+			</header>
 
-			<form class="membership-form" action="/tesseramento" method="post">
-				<!-- Form fields will be added here. On submit the backend generates the signed PDF. -->
+			<form id="membership-form" class="membership-form" action="/membership_form" method="post">
+
+				<!-- 1. DATI ANAGRAFICI -->
+				<fieldset style="border: 1px solid #e0e0e0; border-radius: 8px; padding: 1.5rem; margin-bottom: 2rem;">
+					<legend style="font-weight: bold; padding: 0 0.5rem;">Dati Anagrafici (Maggiorenne o Genitore / Tutore)
+					</legend>
+
+					<div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
+						<div>
+							<label for="last_name">Cognome</label>
+							<input id="last_name" name="last_name" type="text" required style="width: 100%;">
+						</div>
+						<div>
+							<label for="first_name">Nome</label>
+							<input id="first_name" name="first_name" type="text" required style="width: 100%;">
+						</div>
+					</div>
+
+					<div style="display: grid; grid-template-columns: 2fr 1fr 2fr; gap: 1rem; margin-top: 1rem;">
+						<div>
+							<label for="birth_place">Luogo di nascita</label>
+							<input id="birth_place" name="birth_place" type="text" required style="width: 100%;">
+						</div>
+						<div>
+							<label for="birth_province">Provincia (Sigla)</label>
+							<input id="birth_province" name="birth_province" type="text" maxlength="2" placeholder="RA"
+							       required style="width: 100%;">
+						</div>
+						<div>
+							<label for="birth_date">Data di nascita</label>
+							<input id="birth_date" name="birth_date" type="date" required style="width: 100%;">
+						</div>
+					</div>
+
+					<div style="display: grid; grid-template-columns: 2fr 2fr 1fr; gap: 1rem; margin-top: 1rem;">
+						<div>
+							<label for="residence_city">Comune di residenza</label>
+							<input id="residence_city" name="residence_city" type="text" required style="width: 100%;">
+						</div>
+						<div>
+							<label for="residence_address">Indirizzo (Via/Piazza)</label>
+							<input id="residence_address" name="residence_address" type="text" required style="width: 100%;">
+						</div>
+						<div>
+							<label for="residence_number">N° Civico</label>
+							<input id="residence_number" name="residence_number" type="text" required style="width: 100%;">
+						</div>
+					</div>
+
+					<div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-top: 1rem;">
+						<div>
+							<label for="residence_cap">CAP</label>
+							<input id="residence_cap" name="residence_cap" type="text" maxlength="5" required
+							       style="width: 100%;">
+						</div>
+						<div>
+							<label for="residence_province">Provincia di residenza</label>
+							<input id="residence_province" name="residence_province" type="text" maxlength="2" placeholder="RA"
+							       required style="width: 100%;">
+						</div>
+					</div>
+
+					<div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-top: 1rem;">
+						<div>
+							<label for="phone">Telefono cellulare</label>
+							<input id="phone" name="phone" type="tel" required style="width: 100%;">
+						</div>
+						<div>
+							<label for="email">E-mail (per invio tessera UISP)</label>
+							<input id="email" name="email" type="email" required style="width: 100%;">
+						</div>
+					</div>
+
+					<div style="margin-top: 1rem;">
+						<label for="fiscal_code">Codice Fiscale</label>
+						<input id="fiscal_code" name="fiscal_code" type="text" maxlength="16" required
+						       style="width: 100%; text-transform: uppercase;">
+					</div>
+				</fieldset>
+
+				<!-- 2. SEZIONE MINORE -->
+				<fieldset style="border: 1px solid #e0e0e0; border-radius: 8px; padding: 1.5rem; margin-bottom: 2rem;">
+					<legend style="font-weight: bold; padding: 0 0.5rem;">Dati Minorenne (Opzionale)</legend>
+
+					<label style="cursor: pointer; display: flex; align-items: center; gap: 0.5rem; margin-bottom: 1rem;">
+						<input id="is_minor" name="is_minor" type="checkbox" value="true"
+						       onchange="document.getElementById('minor-fields').style.display = this.checked ? 'block' : 'none'">
+						<strong>Sto compilando questa richiesta per un tesserato minorenne</strong>
+					</label>
+
+					<div id="minor-fields" style="display: none;">
+						<div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
+							<div>
+								<label for="minor_last_name">Cognome del minore</label>
+								<input id="minor_last_name" name="minor_last_name" type="text" style="width: 100%;">
+							</div>
+							<div>
+								<label for="minor_first_name">Nome del minore</label>
+								<input id="minor_first_name" name="minor_first_name" type="text" style="width: 100%;">
+							</div>
+						</div>
+
+						<div style="display: grid; grid-template-columns: 2fr 1fr 2fr; gap: 1rem; margin-top: 1rem;">
+							<div>
+								<label for="minor_birth_place">Luogo di nascita del minore</label>
+								<input id="minor_birth_place" name="minor_birth_place" type="text" style="width: 100%;">
+							</div>
+							<div>
+								<label for="minor_birth_province">Provincia</label>
+								<input id="minor_birth_province" name="minor_birth_province" type="text" maxlength="2"
+								       style="width: 100%;">
+							</div>
+							<div>
+								<label for="minor_birth_date">Data di nascita del minore</label>
+								<input id="minor_birth_date" name="minor_birth_date" type="date" style="width: 100%;">
+							</div>
+						</div>
+
+						<div style="display: grid; grid-template-columns: 2fr 2fr 1fr; gap: 1rem; margin-top: 1rem;">
+							<div>
+								<label for="minor_residence_city">Comune di residenza</label>
+								<input id="minor_residence_city" name="minor_residence_city" type="text" style="width: 100%;">
+							</div>
+							<div>
+								<label for="minor_residence_address">Indirizzo</label>
+								<input id="minor_residence_address" name="minor_residence_address" type="text"
+								       style="width: 100%;">
+							</div>
+							<div>
+								<label for="minor_residence_number">N° Civico</label>
+								<input id="minor_residence_number" name="minor_residence_number" type="text"
+								       style="width: 100%;">
+							</div>
+						</div>
+
+						<div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-top: 1rem;">
+							<div>
+								<label for="minor_residence_cap">CAP</label>
+								<input id="minor_residence_cap" name="minor_residence_cap" type="text" maxlength="5"
+								       style="width: 100%;">
+							</div>
+							<div>
+								<label for="minor_residence_province">Provincia</label>
+								<input id="minor_residence_province" name="minor_residence_province" type="text" maxlength="2"
+								       style="width: 100%;">
+							</div>
+						</div>
+
+						<div style="margin-top: 1rem;">
+							<label for="minor_fiscal_code">Codice Fiscale del minore</label>
+							<input id="minor_fiscal_code" name="minor_fiscal_code" type="text" maxlength="16"
+							       style="width: 100%; text-transform: uppercase;">
+						</div>
+					</div>
+				</fieldset>
+
+				<!-- 3. CONSENSI -->
+				<fieldset style="border: 1px solid #e0e0e0; border-radius: 8px; padding: 1.5rem; margin-bottom: 2rem;">
+					<legend style="font-weight: bold; padding: 0 0.5rem;">Consensi Privacy e Riprese</legend>
+
+					<label
+						style="cursor: pointer; display: flex; align-items: flex-start; gap: 0.5rem; margin-bottom: 1rem;">
+						<input name="consent_photo" type="checkbox" value="true">
+						<span>Autorizzo la fotografia e/o la ripresa video per i soli fini istituzionali durante le attività dell'Associazione.</span>
+					</label>
+
+					<label style="cursor: pointer; display: flex; align-items: flex-start; gap: 0.5rem;">
+						<input name="consent_publication" type="checkbox" value="true">
+						<span>Acconsento alla pubblicazione sui canali social e media di SHINE ASD.</span>
+					</label>
+				</fieldset>
+
+				<!-- 4. DATA E FIRMA -->
+				<fieldset style="border: 1px solid #e0e0e0; border-radius: 8px; padding: 1.5rem; margin-bottom: 2rem;">
+					<legend style="font-weight: bold; padding: 0 0.5rem;">Data e Firma</legend>
+
+					<div style="margin-bottom: 1rem;">
+						<label for="place_and_date">Luogo e Data</label>
+						<input id="place_and_date" name="place_and_date" type="text" placeholder="es. Ravenna, 14/08/2026"
+						       required style="width: 100%;">
+					</div>
+
+					<div>
+						<label>Traccia la tua firma nel riquadro:</label>
+						<div style="border: 1px solid #ccc; border-radius: 4px; background: #fafafa;">
+							<canvas id="signature-pad"
+							        style="touch-action: none; width: 100%; height: 140px; display: block; cursor: crosshair;"></canvas>
+						</div>
+						<div style="margin-top: 0.5rem; text-align: right;">
+							<button type="button" class="btn btn--sm" onclick="clearSignature()"
+							        style="background: #e5e7eb; color: #374151;">Cancella firma
+							</button>
+						</div>
+						<input type="hidden" id="signature" name="signature" required>
+					</div>
+				</fieldset>
+
+				<div style="text-align: center; margin-top: 2rem;">
+					<button id="submit-btn" type="submit" class="btn btn--green"
+					        style="padding: 0.9rem 2.2rem; font-size: 1.05rem;">
+						Genera e Scarica PDF
+					</button>
+				</div>
 			</form>
+
 		</div>
 	</section>
 </main>
+
+<script>
+	// Gestione Canvas Firma (Supporto Mouse e Schermi Touch Mobile)
+	const canvas = document.getElementById("signature-pad");
+	const ctx = canvas.getContext("2d");
+	let drawing = false;
+
+	function resize () {
+		const ratio = Math.max(window.devicePixelRatio || 1, 1);
+		canvas.width = canvas.offsetWidth * ratio;
+		canvas.height = canvas.offsetHeight * ratio;
+		ctx.scale(ratio, ratio);
+		ctx.lineWidth = 2;
+		ctx.lineCap = "round";
+	}
+
+	window.addEventListener("resize", resize);
+	setTimeout(resize, 150);
+
+	function getPos (e) {
+		const r = canvas.getBoundingClientRect();
+		const x = (e.touches ? e.touches[0].clientX : e.clientX) - r.left;
+		const y = (e.touches ? e.touches[0].clientY : e.clientY) - r.top;
+		return { x, y };
+	}
+
+	canvas.addEventListener("mousedown", e => {
+		drawing = true;
+		const p = getPos(e);
+		ctx.beginPath();
+		ctx.moveTo(p.x, p.y);
+	});
+	canvas.addEventListener("mousemove", e => {
+		if (drawing) {
+			const p = getPos(e);
+			ctx.lineTo(p.x, p.y);
+			ctx.stroke();
+		}
+	});
+	window.addEventListener("mouseup", () => drawing = false);
+
+	canvas.addEventListener("touchstart", e => {
+		drawing = true;
+		const p = getPos(e);
+		ctx.beginPath();
+		ctx.moveTo(p.x, p.y);
+		e.preventDefault();
+	}, { passive: false });
+	canvas.addEventListener("touchmove", e => {
+		if (drawing) {
+			const p = getPos(e);
+			ctx.lineTo(p.x, p.y);
+			ctx.stroke();
+			e.preventDefault();
+		}
+	}, { passive: false });
+	window.addEventListener("touchend", () => drawing = false);
+
+	function clearSignature () {
+		ctx.clearRect(0, 0, canvas.width, canvas.height);
+		document.getElementById("signature").value = "";
+	}
+
+	// Al submit, converte il disegno del canvas in Base64
+	const form = document.getElementById("membership-form");
+	form.addEventListener("submit", function (e) {
+		const sigInput = document.getElementById("signature");
+		sigInput.value = canvas.toDataURL("image/png");
+	});
+</script>
 {% endblock %}
