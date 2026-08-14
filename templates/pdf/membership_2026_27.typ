@@ -72,7 +72,7 @@
   gutter: 10pt,
   align: (center + horizon, center + horizon, center + horizon),
   [
-    #image("../../static/web-app-manifest-512x512.png", width: 100%)
+    #image("logo_shine.png", width: 100%)
   ],
   [
     #set text(size: 8.5pt)
@@ -84,7 +84,7 @@
     #text(size: 12.5pt, weight: "bold")[2026/2027]
   ],
   [
-    #image("../../static/logo_uisp.png", width: 100%)
+    #image("logo_uisp.png", width: 100%)
   ]
 )
 

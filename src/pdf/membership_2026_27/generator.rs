@@ -98,7 +98,7 @@ impl World for InMemoryWorld {
 				.autonomy_signature_bytes
 				.clone()
 				.ok_or_else(|| FileError::NotFound(path.to_path_buf())),
-			Some("web-app-manifest-512x512.png") => Ok(Bytes::new(LOGO_SHINE.to_vec())),
+			Some("logo_shine.png") => Ok(Bytes::new(LOGO_SHINE.to_vec())),
 			Some("logo_uisp.png") => Ok(Bytes::new(LOGO_UISP.to_vec())),
 			_ => Err(FileError::NotFound(path.to_path_buf())),
 		}
@@ -120,6 +120,15 @@ fn decode_signature(data_url: &str) -> Result<Vec<u8>, String> {
 		.map_err(|e| format!("Errore decodifica Base64 firma: {e}"))
 }
 
+fn typst_escape(s: String) -> String {
+	// @ in Typst markup content is citation syntax; # starts code mode.
+	s.replace('@', r"\u{40}").replace('#', r"\u{23}")
+}
+
+fn typst_escape_opt(s: Option<String>) -> Option<String> {
+	s.map(typst_escape)
+}
+
 pub fn generate(mut form: MembershipForm) -> Result<Vec<u8>, String> {
 	form.autonomy_signature = form
 		.autonomy_signature
@@ -127,6 +136,18 @@ pub fn generate(mut form: MembershipForm) -> Result<Vec<u8>, String> {
 	form.autonomy_place_and_date = form
 		.autonomy_place_and_date
 		.filter(|s| !s.trim().is_empty());
+
+	form.last_name = typst_escape(form.last_name);
+	form.first_name = typst_escape(form.first_name);
+	form.birth_place = typst_escape(form.birth_place);
+	form.residence_city = typst_escape(form.residence_city);
+	form.residence_address = typst_escape(form.residence_address);
+	form.email = typst_escape(form.email);
+	form.fiscal_code = typst_escape(form.fiscal_code);
+	form.minor_last_name = typst_escape_opt(form.minor_last_name);
+	form.minor_first_name = typst_escape_opt(form.minor_first_name);
+	form.minor_birth_place = typst_escape_opt(form.minor_birth_place);
+	form.minor_fiscal_code = typst_escape_opt(form.minor_fiscal_code);
 
 	let signature_bytes = decode_signature(&form.signature)?;
 	let autonomy_signature_bytes = form
