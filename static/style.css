@@ -90,30 +90,20 @@ a {
 }
 
 /* ************************************** */
-/* BACKGROUND LEAVES                      */
+/* ACCESSIBILITY HELPERS                  */
 /* ************************************** */
 
-.bg-leaf {
+/* Visible to screen readers only. */
+.sr-only {
 	position: absolute;
-	color: rgba(16, 185, 129, 0.12);
-	z-index: 0;
-	pointer-events: none;
-}
-
-.bg-leaf--1 {
-	width: 180px;
-	height: 180px;
-	top: 12%;
-	right: -40px;
-	transform: rotate(30deg);
-}
-
-.bg-leaf--2 {
-	width: 230px;
-	height: 230px;
-	top: 60%;
-	left: -50px;
-	transform: rotate(-40deg);
+	width: 1px;
+	height: 1px;
+	padding: 0;
+	margin: -1px;
+	overflow: hidden;
+	clip-path: inset(50%);
+	white-space: nowrap;
+	border: 0;
 }
 
 /* ************************************** */
@@ -228,15 +218,49 @@ a {
 	position: relative;
 }
 
+/*
+ * The wave is a repeating background tile, not a stretched SVG. Its width is fixed in
+ * px, so the crests keep the same size on every screen and a phone simply shows fewer
+ * of them instead of squeezing them all in. Regenerate the tiles with
+ * playground/wave_divider_playground.html.
+ */
 .wave-divider {
-	width: 100%;
-	line-height: 0;
-	overflow: hidden;
+	--wave-tile: 1000px;
+	height: 110px;
 }
 
-.wave-divider svg {
-	width: 100%;
-	height: 65px;
+/* Generated tiles — seed 55, 4 nodes, amplitude 17. */
+.wave-divider--top {
+	background-image: url("data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 width=%221000%22 height=%22110%22 viewBox=%220 0 1000 110%22 preserveAspectRatio=%22none%22%3E%3Cpath d=%22M0,53.17 C95.44,54.27 223.47,64.12 308.84,62.05 C394.22,59.98 476.33,41.22 539.23,40.12 C602.12,39.02 633.11,53.04 706.07,55.11 C779.02,57.18 904.56,52.07 1000,53.17 L1000,110 L0,110 Z%22 fill=%22%23ecfdf5%22/%3E%3C/svg%3E");
+}
+
+.wave-divider--bottom {
+	background-image: url("data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 width=%221000%22 height=%22110%22 viewBox=%220 0 1000 110%22 preserveAspectRatio=%22none%22%3E%3Cpath d=%22M0,56.83 C95.44,55.73 223.47,45.88 308.84,47.95 C394.22,50.02 476.33,68.78 539.23,69.88 C602.12,70.98 633.11,56.96 706.07,54.89 C779.02,52.82 904.56,57.93 1000,56.83 L1000,0 L0,0 Z%22 fill=%22%23ecfdf5%22/%3E%3C/svg%3E");
+}
+
+/* Scrolling by exactly one tile width returns to the starting frame. */
+@keyframes wave-drift {
+	from {
+		background-position: 0 0;
+	}
+	to {
+		background-position: var(--wave-tile) 0;
+	}
+}
+
+@media (prefers-reduced-motion: reduce) {
+	.wave-divider {
+		animation: none;
+	}
+}
+
+/* Generated tiles — seed 55, 4 nodes, amplitude 17. Solid part faces the green section. */
+.wave-divider--top {
+	background-image: url("data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 width=%221000%22 height=%2290%22 viewBox=%220 0 1000 90%22 preserveAspectRatio=%22none%22%3E%3Cpath d=%22M0,43.17 C100.46,44.33 218.97,54.23 308.84,52.05 C398.72,49.87 473.02,31.27 539.23,30.12 C605.43,28.96 629.27,42.93 706.07,45.11 C782.86,47.28 899.54,42.02 1000,43.17 L1000,90 L0,90 Z%22 fill=%22%23ecfdf5%22/%3E%3C/svg%3E");
+}
+
+.wave-divider--bottom {
+	background-image: url("data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 width=%221000%22 height=%2290%22 viewBox=%220 0 1000 90%22 preserveAspectRatio=%22none%22%3E%3Cpath d=%22M0,46.83 C100.46,45.67 218.97,35.77 308.84,37.95 C398.72,40.13 473.02,58.73 539.23,59.88 C605.43,61.04 629.27,47.07 706.07,44.89 C782.86,42.72 899.54,47.98 1000,46.83 L1000,0 L0,0 Z%22 fill=%22%23ecfdf5%22/%3E%3C/svg%3E");
 }
 
 .icon-sm {
@@ -381,14 +405,24 @@ a {
 	letter-spacing: -0.02em;
 }
 
-.logo__icon {
+/*
+ * Placeholder for the Shine logo, pending the final SVG. Sizing and alignment live
+ * here, so dropping in an <svg>/<img> with this class needs no further CSS.
+ */
+.logo__mark {
+	display: block;
+	flex: 0 0 auto;
 	width: 26px;
 	height: 26px;
-	color: var(--color-green);
+	border: 1.5px dashed var(--color-grey-pastel);
+	border-radius: 6px;
 }
 
-.logo__highlight {
-	color: var(--color-orange);
+/* An injected image keeps the box but drops the dashed placeholder outline. */
+img.logo__mark,
+svg.logo__mark {
+	border: none;
+	object-fit: contain;
 }
 
 /* ************************************** */
@@ -397,12 +431,53 @@ a {
 
 .section--hero {
 	background: linear-gradient(180deg, #ffffff 0%, #ecfdf5 100%);
-	padding: 3.5rem 0 4.5rem 0;
+	padding: 5rem 0 6rem 0;
 }
 
 .hero__container {
 	max-width: 780px;
 	margin: 0 auto;
+}
+
+/* ************************************** */
+/* FEATURED IN STRIP                      */
+/* ************************************** */
+
+/* A white band of its own, so the strip reads as separate from the hero above it. */
+.featured-strip {
+	background-color: var(--color-light);
+	padding: 1.75rem 0;
+}
+
+.featured-strip__list {
+	display: flex;
+	flex-wrap: wrap;
+	align-items: center;
+	justify-content: center;
+	gap: 1.5rem 3rem;
+
+	img {
+		display: block;
+	}
+}
+
+.featured-strip__logo {
+	display: block;
+	width: auto;
+	height: 46px;
+	max-width: 150px;
+	object-fit: contain;
+}
+
+@media (min-width: 960px) {
+	.featured-strip {
+		padding: 2.25rem 0;
+	}
+
+	.featured-strip__logo {
+		height: 56px;
+		max-width: 180px;
+	}
 }
 
 .hero__description {
@@ -823,7 +898,12 @@ a {
 		padding: 6rem 0;
 	}
 
-	.wave-divider svg {
+	/* Declared after `.section` on purpose: same specificity, so it must come later to win. */
+	.section--hero {
+		padding: 7.5rem 0 8.5rem 0;
+	}
+
+	.wave-divider {
 		height: 90px;
 	}
 

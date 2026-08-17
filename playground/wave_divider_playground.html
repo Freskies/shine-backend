@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+	<meta charset="UTF-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<title>Generatore Onda Divisoria</title>
+	<link rel="stylesheet" href="wave_divider_playground.css">
+</head>
+<body>
+
+<div class="sidebar">
+	<h2>Generatore Onda Divisoria</h2>
+
+	<div class="control-group">
+		<label for="tile">Larghezza Onda: <span id="val-tile">1000</span>px</label>
+		<input type="range" id="tile" min="400" max="2000" step="50" value="1000"
+		       oninput="updateUI(); generate()">
+		<small>Fissa in px, non in % dello schermo: da telefono si vedono meno creste, non
+			creste più strette.</small>
+	</div>
+
+	<div class="control-group">
+		<label for="height">Altezza: <span id="val-height">90</span>px</label>
+		<input type="range" id="height" min="40" max="180" step="5" value="90"
+		       oninput="updateUI(); generate()">
+	</div>
+
+	<div class="control-group">
+		<label for="nodes">Nodi per Tile: <span id="val-nodes">4</span></label>
+		<input type="range" id="nodes" min="2" max="10" step="2" value="4"
+		       oninput="updateUI(); generate()">
+		<small>2 nodi = 1 onda intera. Meno nodi = onde più larghe e morbide.</small>
+	</div>
+
+	<div class="control-group">
+		<label for="amp">Ampiezza: <span id="val-amp">17</span>px</label>
+		<input type="range" id="amp" min="2" max="60" step="1" value="17"
+		       oninput="updateUI(); generate()">
+		<small>Limitata automaticamente per non uscire dall'altezza.</small>
+	</div>
+
+	<div class="control-group">
+		<label for="jitter">Irregolarità: <span id="val-jitter">0.7</span></label>
+		<input type="range" id="jitter" min="0" max="1" step="0.05" value="0.7"
+		       oninput="updateUI(); generate()">
+		<small>0 = onda regolare e matematica. 1 = creste sfalsate e organiche.</small>
+	</div>
+
+	<div class="control-group">
+		<label for="tension">Morbidezza: <span id="val-tension">1</span></label>
+		<input type="range" id="tension" min="0.2" max="1.6" step="0.05" value="1"
+		       oninput="updateUI(); generate()">
+		<small>Bassa = curve trattenute. Alta = curve ampie, può creare occhielli.</small>
+	</div>
+
+	<div class="control-group">
+		<label for="speed">Velocità: <span id="val-speed">22</span>s</label>
+		<input type="range" id="speed" min="6" max="60" step="1" value="22"
+		       oninput="updateUI(); applySpeed()">
+	</div>
+
+	<div class="control-group">
+		<label for="seed">Seed: <span id="val-seed">55</span></label>
+		<input type="range" id="seed" min="1" max="200" step="1" value="55"
+		       oninput="updateUI(); generate()">
+	</div>
+
+	<button class="btn" onclick="randomSeed()">Genera Nuova Onda</button>
+	<button class="btn btn-secondary" id="copy-btn" onclick="copyCode()">Copia Codice CSS</button>
+</div>
+
+<div class="preview-area">
+	<div>
+		<p class="preview-label">Anteprima — la colonna stretta è un telefono reale (390px)</p>
+		<div class="viewports">
+			<div class="viewport--desktop">
+				<div class="stage" id="stage-desktop">
+					<div class="stage__hero">Hero (bianco)</div>
+					<div class="wave wave--top"></div>
+					<div class="stage__body">Sezione Chi Siamo (verde)</div>
+					<div class="wave wave--bottom"></div>
+					<div class="stage__hero">Sezione successiva (bianco)</div>
+				</div>
+			</div>
+			<div class="viewport--phone">
+				<div class="stage" id="stage-phone">
+					<div class="stage__hero">Hero</div>
+					<div class="wave wave--top"></div>
+					<div class="stage__body">Chi Siamo</div>
+					<div class="wave wave--bottom"></div>
+					<div class="stage__hero">Sezione</div>
+				</div>
+			</div>
+		</div>
+	</div>
+
+	<p class="seam-check" id="seam-check"></p>
+
+	<div>
+		<p class="preview-label">CSS da incollare in static/style.css</p>
+		<label for="output"></label><textarea id="output" readonly></textarea>
+	</div>
+</div>
+
+<script src="wave_divider_playground.js"></script>
+</body>
+</html>

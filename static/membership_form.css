@@ -1,0 +1,267 @@
+/* ************************************** */
+/* MEMBERSHIP FORM  (/membership_form)     */
+/* ************************************** */
+
+/* ---------------------------------------- */
+/* PAGE HEADER                              */
+/* ---------------------------------------- */
+
+.membership-form__header {
+	margin-top: 1.5rem;
+	margin-bottom: 2rem;
+}
+
+.membership-form__intro {
+	color: var(--color-dark-muted);
+	margin-top: 0.5rem;
+}
+
+/* ---------------------------------------- */
+/* FIELDSETS                                */
+/* ---------------------------------------- */
+
+.membership-form__fieldset {
+	border: 1px solid var(--color-grey-pastel);
+	border-radius: 8px;
+	padding: 1.5rem;
+	margin-bottom: 2rem;
+}
+
+.membership-form__legend {
+	font-weight: 700;
+	padding: 0 0.5rem;
+}
+
+/* ---------------------------------------- */
+/* FIELD GRID                               */
+/* ---------------------------------------- */
+
+.membership-form__row {
+	display: grid;
+	gap: 1rem;
+	margin-top: 1rem;
+}
+
+/* The first row sits directly under the legend, which already provides spacing. */
+.membership-form__row:first-of-type {
+	margin-top: 0;
+}
+
+.membership-form__row--halves {
+	grid-template-columns: 1fr 1fr;
+}
+
+.membership-form__row--wide-narrow-wide {
+	grid-template-columns: 2fr 1fr 2fr;
+}
+
+.membership-form__row--wide-wide-narrow {
+	grid-template-columns: 2fr 2fr 1fr;
+}
+
+.membership-form__field {
+	display: flex;
+	flex-direction: column;
+}
+
+.membership-form__label {
+	font-size: 0.85rem;
+	margin-bottom: 0.35rem;
+}
+
+.membership-form__input {
+	width: 100%;
+	padding: 0.6rem 0.8rem;
+	border: 1px solid var(--color-grey-pastel);
+	border-radius: 6px;
+	background-color: var(--color-light);
+	color: var(--color-dark);
+	font-family: var(--font-base), sans-serif;
+	font-size: 0.95rem;
+}
+
+.membership-form__input:focus-visible {
+	outline: 2px solid var(--color-green);
+	outline-offset: 1px;
+	border-color: var(--color-green);
+}
+
+.membership-form__input--upper {
+	text-transform: uppercase;
+}
+
+/* ---------------------------------------- */
+/* CHECKBOXES                               */
+/* ---------------------------------------- */
+
+.membership-form__check {
+	display: flex;
+	align-items: flex-start;
+	gap: 0.5rem;
+	cursor: pointer;
+}
+
+.membership-form__check--inline {
+	align-items: center;
+}
+
+.membership-form__check + .membership-form__check {
+	margin-top: 1rem;
+}
+
+/* The checkbox that reveals a conditional section. */
+.membership-form__check--toggle {
+	margin-bottom: 1rem;
+}
+
+/* ---------------------------------------- */
+/* CONDITIONAL SECTIONS                     */
+/* Toggled by :has() on the checkbox state, */
+/* so no JS is needed to show or hide them. */
+/* ---------------------------------------- */
+
+.section-minor,
+.section-autonomy {
+	display: none;
+}
+
+.wrapper-minor:has(#is_minor:checked) .section-minor {
+	display: block;
+}
+
+.wrapper-autonomy:has(#commute_alone:checked) .section-autonomy {
+	display: block;
+}
+
+.wrapper-autonomy {
+	border-top: 1px solid var(--color-grey-pastel);
+	margin-top: 1.5rem;
+	padding-top: 1.5rem;
+}
+
+.membership-form__disclaimer {
+	color: var(--color-dark-muted);
+	margin-bottom: 1rem;
+}
+
+/* ---------------------------------------- */
+/* SIGNATURE PAD                            */
+/* ---------------------------------------- */
+
+.signature-box {
+	border: 1px solid #ccc;
+	border-radius: 4px;
+	background: #fafafa;
+	touch-action: none;
+}
+
+canvas.signature-canvas {
+	width: 100%;
+	height: 140px;
+	display: block;
+	cursor: crosshair;
+}
+
+.membership-form__signature-actions {
+	margin-top: 0.5rem;
+	text-align: right;
+}
+
+.btn--clear-signature {
+	background: var(--color-grey-pastel);
+	color: #374151;
+}
+
+/* ---------------------------------------- */
+/* ACTIONS                                  */
+/* ---------------------------------------- */
+
+.membership-form__actions {
+	text-align: center;
+	margin-top: 2rem;
+}
+
+.membership-form__submit {
+	padding: 0.9rem 2.2rem;
+	font-size: 1.05rem;
+}
+
+/* ---------------------------------------- */
+/* HTMX REQUEST STATES                      */
+/* ---------------------------------------- */
+
+.htmx-indicator {
+	display: none;
+}
+
+.htmx-request.htmx-indicator,
+.htmx-request .htmx-indicator {
+	display: inline-flex;
+	align-items: center;
+	gap: 0.5rem;
+}
+
+form.htmx-request {
+	opacity: 0.85;
+}
+
+button:disabled,
+input:disabled {
+	cursor: not-allowed;
+	opacity: 0.6;
+}
+
+.membership-form__loading {
+	margin-top: 1rem;
+	color: var(--color-green);
+	font-weight: 500;
+}
+
+/* ---------------------------------------- */
+/* FEEDBACK FRAGMENTS (#form-feedback)      */
+/* Swapped in by HTMX after submitting.     */
+/* ---------------------------------------- */
+
+#form-feedback {
+	margin-top: 1.5rem;
+	text-align: center;
+}
+
+.form-feedback {
+	padding: 1rem 1.25rem;
+	border-radius: 8px;
+	border: 1px solid transparent;
+}
+
+.form-feedback__text {
+	margin-top: 0.35rem;
+	font-size: 0.9rem;
+}
+
+.form-feedback--success {
+	background-color: var(--color-green-pastel);
+	border-color: var(--color-green);
+	color: var(--color-green-hover);
+}
+
+.form-feedback--error {
+	background-color: var(--color-orange-pastel);
+	border-color: var(--color-orange);
+	color: var(--color-orange-hover);
+}
+
+/* ---------------------------------------- */
+/* RESPONSIVE                               */
+/* ---------------------------------------- */
+
+@media (max-width: 640px) {
+	.membership-form__row--halves,
+	.membership-form__row--wide-narrow-wide,
+	.membership-form__row--wide-wide-narrow {
+		grid-template-columns: 1fr;
+	}
+
+	.membership-form__fieldset {
+		padding: 1rem;
+	}
+}

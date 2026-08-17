@@ -1,5 +1,5 @@
-use serde::Deserialize;
 use askama::Template;
+use serde::Deserialize;
 
 #[derive(Deserialize, Template)]
 #[template(path = "pdf/membership_2026_27.typ", escape = "none")]
@@ -50,6 +50,10 @@ pub struct MembershipForm {
 	pub consent_photo: bool,
 	#[serde(default)]
 	pub consent_publication: bool,
+
+	// --- Commute autonomy (only when enrolling a minor) ---
+	#[serde(default)]
+	pub commute_alone: Option<String>,
 
 	// --- Signatures ---
 	pub place_and_date: String,

@@ -4,25 +4,16 @@
 <header class="header">
 	<div class="container header__container">
 		<a href="#" class="logo">
-			<svg class="logo__icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
-				<path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/>
-			</svg>
-			Shine<span class="logo__highlight">Parkour</span>
+			<!-- PLACEHOLDER LOGO: quando arriva l' SVG del logo Shine, sostituisci questo
+			     <span> con l'<svg> inline (o <img src="/static/logo_shine.svg" alt="">)
+			     mantenendo la classe logo__mark, che ne fissa dimensioni e allineamento. -->
+			<span class="logo__mark" aria-hidden="true"></span>
+			Shine
 		</a>
 	</div>
 </header>
 
 <main class="main-wrapper">
-	<!-- NATURE LEAVES IN PASTEL GREEN -->
-	<svg class="bg-leaf bg-leaf--1" viewBox="0 0 100 100" fill="currentColor">
-		<path
-			d="M50 0C50 0 20 35 20 65C20 81.5 33.5 95 50 95C66.5 95 80 81.5 80 65C80 35 50 0 50 0ZM50 85C48 85 48 50 48 50C48 50 50 85 50 85Z"/>
-	</svg>
-	<svg class="bg-leaf bg-leaf--2" viewBox="0 0 100 100" fill="currentColor">
-		<path
-			d="M50 0C50 0 20 35 20 65C20 81.5 33.5 95 50 95C66.5 95 80 81.5 80 65C80 35 50 0 50 0ZM50 85C48 85 48 50 48 50C48 50 50 85 50 85Z"/>
-	</svg>
-
 	<!-- HERO SECTION -->
 	<section class="section section--hero">
 		<div class="container hero__container">
@@ -40,12 +31,29 @@
 		</div>
 	</section>
 
-	<!-- WAVE DIVIDER TOP -->
-	<div class="wave-divider wave-divider--top">
-		<svg viewBox="0 0 1200 120" preserveAspectRatio="none">
-			<path d="M0,0 C150,90 350,-40 500,60 C650,160 900,10 1200,40 L1200,120 L0,120 Z" fill="#ecfdf5"></path>
-		</svg>
-	</div>
+	<!-- FEATURED IN -->
+	<section class="section section--featured-in featured-strip" aria-labelledby="featured-strip-title">
+		<div class="container">
+			<h2 id="featured-strip-title" class="sr-only">Enti e realtà di riferimento</h2>
+			<ul class="featured-strip__list">
+				<li>
+					<img class="featured-strip__logo" src="/static/featured-in-logos/logo_coni.avif"
+					     alt="CONI" loading="lazy" decoding="async">
+				</li>
+				<li>
+					<img class="featured-strip__logo" src="/static/featured-in-logos/logo_uisp.avif"
+					     alt="UISP" loading="lazy" decoding="async">
+				</li>
+				<li>
+					<img class="featured-strip__logo" src="/static/featured-in-logos/logo_adapt.avif"
+					     alt="ADAPT" loading="lazy" decoding="async">
+				</li>
+			</ul>
+		</div>
+	</section>
+
+	<!-- WAVE DIVIDER TOP (onda = background tile in style.css, vedi playground/) -->
+	<div class="wave-divider wave-divider--top" aria-hidden="true"></div>
 
 	<!-- ABOUT SECTION -->
 	<section class="section section--about">
@@ -77,12 +85,8 @@
 		</div>
 	</section>
 
-	<!-- WAVE DIVIDER BOTTOM -->
-	<div class="wave-divider wave-divider--bottom">
-		<svg viewBox="0 0 1200 120" preserveAspectRatio="none">
-			<path d="M0,60 C300,120 600,0 900,80 C1050,120 1150,40 1200,20 L1200,0 L0,0 Z" fill="#ecfdf5"></path>
-		</svg>
-	</div>
+	<!-- WAVE DIVIDER BOTTOM (onda = background tile in style.css, vedi playground/) -->
+	<div class="wave-divider wave-divider--bottom" aria-hidden="true"></div>
 
 	<!-- COURSES SECTION -->
 	<section id="courses" class="section section--courses">
@@ -140,7 +144,8 @@
 						<span class="steps-list__number">1</span>
 						<div class="steps-list__content">
 							<strong class="steps-list__title">Compila il modulo di tesseramento</strong>
-							<p class="steps-list__text">Compila il modulo online: riceverai il modulo di tesseramento già firmato.</p>
+							<p class="steps-list__text">Compila il modulo online: riceverai il modulo di tesseramento già
+								firmato.</p>
 							<a href="/membership_form" class="btn btn--green-outline btn--sm">Compila il modulo</a>
 						</div>
 					</li>
@@ -148,15 +153,18 @@
 						<span class="steps-list__number">2</span>
 						<div class="steps-list__content">
 							<strong class="steps-list__title">Procurati il certificato medico</strong>
-							<p class="steps-list__text">Ottieni un certificato medico in corso di validità: scarica la richiesta da consegnare al tuo medico.</p>
-							<a href="/static/richiesta-certificato-medico.pdf" download class="btn btn--green-outline btn--sm">Scarica il certificato</a>
+							<p class="steps-list__text">Ottieni un certificato medico in corso di validità: scarica la
+								richiesta da consegnare al tuo medico.</p>
+							<a href="/static/richiesta-certificato-medico.pdf" download class="btn btn--green-outline btn--sm">Scarica
+								il certificato</a>
 						</div>
 					</li>
 					<li class="steps-list__item">
 						<span class="steps-list__number">3</span>
 						<div class="steps-list__content">
 							<strong class="steps-list__title">Finalizza l'iscrizione</strong>
-							<p class="steps-list__text">Carica il modulo di tesseramento e il certificato medico per completare l'iscrizione.</p>
+							<p class="steps-list__text">Carica il modulo di tesseramento e il certificato medico per completare
+								l'iscrizione.</p>
 							<a href="/enrollment" class="btn btn--orange btn--sm">Iscriviti</a>
 						</div>
 					</li>

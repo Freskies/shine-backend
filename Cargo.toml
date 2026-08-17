@@ -14,3 +14,4 @@ typst-layout = "0.15.1"
 typst-pdf = "0.15.1"
 fontdb = "0.24.0"
 base64 = "0.23.1"
+uuid = { version = "1", features = ["v4"] }
