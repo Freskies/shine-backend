@@ -1,0 +1,105 @@
+{# Shared body of both enrolment emails. Table layout and inline styles on purpose: email
+   clients strip <style> blocks and support little beyond tables. #}
+<table role="presentation" cellpadding="0" cellspacing="0" border="0"
+       style="width:100%;max-width:600px;font-family:Arial,Helvetica,sans-serif;font-size:14px;color:#1f2937;">
+	<tr>
+		<td style="padding:8px 0;font-weight:bold;font-size:16px;color:#047857;">Dati del richiedente</td>
+	</tr>
+	<tr>
+		<td style="padding:2px 0;">Nome e cognome: <strong>{{ form.first_name }} {{ form.last_name }}</strong></td>
+	</tr>
+	<tr>
+		<td style="padding:2px 0;">Nato/a a {{ form.birth_place }} ({{ form.birth_province }}) il {{ form.birth_date }}</td>
+	</tr>
+	<tr>
+		<td style="padding:2px 0;">
+			Residenza: {{ form.residence_address }} {{ form.residence_number }},
+			{{ form.residence_cap }} {{ form.residence_city }} ({{ form.residence_province }})
+		</td>
+	</tr>
+	<tr>
+		<td style="padding:2px 0;">Telefono: {{ form.phone }}</td>
+	</tr>
+	<tr>
+		<td style="padding:2px 0;">Codice fiscale: {{ form.fiscal_code }}</td>
+	</tr>
+
+	{% if form.is_minor.is_some() %}
+		<tr>
+			<td style="padding:14px 0 4px;font-weight:bold;font-size:16px;color:#047857;">Tesserato minorenne</td>
+		</tr>
+		<tr>
+			<td style="padding:2px 0;">
+				Nome e cognome:
+				<strong>{{ form.minor_first_name.as_deref().unwrap_or("") }}
+					{{ form.minor_last_name.as_deref().unwrap_or("") }}</strong>
+			</td>
+		</tr>
+		<tr>
+			<td style="padding:2px 0;">
+				Nato/a a {{ form.minor_birth_place.as_deref().unwrap_or("") }}
+				({{ form.minor_birth_province.as_deref().unwrap_or("") }})
+				il {{ form.minor_birth_date.as_deref().unwrap_or("") }}
+			</td>
+		</tr>
+		<tr>
+			<td style="padding:2px 0;">
+				Residenza: {{ form.minor_residence_address.as_deref().unwrap_or("") }}
+				{{ form.minor_residence_number.as_deref().unwrap_or("") }},
+				{{ form.minor_residence_cap.as_deref().unwrap_or("") }}
+				{{ form.minor_residence_city.as_deref().unwrap_or("") }}
+				({{ form.minor_residence_province.as_deref().unwrap_or("") }})
+			</td>
+		</tr>
+		<tr>
+			<td style="padding:2px 0;">Codice fiscale: {{ form.minor_fiscal_code.as_deref().unwrap_or("") }}</td>
+		</tr>
+		{% if form.commute_alone.is_some() %}
+			<tr>
+				<td style="padding:6px 0;">Autorizzato a fare da solo il tragitto casa &harr; allenamento.</td>
+			</tr>
+		{% endif %}
+	{% endif %}
+
+	<tr>
+		<td style="padding:14px 0 4px;font-weight:bold;font-size:16px;color:#047857;">Consensi</td>
+	</tr>
+	<tr>
+		<td style="padding:2px 0;">
+			Foto e riprese durante le attività: <strong>{% if form.consent_photo %}sì{% else %}no{% endif %}</strong>
+		</td>
+	</tr>
+	<tr>
+		<td style="padding:2px 0;">
+			Pubblicazione su web e social: <strong>{% if form.consent_publication %}sì{% else %}no{% endif %}</strong>
+		</td>
+	</tr>
+
+	<tr>
+		<td style="padding:14px 0 4px;font-weight:bold;font-size:16px;color:#047857;">Contatti di emergenza</td>
+	</tr>
+	{% if contacts.is_empty() %}
+		<tr>
+			<td style="padding:2px 0;color:#4b5563;">Nessuno indicato.</td>
+		</tr>
+	{% else %}
+		{% for c in contacts %}
+			<tr>
+				<td style="padding:2px 0;">
+					<strong>{{ c.name }} {{ c.surname }}</strong> &mdash; {{ c.phone }}
+					{% if !c.note.is_empty() %}<span style="color:#4b5563;">({{ c.note }})</span>{% endif %}
+				</td>
+			</tr>
+		{% endfor %}
+	{% endif %}
+
+	<tr>
+		<td style="padding:14px 0 4px;font-weight:bold;font-size:16px;color:#047857;">Allegati</td>
+	</tr>
+	<tr>
+		<td style="padding:2px 0;">Modulo di tesseramento firmato (PDF)</td>
+	</tr>
+	<tr>
+		<td style="padding:2px 0;">Certificato medico: {{ certificate_name }}</td>
+	</tr>
+</table>

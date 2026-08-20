@@ -15,12 +15,12 @@
     <inspection_tool class="ContinueStatementJS" enabled="true" level="WARNING" enabled_by_default="true" />
     <inspection_tool class="ContinueStatementWithLabelJS" enabled="true" level="WARNING" enabled_by_default="true" />
     <inspection_tool class="CssBrowserCompatibilityForProperties" enabled="true" level="WARNING" enabled_by_default="true">
-      <option name="myChromeVersion" value="136" />
-      <option name="myEdgeVersion" value="132" />
-      <option name="myFirefoxVersion" value="138" />
+      <option name="myChromeVersion" value="152" />
+      <option name="myEdgeVersion" value="151" />
+      <option name="myFirefoxVersion" value="155" />
       <option name="myCheckIE" value="false" />
-      <option name="myOperaVersion" value="114" />
-      <option name="mySafariVersion" value="18" />
+      <option name="myOperaVersion" value="134" />
+      <option name="mySafariVersion" value="27" />
     </inspection_tool>
     <inspection_tool class="CssConvertColorToHexInspection" enabled="true" level="WEAK WARNING" enabled_by_default="true" editorAttributes="INFO_ATTRIBUTES" />
     <inspection_tool class="CssInvalidNestedSelector" enabled="true" level="WARNING" enabled_by_default="true" />

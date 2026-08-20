@@ -1,0 +1,10 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="900" height="700" viewBox="0 0 900 700" role="img" aria-label="Immagine 2 placeholder">
+  <rect width="100%" height="100%" fill="#ffedd5"/>
+  <rect x="14" y="14" width="872" height="672" fill="none" stroke="#c2410c" stroke-width="4"
+        stroke-dasharray="18 14" opacity="0.55"/>
+  <g fill="#c2410c" font-family="Rubik, system-ui, sans-serif" text-anchor="middle">
+    <text x="50%" y="46%" font-size="76" font-weight="700" opacity="0.75">2</text>
+    <text x="50%" y="57%" font-size="34" font-weight="600" opacity="0.7">Immagine 2</text>
+    <text x="50%" y="64%" font-size="24" opacity="0.55">a destra, media</text>
+  </g>
+</svg>

@@ -85,7 +85,12 @@ function wavePath (pts, width, tension) {
  */
 function buildSvg (pts, { width, height, tension }, flip) {
 	const p = flip ? pts.map((q) => ({ x: q.x, y: height - q.y })) : pts;
-	const close = flip ? ` L${width},0 L0,0 Z` : ` L${width},${height} L0,${height} Z`;
+	/*
+	 * The fill runs 1px past the viewBox, which clips it exactly on the boundary. That
+	 * avoids an antialiased half-row along the flat edge when the tile is scaled to a
+	 * fractional height, which would show as a hairline against the adjacent section.
+	 */
+	const close = flip ? ` L${width},-1 L0,-1 Z` : ` L${width},${height + 1} L0,${height + 1} Z`;
 	const d = wavePath(p, width, tension) + close;
 	return `<svg xmlns="http://www.w3.org/2000/svg" width="${width}" height="${height}" `
 		+ `viewBox="0 0 ${width} ${height}" preserveAspectRatio="none">`

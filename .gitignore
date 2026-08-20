@@ -1,1 +1,8 @@
 /target
+
+# Local configuration: holds the SMTP app password. Never commit.
+.env
+.env.local
+
+# Ad-hoc output from local document experiments.
+/out.pdf

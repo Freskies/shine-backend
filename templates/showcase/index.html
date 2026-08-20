@@ -20,16 +20,18 @@
 			<div class="hero__content">
 				<h1 class="heading-primary">Mettiti in gioco. <br><span class="text-green">Esplora la città.</span></h1>
 				<p class="hero__description">
-					Trasforma lo spazio urbano nella tua palestra naturale. Impara a muoverti superando gli ostacoli con il
-					parkour outdoor in un ambiente rilassato e collaborativo.
+					Trasforma lo spazio urbano nella tua palestra naturale.
+					Impara a muoverti superando gli ostacoli in un ambiente stimolante e collaborativo.
 				</p>
 				<div class="hero__cta-group">
-					<a href="#join" class="btn btn--orange btn--full">Prenota Prova Gratuita</a>
-					<a href="#courses" class="btn btn--green-outline btn--full">Scopri i Corsi</a>
+					<a href="#join" class="btn btn--orange btn--full fluid-shape">Prenota Prova Gratuita</a>
+					<a href="#courses" class="btn btn--green-soft btn--full fluid-shape">Scopri i Corsi</a>
 				</div>
 			</div>
 		</div>
 	</section>
+
+	<div class="wave-divider wave-divider--green wave-divider--bottom" aria-hidden="true"></div>
 
 	<!-- FEATURED IN -->
 	<section class="section section--featured-in featured-strip" aria-labelledby="featured-strip-title">
@@ -37,29 +39,33 @@
 			<h2 id="featured-strip-title" class="sr-only">Enti e realtà di riferimento</h2>
 			<ul class="featured-strip__list">
 				<li>
-					<img class="featured-strip__logo" src="/static/featured-in-logos/logo_coni.avif"
-					     alt="CONI" loading="lazy" decoding="async">
+					<a href="https://www.coni.it/" target="_blank">
+						<img class="featured-strip__logo" src="/static/featured-in-logos/logo_coni.avif" alt="CONI"
+						     loading="lazy" decoding="async">
+					</a>
 				</li>
 				<li>
-					<img class="featured-strip__logo" src="/static/featured-in-logos/logo_uisp.avif"
-					     alt="UISP" loading="lazy" decoding="async">
+					<a href="https://www.uisp.it/nazionale/" target="_blank">
+						<img class="featured-strip__logo" src="/static/featured-in-logos/logo_uisp.avif" alt="UISP"
+						     loading="lazy" decoding="async">
+					</a>
 				</li>
 				<li>
-					<img class="featured-strip__logo" src="/static/featured-in-logos/logo_adapt.avif"
-					     alt="ADAPT" loading="lazy" decoding="async">
+					<a href="https://adaptqualifications.com/" target="_blank">
+						<img class="featured-strip__logo" src="/static/featured-in-logos/logo_adapt.avif" alt="ADAPT"
+						     loading="lazy" decoding="async">
+					</a>
 				</li>
 			</ul>
 		</div>
 	</section>
 
-	<!-- WAVE DIVIDER TOP (onda = background tile in style.css, vedi playground/) -->
-	<div class="wave-divider wave-divider--top" aria-hidden="true"></div>
+	<div class="wave-divider wave-divider--green wave-divider--top" aria-hidden="true"></div>
 
 	<!-- ABOUT SECTION -->
 	<section class="section section--about">
 		<div class="container about__container">
 			<div class="about__text">
-				<span class="subheading subheading--orange">Chi Siamo</span>
 				<h2 class="heading-secondary">Natura, movimento e crescita personale.</h2>
 				<p class="text-body">
 					Siamo un gruppo di ragazzi uniti dalla passione per il parkour. Per noi la città non è solo cemento, ma
@@ -72,128 +78,120 @@
 				</p>
 			</div>
 
-			<div class="stats-grid">
-				<div class="stat-box blob-card blob-card--green-1">
-					<span class="stat-box__number text-green">100+</span>
-					<span class="stat-box__label">SOCI ATTIVI</span>
+			<div class="about__collage">
+				<div class="about__shot about__shot--1 fluid-shape">
+					<img src="/static/images/about/about-1.jpg" alt="" loading="lazy" decoding="async">
 				</div>
-				<div class="stat-box blob-card blob-card--orange-1 card-organic-corner">
-					<span class="stat-box__number text-orange">100%</span>
-					<span class="stat-box__label">OUTDOOR</span>
+				<div class="about__shot about__shot--2 fluid-shape">
+					<img src="/static/images/about/about-2.jpg" alt="" loading="lazy" decoding="async">
+				</div>
+				<div class="about__shot about__shot--3 fluid-shape">
+					<img src="/static/images/about/about-3.jpg" alt="" loading="lazy" decoding="async">
 				</div>
 			</div>
 		</div>
 	</section>
 
-	<!-- WAVE DIVIDER BOTTOM (onda = background tile in style.css, vedi playground/) -->
-	<div class="wave-divider wave-divider--bottom" aria-hidden="true"></div>
+	<div class="wave-divider wave-divider--bottom wave-divider--green" aria-hidden="true"></div>
 
 	<!-- COURSES SECTION -->
 	<section id="courses" class="section section--courses">
 		<div class="container">
 			<div class="section__header">
-				<span class="subheading subheading--green">Classi Miste & Crescita Rapida</span>
 				<h2 class="heading-secondary">I Nostri Corsi di Parkour</h2>
 				<p class="section__intro">
 					Creiamo volutamente gruppi grandi ed eterogenei: i più piccoli imparano per emulazione e crescono più
 					velocemente, mentre i più grandi sviluppano empatia e senso di responsabilità.
 				</p>
-			</div>
 
-			<div class="week-days">
-				<span class="week-day blob-card week-day--active">Lun</span>
-				<span class="week-day blob-card">Mar</span>
-				<span class="week-day blob-card week-day--active">Mer</span>
-				<span class="week-day blob-card week-day--active">Gio</span>
-				<span class="week-day blob-card">Ven</span>
+				<ul class="section__points">
+					<li>
+						<strong class="text-green">3 allenamenti a settimana:</strong>
+						<span class="day-mark fluid-shape">Lun</span>
+						<span class="day-mark fluid-shape">Mer</span>
+						<span class="day-mark fluid-shape">Gio</span>
+						puoi scegliere liberamente quando venire senza avvisare nessuno. Massima libertà per adattarsi ai tuoi
+						impegni.
+					</li>
+					<li>
+						<strong class="text-green">Recuperi facili in caso di pioggia:</strong>
+						essendo al 100% all'aperto, se piove eccessivamente la lezione salta per sicurezza
+						ma puoi recuperarla quando vuoi sfruttando una qualsiasi delle altre sessioni della settimana.
+					</li>
+				</ul>
 			</div>
 
 			<div class="courses-grid">
 				<article class="course-card blob-card blob-card--green-1">
-					<span class="course-card__age course-card__age--green">6 - 14 Anni</span>
-					<h3 class="course-card__title">Piccoli Esploratori</h3>
-					<p class="course-card__desc">Coordinazione, equilibrio, primi approcci al salto e fondamenti del parkour
-						urbano in totale sicurezza e spirito di squadra.</p>
-					<div class="course-card__schedule">
-						<span class="course-card__schedule-hours">18:00 &ndash; 19:30</span>
-					</div>
+					<span class="course-card__schedule course-card__schedule--green fluid-shape">18:00 – 19:30</span>
+					<h3 class="course-card__title">7 – 14 Anni</h3>
+					<p class="course-card__desc">Coordinazione, equilibrio, tecniche di salvataggio e sviluppo di spirito
+						critico nell'affrontare i salti.</p>
 				</article>
 
-				<article class="course-card blob-card blob-card--orange-1 course-card--highlight card-organic-corner">
-					<span class="course-card__age course-card__age--orange">14+ Anni & Adulti</span>
-					<h3 class="course-card__title">Fluidità & Espressione</h3>
+				<article class="course-card blob-card blob-card--green-1 course-card--highlight card-organic-corner">
+					<span class="course-card__schedule course-card__schedule--green fluid-shape">19:30 – 21:30</span>
+					<h3 class="course-card__title">14+ Anni &amp; Adulti</h3>
 					<p class="course-card__desc">Consapevolezza del corpo, condizionamento atletico aperto e ricerca del
 						proprio stile di movimento.</p>
-					<div class="course-card__schedule">
-						<span class="course-card__schedule-hours">19:30 &ndash; 21:30</span>
-					</div>
 				</article>
 			</div>
 		</div>
 	</section>
 
-	<!-- JOIN SECTION (LIGHT PASTEL THEME) -->
+	<div class="wave-divider wave-divider--top wave-divider--orange" aria-hidden="true"></div>
+
+	<!-- JOIN SECTION: sezione a fondo pieno tra due onde, non piu' una fluid box -->
 	<section id="join" class="section section--join">
 		<div class="container join__container">
-			<div class="join-box blob-card blob-card--orange-1 card-organic-corner">
-				<h3 class="join-box__title">Come Iscriversi</h3>
-				<p class="join-box__text">Segui questi semplici passi per entrare a far parte di Shine Parkour.</p>
-
-				<ol class="steps-list">
-					<li class="steps-list__item">
-						<span class="steps-list__number">1</span>
-						<div class="steps-list__content">
-							<strong class="steps-list__title">Compila il modulo di tesseramento</strong>
-							<p class="steps-list__text">Compila il modulo online: riceverai il modulo di tesseramento già
-								firmato.</p>
-							<a href="/membership_form" class="btn btn--green-outline btn--sm">Compila il modulo</a>
-						</div>
-					</li>
-					<li class="steps-list__item">
-						<span class="steps-list__number">2</span>
-						<div class="steps-list__content">
-							<strong class="steps-list__title">Procurati il certificato medico</strong>
-							<p class="steps-list__text">Ottieni un certificato medico in corso di validità: scarica la
-								richiesta da consegnare al tuo medico.</p>
-							<a href="/static/richiesta-certificato-medico.pdf" download class="btn btn--green-outline btn--sm">Scarica
-								il certificato</a>
-						</div>
-					</li>
-					<li class="steps-list__item">
-						<span class="steps-list__number">3</span>
-						<div class="steps-list__content">
-							<strong class="steps-list__title">Finalizza l'iscrizione</strong>
-							<p class="steps-list__text">Carica il modulo di tesseramento e il certificato medico per completare
-								l'iscrizione.</p>
-							<a href="/enrollment" class="btn btn--orange btn--sm">Iscriviti</a>
-						</div>
-					</li>
-				</ol>
+			<div class="section__header">
+				<h2 class="heading-secondary">Come Iscriversi</h2>
+				<p class="section__intro">
+					Iscriversi richiede solo due passaggi. Procurati prima il certificato medico, poi completa
+					l'iscrizione online in 2 minuti.
+				</p>
 			</div>
 
-			<div class="join-box join-box--info blob-card blob-card--green-1">
-				<h3 class="join-box__title text-green">Flessibilità & Meteo</h3>
-				<ul class="join-info-list">
-					<li>
-						<strong class="text-green">3 Allenamenti a Settimana:</strong>
-						Puoi scegliere liberamente quando venire senza avvisare nessuno. Massima libertà per adattarsi ai tuoi
-						impegni.
-					</li>
-					<li>
-						<strong class="text-green">Recuperi Facili in Caso di Pioggia:</strong>
-						Essendo al 100% all'aperto, se piove la lezione salta per sicurezza. Ma puoi recuperarla quando vuoi
-						sfruttando una qualsiasi delle altre sessioni della settimana!
-					</li>
-				</ul>
-			</div>
+			<ol class="steps-list">
+				<li class="steps-list__item">
+					<div class="steps-list__content">
+						<h4>
+							<span class="steps-list__number">1</span>
+							<strong class="steps-list__title">Richiedi il certificato medico</strong>
+						</h4>
+						<p class="steps-list__text">
+							Serve il certificato medico per attività sportiva non agonistica. Scarica il nostro foglio di
+							richiesta da mostrare al tuo medico per non sbagliare.
+						</p>
+						<a href="/static/richiesta-certificato-medico.pdf" download=""
+						   class="btn btn--orange btn--sm fluid-shape">
+							Scarica richiesta per il medico
+						</a>
+					</div>
+				</li>
+				<li class="steps-list__item">
+					<div class="steps-list__content">
+						<h4>
+							<span class="steps-list__number">2</span>
+							<strong class="steps-list__title">Completa l'iscrizione online</strong>
+						</h4>
+						<p class="steps-list__text">
+							Hai il certificato a portata di mano? Clicca qui sotto per caricare la foto del certificato e
+							inserire i tuoi dati. Riceverai subito la conferma via email.
+						</p>
+						<a href="/enrollment" class="btn btn--orange btn--sm fluid-shape">Inizia l'iscrizione</a>
+					</div>
+				</li>
+			</ol>
 		</div>
 	</section>
+
+	<div class="wave-divider wave-divider--bottom wave-divider--orange" aria-hidden="true"></div>
 
 	<!-- PRICING SECTION -->
 	<section class="section section--pricing">
 		<div class="container">
 			<div class="section__header">
-				<span class="subheading subheading--orange">Modalità di Partecipazione</span>
 				<h2 class="heading-secondary">Tariffe Semplici e Chiare</h2>
 			</div>
 
@@ -210,8 +208,8 @@
 					<p class="pricing-card__desc">Scegli ogni settimana il giorno che ti è più comodo.</p>
 				</div>
 
-				<div class="pricing-card pricing-card--featured blob-card blob-card--orange-1 card-organic-corner">
-					<span class="pricing-card__badge">Più Scelto</span>
+				<div class="pricing-card pricing-card--featured blob-card blob-card--green-1 card-organic-corner">
+					<span class="pricing-card__badge fluid-shape">Più Scelto</span>
 					<h3 class="pricing-card__title">3 Volte / Settimana</h3>
 					<p class="pricing-card__price">60€ <span>/ mese</span></p>
 					<p class="pricing-card__desc">Massimo valore, piena flessibilità e crescita costante.</p>
@@ -224,7 +222,6 @@
 	<section class="section section--faqs">
 		<div class="container container--narrow">
 			<div class="section__header">
-				<span class="subheading subheading--green">Domande Frequenti</span>
 				<h2 class="heading-secondary">Risposte alle tue curiosità</h2>
 			</div>
 

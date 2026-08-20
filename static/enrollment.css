@@ -1,0 +1,287 @@
+/* ************************************** */
+/* ENROLMENT WIZARD  (/enrollment)         */
+/* ************************************** */
+
+/*
+ * Deliberately plain and large. This is the one page where a mistake costs somebody their
+ * enrolment, so targets are big, one decision is visible at a time, and nothing moves.
+ */
+
+.wizard__back {
+	display: inline-block;
+	margin-bottom: 1.5rem;
+	font-weight: 600;
+	color: var(--color-dark-muted);
+}
+
+/* ---------------------------------------- */
+/* PHASE TOGGLING                           */
+/* ---------------------------------------- */
+
+/*
+ * Both phases stay in the DOM — see enrollment.js — so visibility is driven by the
+ * wrapper's `data-phase`.
+ */
+.wizard__phase {
+	display: none;
+}
+
+.wizard[data-phase="1"] .wizard__phase[data-phase="1"],
+.wizard[data-phase="2"] .wizard__phase[data-phase="2"] {
+	display: block;
+}
+
+/* ---------------------------------------- */
+/* PROGRESS                                 */
+/* ---------------------------------------- */
+
+.wizard__steps {
+	display: flex;
+	gap: 0.5rem;
+	list-style: none;
+	margin-bottom: 2rem;
+}
+
+.wizard__stepper {
+	flex: 1;
+	padding-top: 0.6rem;
+	border-top: 4px solid var(--color-grey-pastel);
+	font-size: 0.8rem;
+	font-weight: 700;
+	text-transform: uppercase;
+	letter-spacing: 0.04em;
+	color: #9ca3af;
+}
+
+/* The current phase and every phase already cleared read as done. */
+.wizard[data-phase="1"] .wizard__stepper[data-step="1"],
+.wizard[data-phase="2"] .wizard__stepper[data-step="1"],
+.wizard[data-phase="2"] .wizard__stepper[data-step="2"] {
+	border-top-color: var(--color-green);
+	color: var(--color-green-hover);
+}
+
+.wizard__step-count {
+	font-size: 0.85rem;
+	font-weight: 700;
+	text-transform: uppercase;
+	letter-spacing: 0.08em;
+	color: var(--color-green);
+	margin-bottom: 0.35rem;
+}
+
+.wizard__lead {
+	font-size: 1.05rem;
+	color: var(--color-dark-muted);
+	line-height: 1.6;
+	margin: 0.75rem 0 1.75rem;
+}
+
+/* ---------------------------------------- */
+/* CERTIFICATE PICKER                       */
+/* ---------------------------------------- */
+
+/*
+ * A label wrapping a visually hidden input: the whole panel becomes the tap target, which
+ * is far easier to hit than a native file button.
+ */
+.wizard__filepick {
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+	justify-content: center;
+	gap: 0.75rem;
+	padding: 2.5rem 1.5rem;
+	border: 3px dashed var(--color-green);
+	border-radius: 14px;
+	background-color: var(--color-green-pastel);
+	cursor: pointer;
+	text-align: center;
+}
+
+.wizard__filepick:hover,
+.wizard__filepick:focus-within {
+	background-color: #d9fbe9;
+}
+
+/* Hidden but still focusable, so keyboard and screen readers keep working. */
+.wizard__filepick input[type="file"] {
+	position: absolute;
+	width: 1px;
+	height: 1px;
+	opacity: 0;
+	pointer-events: none;
+}
+
+.wizard__filepick-icon {
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	width: 3rem;
+	height: 3rem;
+	border-radius: var(--radius-full);
+	background-color: var(--color-green);
+	color: var(--color-light);
+	font-size: 1.8rem;
+	font-weight: 800;
+	line-height: 1;
+}
+
+.wizard__filepick-text {
+	font-size: 1.05rem;
+	font-weight: 700;
+	color: var(--color-green-hover);
+}
+
+.wizard__chosen {
+	min-height: 1.5rem;
+	margin: 1rem 0 1.5rem;
+	font-weight: 600;
+	color: var(--color-green-hover);
+	text-align: center;
+	word-break: break-word;
+}
+
+/* ---------------------------------------- */
+/* EMERGENCY CONTACTS                       */
+/* ---------------------------------------- */
+
+.contact-row {
+	display: flex;
+	align-items: flex-end;
+	gap: 1rem;
+	padding-bottom: 1.25rem;
+	margin-bottom: 1.25rem;
+	border-bottom: 1px solid var(--color-grey-pastel);
+}
+
+.contact-row__fields {
+	flex: 1;
+	display: grid;
+	grid-template-columns: 1fr 1fr;
+	gap: 1rem;
+}
+
+.contact-row__remove {
+	flex: 0 0 auto;
+	padding: 0.6rem 1rem;
+	border: 2px solid var(--color-grey-pastel);
+	border-radius: var(--radius-full);
+	background: none;
+	color: var(--color-dark-muted);
+	font-family: inherit;
+	font-size: 0.85rem;
+	font-weight: 700;
+	cursor: pointer;
+}
+
+.contact-row__remove:hover {
+	border-color: #dc2626;
+	color: #dc2626;
+}
+
+/* ---------------------------------------- */
+/* ACTIONS                                  */
+/* ---------------------------------------- */
+
+.wizard__next,
+.wizard__actions .btn[type="submit"] {
+	font-size: 1.1rem;
+}
+
+.wizard__actions {
+	display: flex;
+	flex-direction: column;
+	gap: 1rem;
+	margin-top: 2rem;
+}
+
+.wizard__back-step {
+	align-self: flex-start;
+	padding: 0;
+	border: none;
+	background: none;
+	color: var(--color-dark-muted);
+	font-family: inherit;
+	font-size: 0.95rem;
+	font-weight: 600;
+	cursor: pointer;
+	text-decoration: underline;
+}
+
+.wizard__hint {
+	font-size: 0.9rem;
+	color: var(--color-dark-muted);
+	text-align: center;
+}
+
+.wizard__loading {
+	justify-content: center;
+	padding: 0.75rem;
+	border-radius: 8px;
+	background-color: var(--color-green-pastel);
+	color: var(--color-green-hover);
+	font-weight: 600;
+	text-align: center;
+}
+
+#wizard-feedback:not(:empty) {
+	margin-top: 1.5rem;
+}
+
+/* ---------------------------------------- */
+/* FINAL STEP                               */
+/* ---------------------------------------- */
+
+.wizard__done {
+	padding: 2rem 0;
+	text-align: center;
+}
+
+.wizard__done .wizard__lead {
+	margin-inline: auto;
+	max-width: 32rem;
+}
+
+.wizard__whatsapp {
+	margin-top: 0.5rem;
+	font-size: 1.15rem;
+}
+
+.wizard__notice {
+	padding: 1rem 1.25rem;
+	border-radius: 8px;
+	font-weight: 600;
+}
+
+.wizard__notice--warn {
+	background-color: var(--color-orange-pastel);
+	color: var(--color-orange-hover);
+}
+
+.wizard__back-home {
+	display: inline-block;
+	margin-top: 1.5rem;
+	color: var(--color-dark-muted);
+	font-weight: 600;
+	text-decoration: underline;
+}
+
+/* ---------------------------------------- */
+/* RESPONSIVE                               */
+/* ---------------------------------------- */
+
+@media (max-width: 640px) {
+	.contact-row {
+		flex-direction: column;
+		align-items: stretch;
+	}
+
+	.contact-row__fields {
+		grid-template-columns: 1fr;
+	}
+
+	.wizard__stepper {
+		font-size: 0.7rem;
+	}
+}

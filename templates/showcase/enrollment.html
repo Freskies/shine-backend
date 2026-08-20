@@ -1,35 +1,146 @@
 {% extends "base.html" %}
 
-{% block title %}Finalizza l'iscrizione &bull; Shine Parkour ASD{% endblock %}
+{% block title %}Iscriviti &bull; Shine Parkour ASD{% endblock %}
+
+{% block head %}
+<link rel="stylesheet" href="/static/membership_form.css">
+<link rel="stylesheet" href="/static/enrollment.css">
+{% endblock %}
 
 {% block content %}
 <main class="main-wrapper">
 	<section class="section">
 		<div class="container container--narrow">
-			<a href="/" class="btn btn--green-outline btn--sm">Torna indietro</a>
+			<a href="/" class="wizard__back">&larr; Torna alla home</a>
 
-			<div class="section__header">
-				<span class="subheading subheading--orange">Iscrizione</span>
-				<h2 class="heading-secondary">Finalizza la richiesta</h2>
-				<p class="section__intro">
-					Carica il modulo di tesseramento compilato e la foto del certificato medico in corso di validità.
-				</p>
+			{#
+			Both phases live inside one form and are toggled with `data-phase`, never
+			fetched. A file input cannot be repopulated from script, so swapping phase 1
+			out of the DOM would silently lose the chosen photo.
+			#}
+			<div id="enrollment-wizard" class="wizard" data-phase="1">
+				<ol class="wizard__steps" aria-label="Avanzamento">
+					<li class="wizard__stepper" data-step="1">Certificato</li>
+					<li class="wizard__stepper" data-step="2">I tuoi dati</li>
+					<li class="wizard__stepper" data-step="3">Conferma</li>
+				</ol>
+
+				<form id="enrollment-form"
+				      class="membership-form"
+				      hx-post="/enrollment"
+				      hx-encoding="multipart/form-data"
+				      hx-target="#wizard-feedback"
+				      hx-swap="innerHTML"
+				      hx-indicator="#wizard-loading"
+				      hx-disabled-elt="find button"
+				      hx-confirm="Confermi l'invio? Controlla i dati: al termine invieremo tutto a Shine e una copia alla tua email.">
+
+					<!-- ======================= FASE 1 ======================= -->
+					<section class="wizard__phase" data-phase="1" aria-labelledby="phase1-title">
+						<p class="wizard__step-count">Passo 1 di 3</p>
+						<h1 id="phase1-title" class="heading-secondary">Fai una foto al certificato medico</h1>
+						<p class="wizard__lead">
+							Scatta una foto chiara o scegli il file dal tuo dispositivo.
+							Assicurati che <strong>data e timbro siano leggibili</strong>.
+						</p>
+
+						<label class="wizard__filepick" for="certificate">
+							<span class="wizard__filepick-icon" aria-hidden="true">+</span>
+							<span class="wizard__filepick-text">Scegli foto o scatta foto</span>
+							{#
+							`capture` is only a hint: on a phone it offers the camera, on a
+							desktop the browser ignores it and opens the file picker.
+							#}
+							<input id="certificate" name="certificate" type="file"
+							       accept="image/*,application/pdf" capture="environment" required>
+						</label>
+
+						<p id="certificate-chosen" class="wizard__chosen" role="status"></p>
+
+						<button type="button" class="btn btn--green btn--full fluid-shape wizard__next"
+						        data-goto-phase="2" disabled>
+							Avanti
+						</button>
+					</section>
+
+					<!-- ======================= FASE 2 ======================= -->
+					<section class="wizard__phase" data-phase="2" aria-labelledby="phase2-title">
+						<p class="wizard__step-count">Passo 2 di 3</p>
+						<h1 id="phase2-title" class="heading-secondary">Inserisci i tuoi dati</h1>
+
+						<fieldset class="membership-form__fieldset">
+							<legend class="membership-form__legend">La tua email</legend>
+							<p class="membership-form__disclaimer">
+								Ci serve per mandarti il riepilogo dell'iscrizione e la tessera UISP.
+							</p>
+							<div class="membership-form__row">
+								<div class="membership-form__field">
+									<label class="membership-form__label" for="applicant_email">Indirizzo email</label>
+									<input class="membership-form__input" id="applicant_email" name="applicant_email"
+									       type="email" autocomplete="email" required>
+								</div>
+							</div>
+						</fieldset>
+
+						{% include "partials/membership_fields.html" %}
+
+						<fieldset class="membership-form__fieldset">
+							<legend class="membership-form__legend">Contatti di emergenza (facoltativo)</legend>
+							<p class="membership-form__disclaimer">
+								Chi chiamiamo se serve, durante l'allenamento. Puoi indicarne fino a 4.
+							</p>
+
+							{# Rows come from the server so their markup lives in one template. #}
+							<div id="contact-list"></div>
+
+							{#
+							  `js:` makes hx-vals evaluate per request, so the server sees how many
+							  rows exist right now and can refuse to hand out a fifth.
+							#}
+							{#
+							  `hx-confirm="unset"` cancels the inheritance from the form: without it,
+							  adding a contact would pop the "confirm the send?" dialog, because
+							  hx-confirm applies to every descendant that issues a request.
+							#}
+							<button type="button" id="add-contact" class="btn btn--sm btn--green-soft fluid-shape"
+							        hx-get="/enrollment/emergency-contact"
+							        hx-target="#contact-list"
+							        hx-swap="beforeend"
+							        hx-confirm="unset"
+							        hx-vals='js:{count: document.querySelectorAll(".contact-row").length}'>
+								+ Aggiungi un contatto
+							</button>
+
+							<p id="contact-max" class="membership-form__disclaimer" hidden>
+								Hai raggiunto il massimo di 4 contatti. Rimuovine uno per cambiarlo.
+							</p>
+						</fieldset>
+
+						<div class="wizard__actions">
+							<button type="button" class="wizard__back-step" data-goto-phase="1">
+								&larr; Torna al certificato
+							</button>
+
+							<button type="submit" class="btn btn--green btn--full fluid-shape">
+								Conferma e invia
+							</button>
+
+							<p class="wizard__hint">
+								Ti invieremo una copia di riepilogo direttamente via email.
+							</p>
+
+							<div id="wizard-loading" class="htmx-indicator wizard__loading">
+								<span>Invio in corso, non chiudere la pagina&hellip;</span>
+							</div>
+						</div>
+					</section>
+				</form>
+
+				<div id="wizard-feedback"></div>
 			</div>
-
-			<form class="enrollment-form" action="/iscrizione" method="post" enctype="multipart/form-data">
-				<label class="form-field">
-					<span class="form-field__label">Modulo di tesseramento</span>
-					<input type="file" name="membership_form" accept="application/pdf,image/*" required>
-				</label>
-
-				<label class="form-field">
-					<span class="form-field__label">Certificato medico</span>
-					<input type="file" name="medical_certificate" accept="application/pdf,image/*" required>
-				</label>
-
-				<button type="submit" class="btn btn--orange btn--full">Invia la richiesta</button>
-			</form>
 		</div>
 	</section>
 </main>
+
+<script src="/static/enrollment.js"></script>
 {% endblock %}

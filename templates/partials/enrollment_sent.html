@@ -1,0 +1,36 @@
+{# Phase 3. Swapped in over the whole wizard once both emails are away. #}
+<div class="wizard__done">
+	<p class="wizard__step-count">Passo 3 di 3</p>
+
+	<h2 class="heading-secondary">Ci siamo quasi!</h2>
+
+	<p class="wizard__lead">
+		I tuoi dati sono stati registrati. Ti abbiamo inviato una copia di riepilogo a
+		<strong>{{ applicant_email }}</strong>, con il modulo di tesseramento in allegato.
+	</p>
+
+	<p class="wizard__lead">
+		Manca solo un passaggio: apri WhatsApp e mandaci il messaggio già pronto, così sappiamo che
+		possiamo procedere.
+	</p>
+
+	{% match whatsapp_url %}
+		{% when Some with (url) %}
+			<a href="{{ url }}" target="_blank" rel="noopener"
+			   class="btn btn--green btn--full wizard__whatsapp fluid-shape">
+				Apri WhatsApp per confermare
+			</a>
+		{% when None %}
+			{# WHATSAPP_NUMBER is unset: say so instead of rendering a dead link. #}
+			<p class="wizard__notice wizard__notice--warn">
+				Numero WhatsApp non ancora configurato. L'iscrizione è comunque arrivata: ti
+				ricontattiamo noi via email.
+			</p>
+	{% endmatch %}
+
+	<p class="wizard__hint">
+		Non usi WhatsApp? Va bene comunque: abbiamo già tutto, ti scriviamo noi.
+	</p>
+
+	<a href="/" class="wizard__back-home">Torna alla home</a>
+</div>

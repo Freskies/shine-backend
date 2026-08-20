@@ -1,0 +1,24 @@
+{# Recap sent to the applicant. The certificate photo is deliberately not attached back:
+   they already have it, and it is health data. #}
+<div style="font-family:Arial,Helvetica,sans-serif;font-size:14px;color:#1f2937;line-height:1.6;">
+	<p style="font-size:18px;font-weight:bold;color:#047857;margin:0 0 12px;">
+		Abbiamo ricevuto la tua iscrizione
+	</p>
+
+	<p style="margin:0 0 12px;">
+		Ciao {{ form.first_name }}, questo è il riepilogo di quello che hai inviato a Shine Parkour ASD.
+		In allegato trovi il modulo di tesseramento firmato: conservalo.
+	</p>
+
+	<p style="margin:0 0 18px;">
+		Ti ricontattiamo noi per confermarti il primo allenamento. Se qualcosa qui sotto è sbagliato,
+		rispondi a questa email e lo correggiamo.
+	</p>
+
+	{% include "email/_data_table.html" %}
+
+	<p style="margin:18px 0 0;color:#4b5563;font-size:13px;">
+		Trattiamo questi dati solo per il tesseramento e le attività dell'associazione.
+		Shine Parkour ASD &bull; Via Piceno 2, 48121 Ravenna
+	</p>
+</div>
