@@ -1,0 +1,79 @@
+{% extends "base.html" %}
+
+{% block title %}Privacy Policy — Shine Parkour ASD{% endblock %}
+
+{% block content %}
+<header class="header">
+	<div class="container header__container">
+		<a href="/" class="logo">
+			<img class="logo__mark" src="/static/logo_shine.svg" alt="Logo Shine">
+			Shine
+		</a>
+	</div>
+</header>
+
+<main class="main-wrapper">
+	<section class="section">
+		<div class="container container--narrow">
+			<!-- #legal-content is what htmx extracts (hx-select) into the global dialog -->
+			<article id="legal-content" class="legal">
+				<h1 class="heading-secondary">Privacy Policy</h1>
+				<p class="text-body">
+					Informativa sul trattamento dei dati personali ai sensi degli artt. 13 e 14 del
+					Regolamento (UE) 2016/679 ("GDPR").
+				</p>
+
+				<h2>Titolare del trattamento</h2>
+				<p class="text-body">
+					Shine Parkour ASD, con sede in Ravenna (RA). Per qualsiasi richiesta relativa ai
+					tuoi dati puoi scrivere a
+					<a href="mailto:shineparkour@yahoo.it">shineparkour@yahoo.it</a>.
+				</p>
+
+				<h2>Dati trattati</h2>
+				<p class="text-body">
+					Nell'ambito del tesseramento e della partecipazione alle attività raccogliamo:
+				</p>
+				<ul class="text-body">
+					<li>dati anagrafici e di contatto dell'atleta e, per i minori, del genitore o tutore;</li>
+					<li>certificato medico per attività sportiva non agonistica;</li>
+					<li>contatti di emergenza indicati al momento dell'iscrizione;</li>
+					<li>firme apposte sul modulo di tesseramento.</li>
+				</ul>
+
+				<h2>Finalità e base giuridica</h2>
+				<p class="text-body">
+					I dati sono trattati per la gestione del tesseramento, la copertura assicurativa,
+					l'affiliazione agli enti di promozione sportiva e l'adempimento degli obblighi di
+					legge. La base giuridica è l'esecuzione del rapporto associativo e gli obblighi
+					legali connessi; il certificato medico è trattato per idoneità alla pratica sportiva.
+				</p>
+
+				<h2>Conservazione</h2>
+				<p class="text-body">
+					I dati sono conservati per la durata del rapporto associativo e successivamente per
+					il tempo richiesto dagli obblighi di legge.
+				</p>
+
+				<h2>Comunicazione dei dati</h2>
+				<p class="text-body">
+					I dati possono essere comunicati agli enti di promozione sportiva a cui
+					l'associazione è affiliata (es. UISP), alla compagnia assicurativa e alle autorità
+					competenti nei casi previsti dalla legge. Non vendiamo né cediamo i dati a terzi per
+					finalità di marketing.
+				</p>
+
+				<h2>Diritti dell'interessato</h2>
+				<p class="text-body">
+					Puoi esercitare in ogni momento i diritti previsti dagli artt. 15–22 GDPR (accesso,
+					rettifica, cancellazione, limitazione, opposizione, portabilità) scrivendo a
+					<a href="mailto:shineparkour@yahoo.it">shineparkour@yahoo.it</a>. Hai inoltre il
+					diritto di proporre reclamo al Garante per la protezione dei dati personali.
+				</p>
+
+				<p class="legal__updated">Ultimo aggiornamento: agosto 2026</p>
+			</article>
+		</div>
+	</section>
+</main>
+{% endblock %}

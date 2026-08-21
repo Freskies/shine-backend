@@ -14,6 +14,7 @@
 	--color-green-pastel: #ecfdf5;
 
 	--color-grey-pastel: #e5e7eb;
+	--color-grey-pastel-light: #f8f9fb;
 
 	--color-dark: #1f2937;
 	--color-dark-muted: #4b5563;
@@ -152,6 +153,11 @@ h1, h2, h3, h4, h5, h6 {
 .blob-card--orange-1 {
 	background-color: var(--color-orange-pastel);
 	border-radius: 38px 22px 48px 20px;
+}
+
+.blob-card--grey-1 {
+	background-color: var(--color-grey-pastel);
+	border-radius: 40px 18px 45px 25px;
 }
 
 /* Keep a positioning context for inner absolute elements (e.g. badge) */
@@ -297,6 +303,10 @@ h1, h2, h3, h4, h5, h6 {
 
 .wave-divider--orange {
 	background-color: var(--color-orange-pastel);
+}
+
+.wave-divider--grey {
+	background-color: var(--color-grey-pastel-light);
 }
 
 /*
@@ -966,6 +976,11 @@ svg.logo__mark {
 /* FAQS SECTION                           */
 /* ************************************** */
 
+/* Filled section between two grey wave dividers; the fill must match `.wave-divider--grey`. */
+.section--faqs {
+	background-color: var(--color-grey-pastel-light);
+}
+
 .faq-list {
 	display: flex;
 	flex-direction: column;
@@ -1131,4 +1146,71 @@ svg.logo__mark {
 	/* courses-grid already flex-wrap at all sizes; no override needed. */
 	/* pricing-grid already flex-wrap at all sizes; no override needed. */
 
+}
+/* ************************************** */
+/* GLOBAL DIALOG & LEGAL PAGES            */
+/* ************************************** */
+
+.dialog {
+	width: min(740px, calc(100vw - 2rem));
+	max-height: 85dvh;
+	margin: auto;
+	padding: 0;
+	border: none;
+	border-radius: 1.25rem;
+	background: var(--color-light);
+	color: var(--color-dark);
+}
+
+.dialog::backdrop {
+	background: rgb(31 41 55 / 0.55);
+}
+
+.dialog__bar {
+	position: sticky;
+	top: 0;
+	display: flex;
+	justify-content: flex-end;
+	padding: 0.75rem 0.75rem 0;
+	background: var(--color-light);
+}
+
+.dialog__close {
+	width: 2.25rem;
+	height: 2.25rem;
+	border: none;
+	border-radius: var(--radius-full);
+	background: var(--color-grey-pastel);
+	color: var(--color-dark);
+	font-size: 1.25rem;
+	line-height: 1;
+	cursor: pointer;
+}
+
+.dialog__close:hover {
+	background: var(--color-orange-pastel);
+}
+
+.dialog__body {
+	padding: 0 1.75rem 1.75rem;
+}
+
+.legal h2 {
+	font-size: 1.15rem;
+	font-weight: 600;
+	margin: 1.5rem 0 0.5rem;
+}
+
+.legal ul {
+	padding-left: 1.25rem;
+}
+
+.legal a {
+	color: var(--color-green);
+}
+
+.legal__updated {
+	margin-top: 2rem;
+	font-size: 0.85rem;
+	color: var(--color-dark-muted);
 }

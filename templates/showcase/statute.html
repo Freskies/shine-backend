@@ -1,0 +1,78 @@
+{% extends "base.html" %}
+
+{% block title %}Statuto — Shine Parkour ASD{% endblock %}
+
+{% block content %}
+<header class="header">
+	<div class="container header__container">
+		<a href="/" class="logo">
+			<img class="logo__mark" src="/static/logo_shine.svg" alt="Logo Shine">
+			Shine
+		</a>
+	</div>
+</header>
+
+<main class="main-wrapper">
+	<section class="section">
+		<div class="container container--narrow">
+			<!-- #legal-content is what htmx extracts (hx-select) into the global dialog -->
+			<article id="legal-content" class="legal">
+				<h1 class="heading-secondary">Statuto — Shine Parkour ASD</h1>
+
+				<h2>Art. 1 — Denominazione e sede</h2>
+				<p class="text-body">
+					È costituita l'associazione sportiva dilettantistica denominata
+					"Shine Parkour ASD", con sede in Ravenna (RA). L'associazione non ha scopo di
+					lucro.
+				</p>
+
+				<h2>Art. 2 — Scopo e attività</h2>
+				<p class="text-body">
+					L'associazione ha per finalità la promozione, la diffusione e la pratica del
+					parkour e delle discipline del movimento, con particolare attenzione
+					all'allenamento all'aperto, alla crescita personale e al rispetto dell'ambiente
+					urbano e naturale.
+				</p>
+
+				<h2>Art. 3 — Soci</h2>
+				<p class="text-body">
+					Possono essere soci tutte le persone fisiche che condividono le finalità
+					dell'associazione. L'ammissione avviene su domanda dell'interessato — per i minori,
+					del genitore o di chi ne esercita la responsabilità — accompagnata dal versamento
+					della quota associativa annuale.
+				</p>
+
+				<h2>Art. 4 — Diritti e doveri dei soci</h2>
+				<p class="text-body">
+					Tutti i soci hanno diritto di partecipare alle attività sociali e, se maggiorenni,
+					di votare in assemblea. I soci sono tenuti al rispetto dello statuto, dei
+					regolamenti interni e al pagamento delle quote deliberate.
+				</p>
+
+				<h2>Art. 5 — Organi dell'associazione</h2>
+				<p class="text-body">
+					Sono organi dell'associazione: l'Assemblea dei soci, il Consiglio Direttivo e il
+					Presidente, che ha la rappresentanza legale dell'associazione.
+				</p>
+
+				<h2>Art. 6 — Esercizio sociale</h2>
+				<p class="text-body">
+					L'esercizio sociale coincide con la stagione sportiva. Il rendiconto economico è
+					predisposto dal Consiglio Direttivo e approvato dall'Assemblea dei soci.
+				</p>
+
+				<h2>Art. 7 — Scioglimento</h2>
+				<p class="text-body">
+					In caso di scioglimento, il patrimonio residuo è devoluto a fini sportivi secondo
+					quanto previsto dalla normativa vigente.
+				</p>
+
+				<p class="legal__updated">
+					Copia integrale dello statuto registrato è disponibile su richiesta scrivendo a
+					<a href="mailto:shineparkour@yahoo.it">shineparkour@yahoo.it</a>.
+				</p>
+			</article>
+		</div>
+	</section>
+</main>
+{% endblock %}

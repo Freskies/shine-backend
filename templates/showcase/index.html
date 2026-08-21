@@ -217,6 +217,8 @@
 		</div>
 	</section>
 
+	<div class="wave-divider wave-divider--top wave-divider--grey" aria-hidden="true"></div>
+
 	<!-- FAQS SECTION -->
 	<section class="section section--faqs">
 		<div class="container container--narrow">
@@ -225,14 +227,15 @@
 			</div>
 
 			<div class="faq-list">
-				<details class="faq-item blob-card blob-card--green-1 fluid-shape">
-					<summary class="faq-item__question">Cosa mi devo portare ad una lezione?</summary>
+				<details class="faq-item blob-card blob-card--grey-1 fluid-shape">
+					<summary class="faq-item__question">Cosa mi devo portare a una lezione?</summary>
 					<div class="faq-item__answer">
-						<p>Una bottiglietta d'acqua. Raccomandato anche un cambio di vestiti per cambiarsi dopo aver sudato.</p>
+						<p>Una bottiglietta d'acqua. Raccomandato anche un cambio di vestiti per cambiarsi dopo aver
+							sudato.</p>
 					</div>
 				</details>
 
-				<details class="faq-item blob-card blob-card--green-1 fluid-shape">
+				<details class="faq-item blob-card blob-card--grey-1 fluid-shape">
 					<summary class="faq-item__question">Come mi devo vestire?</summary>
 					<div class="faq-item__answer">
 						<p>Scarpe da ginnastica sono preferibili. Si può fare con qualsiasi abbigliamento, ma consigliamo
@@ -240,7 +243,7 @@
 					</div>
 				</details>
 
-				<details class="faq-item blob-card blob-card--green-1 fluid-shape">
+				<details class="faq-item blob-card blob-card--grey-1 fluid-shape">
 					<summary class="faq-item__question">Dove si svolgono le lezioni?</summary>
 					<div class="faq-item__answer">
 						<p>Il luogo può cambiare di lezione in lezione e viene comunicato in anticipo dall'insegnante del
@@ -248,7 +251,7 @@
 					</div>
 				</details>
 
-				<details class="faq-item blob-card blob-card--green-1 fluid-shape">
+				<details class="faq-item blob-card blob-card--grey-1 fluid-shape">
 					<summary class="faq-item__question">Devo avvisare prima di venire ad allenarmi?</summary>
 					<div class="faq-item__answer">
 						<p>No! Puoi scegliere liberamente il giorno in cui allenarti in base alla tua disponibilità
@@ -258,14 +261,37 @@
 			</div>
 		</div>
 	</section>
+
+	<div class="wave-divider wave-divider--bottom wave-divider--grey" aria-hidden="true"></div>
+
+	<!-- CONTACT SECTION -->
+	<section id="contact" class="section section--contact">
+		<div class="container container--narrow">
+			<div class="section__header">
+				<h2 class="heading-secondary">Contattaci</h2>
+				<p class="section__intro">
+					Come associazione siamo aperti a partecipare a eventi e manifestazioni, e disponiamo di alcune
+					strutture mobili da allestire all'occorrenza. Per informazioni, collaborazioni o per problemi
+					con la registrazione, scrivici una mail: ti risponderemo il prima possibile.
+				</p>
+			</div>
+			<a href="mailto:shineparkour@yahoo.it" class="btn btn--green-soft fluid-shape">shineparkour@yahoo.it</a>
+		</div>
+	</section>
 </main>
 
 <footer class="footer">
 	<div class="container footer__container">
 		<p class="footer__copy">&copy; 2026 Shine Parkour ASD &bull; Esplorazione & Allenamento Outdoor</p>
 		<div class="footer__links">
-			<a href="#">Privacy Policy</a>
-			<a href="#">Statuto ASD</a>
+			<!-- href keeps the standalone page reachable (no-JS, new tab, legal deep link);
+			     with JS, htmx intercepts the click and shows the same content in the dialog. -->
+			<a href="/privacy-policy"
+			   hx-get="/privacy-policy" hx-select="#legal-content"
+			   hx-target="#global-dialog-content" hx-swap="innerHTML">Privacy Policy</a>
+			<a href="/statute"
+			   hx-get="/statute" hx-select="#legal-content"
+			   hx-target="#global-dialog-content" hx-swap="innerHTML">Statuto ASD</a>
 		</div>
 	</div>
 </footer>

@@ -10,7 +10,7 @@ use crate::config::Config;
 use crate::handlers::enrollment::{
 	emergency_contact_row_handler, enrollment_handler, enrollment_submit_handler,
 };
-use crate::handlers::showcase::index_handler;
+use crate::handlers::showcase::{index_handler, privacy_policy_handler, statute_handler};
 use crate::state::AppState;
 use axum::Router;
 use axum::extract::DefaultBodyLimit;
@@ -32,10 +32,10 @@ const MAX_UPLOAD_BYTES: usize = 16 * 1024 * 1024;
 /// Forces revalidation of static assets.
 ///
 /// `ServeDir` sends `ETag` and `Last-Modified` but no `Cache-Control`. With no explicit
-/// lifetime a browser falls back to *heuristic* freshness — roughly 10% of the time since
+/// lifetime, a browser falls back to *heuristic* freshness — roughly 10% of the time since
 /// the file was last modified — and reuses its copy without asking, so an edited
-/// stylesheet can keep serving stale for minutes. `no-cache` still allows caching, it just
-/// requires a revalidation first, which the existing `ETag` answers with a cheap 304.
+/// stylesheet can keep serving stale for minutes. `no-cache` still allows caching; it just
+/// requires a revalidation first, which the existing `ETag` answers with an inexpensive 304.
 async fn revalidate_static(mut response: Response) -> Response {
 	response
 		.headers_mut()
@@ -95,6 +95,8 @@ async fn main() {
 
 	let app = Router::new()
 		.route("/", get(index_handler))
+		.route("/privacy-policy", get(privacy_policy_handler))
+		.route("/statute", get(statute_handler))
 		.route("/enrollment", get(enrollment_handler))
 		.route(
 			"/enrollment",
