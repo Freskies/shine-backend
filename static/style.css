@@ -465,7 +465,6 @@ h1, h2, h3, h4, h5, h6 {
 /* ************************************** */
 
 .header {
-	padding: 1.1rem 0;
 	background-color: rgba(255, 255, 255, 0.95);
 	backdrop-filter: blur(10px);
 	position: sticky;
@@ -485,24 +484,17 @@ h1, h2, h3, h4, h5, h6 {
 	align-items: center;
 	gap: 0.4rem;
 	font-size: 1.4rem;
-	font-weight: 800;
+	font-weight: 300;
 	letter-spacing: -0.02em;
 }
 
-/*
- * Placeholder for the Shine logo, pending the final SVG. Sizing and alignment live
- * here, so dropping in an <svg>/<img> with this class needs no further CSS.
- */
 .logo__mark {
 	display: block;
 	flex: 0 0 auto;
-	width: 26px;
-	height: 26px;
-	border: 1.5px dashed var(--color-grey-pastel);
+	height: 76px;
 	border-radius: 6px;
 }
 
-/* An injected image keeps the box but drops the dashed placeholder outline. */
 img.logo__mark,
 svg.logo__mark {
 	border: none;
@@ -698,29 +690,20 @@ svg.logo__mark {
 }
 
 /*
- * Supporting points under a section intro. Used for the flexibility and weather notes,
- * which were a floating card in the sign-up section: they describe how the courses run,
- * so they belong with the course description rather than next to the enrolment steps.
+ * Fixed-width cards that wrap naturally: 3 → 2+1 → 1 per row as the viewport narrows.
+ * `flex: 0 0 320px` prevents any shrinking, so the card width never changes — the layout
+ * just reflows. On a 375px phone (327px usable after container padding) a 320px card leaves
+ * a small margin on each side instead of going edge-to-edge.
  */
-.section__points {
-	display: flex;
-	flex-direction: column;
-	gap: 1rem;
-	margin-top: 1.25rem;
-}
-
-.section__points li {
-	font-size: 0.95rem;
-	color: var(--color-dark-muted);
-	line-height: 1.6;
-	padding-left: 1rem;
-	border-left: 3px solid var(--color-green-pastel);
-}
-
 .courses-grid {
 	display: flex;
-	flex-direction: column;
-	gap: 2.5rem;
+	flex-wrap: wrap;
+	gap: 2rem;
+	justify-content: center;
+}
+
+.course-card {
+	flex: 0 0 320px;
 }
 
 /* ---------------------------------------- */
@@ -758,6 +741,15 @@ svg.logo__mark {
 }
 
 .day-mark:nth-of-type(3) {
+	animation-delay: -8s;
+}
+
+/* Staggered like `.about__shot`, so the three course cards don't pulse in unison. */
+.courses-grid .course-card.fluid-shape:nth-child(2) {
+	animation-delay: -4s;
+}
+
+.courses-grid .course-card.fluid-shape:nth-child(3) {
 	animation-delay: -8s;
 }
 
@@ -894,30 +886,45 @@ svg.logo__mark {
 /* PRICING SECTION                        */
 /* ************************************** */
 
+/*
+ * Fixed-width cards that wrap 3 → 2+1 → 1 per row, same pattern as .courses-grid.
+ * padding-top makes room for the "Più Scelto" badge of the featured card to sit on
+ * its top edge without being cropped by the flex container.
+ */
 .pricing-grid {
 	display: flex;
-	flex-direction: column;
-	gap: 2.5rem;
-	padding-top: 1rem;
+	flex-wrap: wrap;
+	gap: 2rem;
+	justify-content: center;
+	padding-top: 1.5rem;
 }
 
 .pricing-card {
+	flex: 0 0 320px;
 	text-align: center;
 	position: relative;
 }
 
-.pricing-card--featured {
-	/* Extra top room so the badge sits below the fluid clip-path edge */
-	padding-top: 4.5rem !important;
+/* Staggered so the three pricing cards don't pulse in unison. */
+.pricing-grid .pricing-card.fluid-shape:nth-child(2) {
+	animation-delay: -4s;
 }
 
+/* Featured card: fluid-shape is on the inner .pricing-card__body, not the outer wrapper. */
+.pricing-grid .pricing-card:nth-child(3) .pricing-card__body {
+	animation-delay: -8s;
+}
+
+/*
+ * Badge is a direct child of the outer .pricing-card--featured wrapper (which has no
+ * clip-path), so it is never cut. top:0 + translateY(-50%) centres it on the wrapper's
+ * top edge; the pricing-grid padding-top gives it room to float above without cropping.
+ */
 .pricing-card__badge {
 	position: absolute;
-	/* Sit inside the fluid clip-path (which insets ~7% + wave) so the badge isn't cut off */
-	top: 42px;
 	left: 50%;
 	transform: translateX(-50%);
-	background-color: var(--color-green);
+	background-color: var(--color-orange);
 	color: var(--color-light);
 	font-size: 0.75rem;
 	font-weight: 800;
@@ -926,6 +933,11 @@ svg.logo__mark {
 	animation-delay: -3s;
 	z-index: 10;
 	white-space: nowrap;
+}
+
+/* Inner wrapper of the featured card: carries the background and fluid clip-path. */
+.pricing-card__body {
+	height: 100%;
 }
 
 .pricing-card__title {
@@ -960,8 +972,51 @@ svg.logo__mark {
 	gap: 1.25rem;
 }
 
+/*
+ * Closed, each item shrinks to the width of its own question; open, it grows to the
+ * full column so the answer has room to breathe. `interpolate-size: allow-keywords`
+ * (set on html) lets the fit-content → 100% change animate instead of snapping.
+ */
+/*
+ * The blob clip-path insets up to ~8% of the box width per side, so the horizontal
+ * padding must clear that at full (open) width. Percentage padding resolves against
+ * the *container* (not the box itself), so it is the same in both states — the text
+ * never shifts when the card opens; only the box edge animates outwards.
+ */
 .faq-item {
 	cursor: pointer;
+	padding: 2.5rem calc(1rem + 7%);
+	width: fit-content;
+	max-width: 100%;
+	position: relative;
+	transition: width 0.35s ease;
+}
+
+.faq-item[open] {
+	width: 100%;
+}
+
+/*
+ * The whole card toggles the accordion — open or closed — not just the question text:
+ * an invisible overlay inside the <summary> stretches over the entire box (clip-path
+ * already limits hit-testing to the visible blob).
+ */
+.faq-item__question::after {
+	content: "";
+	position: absolute;
+	inset: 0;
+}
+
+.faq-item:nth-child(2) {
+	animation-delay: -3s;
+}
+
+.faq-item:nth-child(3) {
+	animation-delay: -6s;
+}
+
+.faq-item:nth-child(4) {
+	animation-delay: -9s;
 }
 
 .faq-item__question {
@@ -980,10 +1035,18 @@ svg.logo__mark {
 	height: auto;
 }
 
+/*
+ * `contain: inline-size` keeps the answer out of the card's intrinsic width. Without
+ * it, `width: fit-content` re-resolves every animation frame against the rendered
+ * content — and the answer stays rendered throughout the open/close transition, so a
+ * long paragraph would drag fit-content to full width instantly and turn the smooth
+ * width interpolation into a single snap.
+ */
 .faq-item__answer {
 	margin-top: 0.65rem;
 	font-size: 0.9rem;
 	color: var(--color-dark-muted);
+	contain: inline-size;
 }
 
 /* ************************************** */
@@ -1065,16 +1128,7 @@ svg.logo__mark {
 		align-items: center;
 	}
 
-	.courses-grid {
-		display: grid;
-		grid-template-columns: repeat(2, 1fr);
-		gap: 2rem;
-	}
-
-	.pricing-grid {
-		display: grid;
-		grid-template-columns: repeat(3, 1fr);
-		gap: 2rem;
-	}
+	/* courses-grid already flex-wrap at all sizes; no override needed. */
+	/* pricing-grid already flex-wrap at all sizes; no override needed. */
 
 }

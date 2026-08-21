@@ -4,10 +4,7 @@
 <header class="header">
 	<div class="container header__container">
 		<a href="#" class="logo">
-			<!-- PLACEHOLDER LOGO: quando arriva l' SVG del logo Shine, sostituisci questo
-			     <span> con l'<svg> inline (o <img src="/static/logo_shine.svg" alt="">)
-			     mantenendo la classe logo__mark, che ne fissa dimensioni e allineamento. -->
-			<span class="logo__mark" aria-hidden="true"></span>
+			<img class="logo__mark" src="/static/logo_shine.svg" alt="Logo Shine">
 			Shine
 		</a>
 	</div>
@@ -100,36 +97,32 @@
 			<div class="section__header">
 				<h2 class="heading-secondary">I Nostri Corsi di Parkour</h2>
 				<p class="section__intro">
-					Creiamo volutamente gruppi grandi ed eterogenei: i più piccoli imparano per emulazione e crescono più
-					velocemente, mentre i più grandi sviluppano empatia e senso di responsabilità.
+					<strong class="text-green">3 allenamenti a settimana:</strong>
+					<span class="day-mark fluid-shape">Lun</span>
+					<span class="day-mark fluid-shape">Mer</span>
+					<span class="day-mark fluid-shape">Gio</span>
+					puoi scegliere liberamente quando venire senza avvisare nessuno, per la massima libertà di adattarti
+					ai tuoi impegni. Essendo al 100% all'aperto, se piove eccessivamente la lezione salta per sicurezza,
+					ma potendo contare su più sessioni a settimana puoi sempre recuperarla in un altro giorno.
 				</p>
-
-				<ul class="section__points">
-					<li>
-						<strong class="text-green">3 allenamenti a settimana:</strong>
-						<span class="day-mark fluid-shape">Lun</span>
-						<span class="day-mark fluid-shape">Mer</span>
-						<span class="day-mark fluid-shape">Gio</span>
-						puoi scegliere liberamente quando venire senza avvisare nessuno. Massima libertà per adattarsi ai tuoi
-						impegni.
-					</li>
-					<li>
-						<strong class="text-green">Recuperi facili in caso di pioggia:</strong>
-						essendo al 100% all'aperto, se piove eccessivamente la lezione salta per sicurezza
-						ma puoi recuperarla quando vuoi sfruttando una qualsiasi delle altre sessioni della settimana.
-					</li>
-				</ul>
 			</div>
 
 			<div class="courses-grid">
-				<article class="course-card blob-card blob-card--green-1">
+				<article class="course-card blob-card blob-card--green-1 fluid-shape">
 					<span class="course-card__schedule course-card__schedule--green fluid-shape">18:00 – 19:30</span>
-					<h3 class="course-card__title">7 – 14 Anni</h3>
+					<h3 class="course-card__title">6 – 9 Anni</h3>
+					<p class="course-card__desc">Gioco e movimento naturale: i più piccoli scoprono equilibrio,
+						coordinazione e le prime tecniche di sicurezza divertendosi.</p>
+				</article>
+
+				<article class="course-card blob-card blob-card--green-1 fluid-shape">
+					<span class="course-card__schedule course-card__schedule--green fluid-shape">18:00 – 19:30</span>
+					<h3 class="course-card__title">10 – 13 Anni</h3>
 					<p class="course-card__desc">Coordinazione, equilibrio, tecniche di salvataggio e sviluppo di spirito
 						critico nell'affrontare i salti.</p>
 				</article>
 
-				<article class="course-card blob-card blob-card--green-1 course-card--highlight card-organic-corner">
+				<article class="course-card blob-card blob-card--green-1 fluid-shape">
 					<span class="course-card__schedule course-card__schedule--green fluid-shape">19:30 – 21:30</span>
 					<h3 class="course-card__title">14+ Anni &amp; Adulti</h3>
 					<p class="course-card__desc">Consapevolezza del corpo, condizionamento atletico aperto e ricerca del
@@ -193,26 +186,32 @@
 		<div class="container">
 			<div class="section__header">
 				<h2 class="heading-secondary">Tariffe Semplici e Chiare</h2>
+				<p class="section__intro">
+					I pagamenti sono accettati esclusivamente tramite bonifico bancario. A eccezione della lezione di
+					prova, è richiesto il versamento di una quota associativa annuale di 20€.
+				</p>
 			</div>
 
 			<div class="pricing-grid">
-				<div class="pricing-card blob-card blob-card--green-1">
+				<div class="pricing-card blob-card blob-card--green-1 fluid-shape">
 					<h3 class="pricing-card__title">Singola</h3>
 					<p class="pricing-card__price">15€ <span>/ lezione</span></p>
 					<p class="pricing-card__desc">Per chi vuole provare una lezione singola ogni tanto.</p>
 				</div>
 
-				<div class="pricing-card blob-card blob-card--green-1">
+				<div class="pricing-card blob-card blob-card--green-1 fluid-shape">
 					<h3 class="pricing-card__title">1 Volta / Settimana</h3>
-					<p class="pricing-card__price">45€ <span>/ mese</span></p>
+					<p class="pricing-card__price">50€ <span>/ mese</span></p>
 					<p class="pricing-card__desc">Scegli ogni settimana il giorno che ti è più comodo.</p>
 				</div>
 
-				<div class="pricing-card pricing-card--featured blob-card blob-card--green-1 card-organic-corner">
+				<div class="pricing-card pricing-card--featured">
 					<span class="pricing-card__badge fluid-shape">Più Scelto</span>
-					<h3 class="pricing-card__title">3 Volte / Settimana</h3>
-					<p class="pricing-card__price">60€ <span>/ mese</span></p>
-					<p class="pricing-card__desc">Massimo valore, piena flessibilità e crescita costante.</p>
+					<div class="pricing-card__body blob-card blob-card--orange-1 fluid-shape">
+						<h3 class="pricing-card__title">3 Volte / Settimana</h3>
+						<p class="pricing-card__price">70€ <span>/ mese</span></p>
+						<p class="pricing-card__desc">Massimo valore, piena flessibilità e crescita costante.</p>
+					</div>
 				</div>
 			</div>
 		</div>
@@ -226,28 +225,34 @@
 			</div>
 
 			<div class="faq-list">
-				<details class="faq-item blob-card blob-card--green-1">
-					<summary class="faq-item__question">Come funzionano i recuperi se piove?</summary>
+				<details class="faq-item blob-card blob-card--green-1 fluid-shape">
+					<summary class="faq-item__question">Cosa mi devo portare ad una lezione?</summary>
 					<div class="faq-item__answer">
-						<p>Non avendo una palestra al coperto, se piove ci fermiamo per sicurezza. Avendo però 3 allenamenti a
-							settimana, puoi recuperare la lezione persa presentandoti direttamente in un altro giorno a tua
-							scelta.</p>
+						<p>Una bottiglietta d'acqua. Raccomandato anche un cambio di vestiti per cambiarsi dopo aver sudato.</p>
 					</div>
 				</details>
 
-				<details class="faq-item blob-card blob-card--green-1">
+				<details class="faq-item blob-card blob-card--green-1 fluid-shape">
+					<summary class="faq-item__question">Come mi devo vestire?</summary>
+					<div class="faq-item__answer">
+						<p>Scarpe da ginnastica sono preferibili. Si può fare con qualsiasi abbigliamento, ma consigliamo
+							indumenti comodi — dipende anche dalla temperatura se la lezione si svolge all'aperto.</p>
+					</div>
+				</details>
+
+				<details class="faq-item blob-card blob-card--green-1 fluid-shape">
+					<summary class="faq-item__question">Dove si svolgono le lezioni?</summary>
+					<div class="faq-item__answer">
+						<p>Il luogo può cambiare di lezione in lezione e viene comunicato in anticipo dall'insegnante del
+							corso.</p>
+					</div>
+				</details>
+
+				<details class="faq-item blob-card blob-card--green-1 fluid-shape">
 					<summary class="faq-item__question">Devo avvisare prima di venire ad allenarmi?</summary>
 					<div class="faq-item__answer">
 						<p>No! Puoi scegliere liberamente il giorno in cui allenarti in base alla tua disponibilità
 							settimanale.</p>
-					</div>
-				</details>
-
-				<details class="faq-item blob-card blob-card--green-1">
-					<summary class="faq-item__question">Perché gruppi grandi ed età miste?</summary>
-					<div class="faq-item__answer">
-						<p>Favorisce un apprendimento naturale: i più giovani imparano velocemente guardando i più grandi, e i
-							ragazzi più grandi maturano senso di guida e responsabilità verso i compagni.</p>
 					</div>
 				</details>
 			</div>
