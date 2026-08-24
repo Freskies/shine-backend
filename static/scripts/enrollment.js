@@ -318,9 +318,35 @@ form.addEventListener("htmx:configRequest", (evt) => {
 });
 
 /*
- * Nothing here toggles the sending state: `hx-disabled-elt` on the form disables the button
- * while the request is out, and the `htmx-indicator` span inside it swaps the label for
- * "Invio in corso" through CSS alone.
+ * `hx-disabled-elt` on the form only covers the submit button, and the `htmx-indicator` span
+ * inside it swaps the label for "Invio in corso" through CSS alone. Everything else on the
+ * page has to be frozen from here: while the request is out the fields must not be edited and
+ * the consent links must not open the Statute or the privacy notice in the dialog.
+ *
+ * `inert` is the guard — it kills clicks and takes the whole subtree out of the tab order —
+ * and the class is what dims it. The wrapper is used rather than the wizard because the "back
+ * to the home" link sits outside it and would otherwise stay clickable.
+ */
+const pageWrapper = document.querySelector(".main-wrapper");
+
+function setSending (sending) {
+	pageWrapper.inert = sending;
+	pageWrapper.classList.toggle("main-wrapper--sending", sending);
+}
+
+form.addEventListener("htmx:beforeRequest", (evt) => {
+	if (evt.detail.elt === form) setSending(true);
+});
+
+/* Covers the failures: the form is still on the page and keeps everything typed. */
+form.addEventListener("htmx:afterRequest", (evt) => {
+	if (evt.detail.elt === form) setSending(false);
+});
+
+/*
+ * A successful send replaces the whole wizard (HX-Retarget + outerHTML), so the listener above
+ * hangs off a detached form by then. The `enrollmentSent` trigger the response carries fires on
+ * the body instead, which is what unfreezes the confirmation step. See the handler below.
  */
 
 /* CONSENT CHECKBOXES */
@@ -367,6 +393,8 @@ form.addEventListener("keydown", (e) => {
 let submitted = false;
 body.addEventListener("enrollmentSent", () => {
 	submitted = true;
+	/* The confirmation step is now on screen and its WhatsApp button has to be clickable. */
+	setSending(false);
 });
 window.addEventListener("beforeunload", (e) => {
 	if (submitted) return;

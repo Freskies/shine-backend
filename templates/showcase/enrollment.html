@@ -53,11 +53,12 @@
 							<span class="wizard__filepick-text">Scegli un file o trascina qui</span>
 							<span class="wizard__filepick-hint">Immagine o PDF &middot; 1 file al massimo</span>
 							{#
-							`capture` is only a hint: on a phone it offers the camera, on a
-							desktop the browser ignores it and opens the file picker.
+							No `capture`: on a phone it sends the user straight to the camera with
+							no way back to the gallery or to a saved PDF. Without it the system
+							picker offers all three.
 							#}
 							<input id="certificate" name="certificate" type="file"
-							       accept="image/*,application/pdf" capture="environment" required>
+							       accept="image/*,application/pdf" required>
 						</label>
 
 						<div id="certificate-preview" class="wizard__preview" hidden>

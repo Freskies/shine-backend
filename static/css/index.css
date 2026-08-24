@@ -1239,8 +1239,17 @@ svg.logo__mark {
 /* GLOBAL DIALOG & LEGAL PAGES            */
 /* ************************************** */
 
+/*noinspection CssBrowserCompatibilityForProperties*/
 .dialog {
 	width: min(740px, calc(100vw - 2rem));
+	/*
+	 * A definite height, not just a cap: `.dialog__body` grows from a zero flex basis and its
+	 * `overflow-y: auto` zeroes its automatic minimum size, so against a content-sized dialog
+	 * it collapses and nothing but the title is left standing.
+	 */
+	height: 85vh;
+	height: 85dvh;
+	/* Restated so the height is never clamped by the browser's own `max-height` for dialogs. */
 	max-height: 85dvh;
 	margin: auto;
 	padding: 0;
@@ -1286,8 +1295,12 @@ svg.logo__mark {
 
 /*noinspection CssBrowserCompatibilityForProperties*/
 .dialog__body {
-	flex: 1;
+	flex: 1 1 auto;
+	/* Lets the item shrink below its content, which is what makes it the scrolling one. */
+	min-height: 0;
 	overflow-y: auto;
+	/* Reaching the end of a legal text must not start scrolling the page underneath. */
+	overscroll-behavior: contain;
 	padding: 0 1.75rem 1.75rem;
 	scrollbar-width: thin;
 	scrollbar-color: var(--color-grey-pastel) transparent;
@@ -1327,4 +1340,20 @@ svg.logo__mark {
 	margin-top: 2rem;
 	font-size: 0.85rem;
 	color: var(--color-dark-muted);
+}
+
+/* On a phone a legal text needs every line it can get, so the dialog takes the screen. */
+@media (max-width: 600px) {
+	/*noinspection CssBrowserCompatibilityForProperties*/
+	.dialog {
+		width: calc(100vw - 1rem);
+		height: 94vh;
+		height: 94dvh;
+		max-height: 94dvh;
+		border-radius: 1rem;
+	}
+
+	.dialog__body {
+		padding: 0 1.15rem 1.25rem;
+	}
 }

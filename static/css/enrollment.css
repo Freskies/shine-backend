@@ -609,8 +609,22 @@ canvas.signature-canvas {
 	gap: 0.5rem;
 }
 
-form.htmx-request {
-	opacity: 0.85;
+/*
+ * Set together with `inert` by enrollment.js while the submission is out. `inert` already
+ * blocks every click; `pointer-events` repeats it for anything that might ignore the
+ * attribute, and the dim tells the applicant the page is frozen.
+ *
+ * The dim skips `.wizard__actions`: opacity on an ancestor cannot be undone by a descendant,
+ * and the button has to keep "Invio in corso" readable.
+ */
+.main-wrapper--sending {
+	pointer-events: none;
+}
+
+.main-wrapper--sending .wizard__back,
+.main-wrapper--sending .wizard__steps,
+.main-wrapper--sending .wizard__phase > :not(.wizard__actions) {
+	opacity: 0.45;
 }
 
 /* The submit button hides its idle label while its own indicator is showing. */

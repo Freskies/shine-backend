@@ -28,8 +28,9 @@
 <body>
 {% block content %}{% endblock %}
 
+{# The scroller is `.dialog__body`, not the dialog itself, so that is what has to be rewound. #}
 <dialog id="global-dialog" class="dialog"
-        hx-on:htmx:after-swap="this.showModal(); this.scrollTop = 0"
+        hx-on:htmx:after-swap="this.showModal(); this.querySelector('.dialog__body').scrollTop = 0"
         hx-on:click="if (event.target === this) this.close()">
 	<form method="dialog" class="dialog__bar">
 		<button class="dialog__close" aria-label="Chiudi">&times;</button>

@@ -393,7 +393,7 @@ fn enrollment_error(detail: &str) -> Response {
 	error!(detail, "enrollment failed");
 	HtmlTemplate(EnrollmentErrorTemplate {
 		message: "Non è stato possibile completare l'invio. Controlla i dati e riprova: \
-		          se il problema resta, scrivici e facciamo l'iscrizione insieme."
+		          se il problema resta, mandaci una mail a shineparkour@yahoo.it."
 			.to_string(),
 	}).into_response()
 }
