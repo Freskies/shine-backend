@@ -2,6 +2,7 @@ use askama::Template;
 use axum::extract::{Multipart, Query, State};
 use axum::http::HeaderValue;
 use axum::response::{Html, IntoResponse, Response};
+use chrono::Local;
 use urlencoding::encode;
 
 use crate::email::{EnrollmentMail, Upload, send_enrollment};
@@ -13,7 +14,7 @@ use tracing::{error, info};
 
 /// Cap on the certificate photo. Phone cameras produce 3–8 MB, and the whole thing is
 /// held in memory and attached to an email, so this leaves headroom without inviting
-/// someone to post a 100 MB file.
+/// anyone to post a 100 MB file.
 const MAX_CERTIFICATE_BYTES: usize = 12 * 1024 * 1024;
 
 /// How many emergency contacts one enrolment may carry.
@@ -40,7 +41,10 @@ impl EmergencyContact {
 
 #[derive(Template)]
 #[template(path = "showcase/enrollment.html")]
-pub struct EnrollmentTemplate;
+pub struct EnrollmentTemplate {
+	/// Pre-filled value for the "Luogo e Data" fields, e.g. "Ravenna, 24/08/2026".
+	pub today: String,
+}
 
 #[derive(Template)]
 #[template(path = "partials/emergency_contact_row.html")]
@@ -83,10 +87,11 @@ struct AssociationNotice<'a> {
 // --- Handlers ---
 
 pub async fn enrollment_handler() -> impl IntoResponse {
-	HtmlTemplate(EnrollmentTemplate)
+	let today = Local::now().format("Ravenna, %d/%m/%Y").to_string();
+	HtmlTemplate(EnrollmentTemplate { today })
 }
 
-/// How many rows the page already has, so the cap can be honoured before handing out
+/// How many rows the page already has, so the cap can be honored before handing out
 /// another one.
 #[derive(serde::Deserialize)]
 pub struct RowRequest {
@@ -118,7 +123,7 @@ struct Submission {
 /// Reads the multipart body into a [`Submission`].
 ///
 /// The membership fields are re-encoded and handed to serde so the existing
-/// `MembershipForm` deserialisation — including its defaults and optional fields — stays
+/// `MembershipForm` deserialization — including its defaults and optional fields — stays
 /// the single description of that document.
 async fn parse_submission(mut multipart: Multipart) -> Result<Submission, String> {
 	let mut fields: Vec<(String, String)> = Vec::new();
@@ -186,9 +191,9 @@ async fn parse_submission(mut multipart: Multipart) -> Result<Submission, String
 		.collect::<Vec<_>>()
 		.join("&");
 	let form: MembershipForm = serde_html_form::from_str(&query)
-		.map_err(|e| format!("membership fields did not deserialise: {e}"))?;
+		.map_err(|e| format!("membership fields did not deserialize: {e}"))?;
 
-	// The four columns are submitted in DOM order and every row always posts all four,
+	// The four columns are submitted in DOM order, and every row always posts all four,
 	// so index alignment holds; `get` keeps a malformed body from panicking anyway.
 	let contacts: Vec<EmergencyContact> = (0..names.len())
 		.map(|i| EmergencyContact {
@@ -236,19 +241,19 @@ fn whatsapp_url(state: &AppState, form: &MembershipForm) -> Option<String> {
 
 	let subject = match form.minor_first_name.as_deref().map(str::trim) {
 		Some(minor) if !minor.is_empty() => format!(
-			"per {} {}",
-			minor,
+			" per {} {}",
+			minor.trim(),
 			form.minor_last_name.as_deref().unwrap_or("").trim()
 		),
-		_ => "per me".to_string(),
+		_ => "".to_string(),
 	};
 	let message = format!(
-		"Ciao Shine! Sono {} {} e ho appena completato l'iscrizione online {}. \
+		"Sono {} {} e ho appena completato l'iscrizione online{}. \
 		 Ho inviato il certificato medico e il modulo di tesseramento. \
 		 Potete confermarmi che è tutto arrivato e dirmi quando posso venire la prima volta?",
 		form.first_name.trim(),
 		form.last_name.trim(),
-		subject.trim()
+		subject
 	);
 
 	Some(format!(
@@ -258,7 +263,7 @@ fn whatsapp_url(state: &AppState, form: &MembershipForm) -> Option<String> {
 	))
 }
 
-/// Receives the whole enrolment, emails both copies and returns the final step.
+/// Receives the whole enrolment, emails both copies, and returns the final step.
 pub async fn enrollment_submit_handler(
 	State(state): State<AppState>,
 	multipart: Multipart,
@@ -270,7 +275,7 @@ pub async fn enrollment_submit_handler(
 
 	let certificate_name = submission.certificate.filename.clone();
 
-	// One line per stage, so a failure points at the step that broke rather than just the
+	// One line per stage, so a failure points to the step that broke rather than just the
 	// whole submission. The email address is the only personal field logged: it is what
 	// makes a report traceable when somebody says "it did not work".
 	info!(
@@ -288,8 +293,7 @@ pub async fn enrollment_submit_handler(
 		form: &submission.form,
 		contacts: &submission.contacts,
 		certificate_name: &certificate_name,
-	})
-	.render()
+	}).render()
 	{
 		Ok(body) => body,
 		Err(e) => return enrollment_error(&format!("recap template failed: {e}")),
@@ -300,8 +304,7 @@ pub async fn enrollment_submit_handler(
 		form: &submission.form,
 		contacts: &submission.contacts,
 		certificate_name: &certificate_name,
-	})
-	.render()
+	}).render()
 	{
 		Ok(body) => body,
 		Err(e) => return enrollment_error(&format!("notice template failed: {e}")),
@@ -349,12 +352,11 @@ pub async fn enrollment_submit_handler(
 	let mut response = HtmlTemplate(EnrollmentSentTemplate {
 		whatsapp_url: whatsapp,
 		applicant_email: submission.applicant_email,
-	})
-	.into_response();
+	}).into_response();
 
 	// The form posts into the small feedback area so that a failure leaves everything the
 	// applicant typed on screen. Success needs the opposite, so it retargets the whole
-	// wizard and replaces it — one endpoint, two swap behaviours, decided server-side.
+	// wizard and replaces it — one endpoint, two swap behaviors, decided server-side.
 	let headers = response.headers_mut();
 	headers.insert(
 		"HX-Retarget",
@@ -375,6 +377,5 @@ fn enrollment_error(detail: &str) -> Response {
 		message: "Non è stato possibile completare l'invio. Controlla i dati e riprova: \
 		          se il problema resta, scrivici e facciamo l'iscrizione insieme."
 			.to_string(),
-	})
-	.into_response()
+	}).into_response()
 }

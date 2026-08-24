@@ -1,23 +1,24 @@
 {# One emergency-contact row, served by GET /enrollment/emergency-contact and appended by
-   HTMX. Field names repeat across rows on purpose: the handler reads them as parallel
-   columns, in DOM order. #}
+HTMX. Field names repeat across rows on purpose: the handler reads them as parallel
+columns, in DOM order. #}
 <div class="contact-row">
 	<div class="contact-row__fields">
 		<div class="membership-form__field">
-			<label class="membership-form__label">Nome</label>
-			<input class="membership-form__input" name="contact_name" type="text" autocomplete="off">
+			<label class="membership-form__label" for="contact_name">Nome</label>
+			<input class="membership-form__input" id="contact_name" name="contact_name" type="text" autocomplete="off">
 		</div>
 		<div class="membership-form__field">
-			<label class="membership-form__label">Cognome</label>
-			<input class="membership-form__input" name="contact_surname" type="text" autocomplete="off">
+			<label class="membership-form__label" for="contact_surname">Cognome</label>
+			<input class="membership-form__input" id="contact_surname" name="contact_surname" type="text"
+			       autocomplete="off">
 		</div>
 		<div class="membership-form__field">
-			<label class="membership-form__label">Telefono</label>
-			<input class="membership-form__input" name="contact_phone" type="tel" autocomplete="off">
+			<label class="membership-form__label" for="contact_phone">Telefono</label>
+			<input class="membership-form__input" id="contact_phone" name="contact_phone" type="tel" autocomplete="off">
 		</div>
 		<div class="membership-form__field">
-			<label class="membership-form__label">Chi è (es. mamma, zio)</label>
-			<input class="membership-form__input" name="contact_note" type="text" autocomplete="off">
+			<label class="membership-form__label" for="contact_note">Chi è (es. mamma, zio)</label>
+			<input class="membership-form__input" id="contact_note" name="contact_note" type="text" autocomplete="off">
 		</div>
 	</div>
 	<button type="button" class="contact-row__remove" data-remove-contact

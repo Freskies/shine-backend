@@ -234,7 +234,12 @@ document.querySelectorAll("button[data-clear]").forEach(btn => {
 
 /* SUBMIT */
 
+const SUBMIT_LABEL = "Conferma e invia";
+const SUBMIT_LOADING_HTML = `Invio in corso <span class="loading-dots" aria-hidden="true"><span>.</span><span>.</span><span>.</span></span>`;
+
 form.addEventListener("htmx:configRequest", (evt) => {
+	if (evt.detail.elt !== form) return;
+
 	const isMinor = document.getElementById("is_minor")?.checked;
 	const commuteAlone = document.getElementById("commute_alone")?.checked;
 
@@ -263,7 +268,31 @@ form.addEventListener("htmx:configRequest", (evt) => {
 	 */
 	evt.detail.parameters["signature"] = document.getElementById("signature").value;
 	evt.detail.parameters["autonomy_signature"] = document.getElementById("autonomy_signature").value;
+
+	submitBtn.innerHTML = SUBMIT_LOADING_HTML;
+	submitBtn.disabled = true;
 });
+
+/* Restore button label if the server returned an error (on success the whole wizard is replaced). */
+form.addEventListener("htmx:afterRequest", (evt) => {
+	if (evt.detail.elt !== form) return;
+	submitBtn.textContent = SUBMIT_LABEL;
+});
+
+/* CONSENT CHECKBOXES */
+
+const consentStatute = document.getElementById("consent-statute");
+const consentPrivacy = document.getElementById("consent-privacy");
+const submitBtn = form.querySelector('button[type="submit"]');
+
+function syncSubmitBtn () {
+	submitBtn.disabled = !(consentStatute.checked && consentPrivacy.checked);
+}
+
+consentStatute.addEventListener("change", syncSubmitBtn);
+consentPrivacy.addEventListener("change", syncSubmitBtn);
+/* Re-sync after HTMX re-enables elements following any sub-request (e.g. add contact) */
+form.addEventListener("htmx:afterRequest", syncSubmitBtn);
 
 /* Leaving midway loses everything typed, so warn unless the sending already succeeded. */
 let submitted = false;
@@ -275,3 +304,33 @@ window.addEventListener("beforeunload", (e) => {
 	if (!document.getElementById("applicant_email").value && !certificate.files.length) return;
 	e.preventDefault();
 });
+
+/* DEV ONLY — call window.__phase3() in the console to preview the confirmation step. */
+window.__phase3 = () => {
+	document.getElementById("enrollment-wizard").outerHTML =
+		`<div class="wizard" data-phase="3">
+			<ol class="wizard__steps" aria-label="Avanzamento">
+				<li class="wizard__stepper" data-step="1">Certificato</li>
+				<li class="wizard__stepper" data-step="2">I tuoi dati</li>
+				<li class="wizard__stepper" data-step="3">Conferma</li>
+			</ol>
+			<div class="wizard__done">
+				<p class="wizard__step-count">Passo 3 di 3</p>
+				<h2 class="heading-secondary">Ci siamo quasi!</h2>
+				<p class="wizard__lead">
+					I tuoi dati sono stati registrati. Ti abbiamo inviato una copia di riepilogo a
+					<strong>test@example.com</strong>, con il modulo di tesseramento in allegato.
+				</p>
+				<p class="wizard__lead">
+					Manca solo un passaggio: apri WhatsApp e mandaci il messaggio già pronto, così sappiamo che
+					possiamo procedere.
+				</p>
+				<p class="wizard__notice wizard__notice--warn">
+					[Anteprima — il pulsante WhatsApp non è attivo in questa modalità]
+				</p>
+				<p class="wizard__hint">Non usi WhatsApp? Va bene comunque: abbiamo già tutto, ti scriviamo noi.</p>
+				<a href="/" class="wizard__back-home">Torna alla home</a>
+			</div>
+		</div>`;
+	submitted = true;
+};

@@ -1,44 +1,8 @@
-/* ************************************** */
-/* DESIGN SYSTEM - 100% LIGHT & PASTEL    */
-/* ************************************** */
+@import url("/static/css/variables.css");
 
 :root {
-	/* Colors */
-	--color-orange: #ffbf69;
-	--color-orange-hover: #ffac3d;
-	--color-orange-pastel: #ffedd5;
-	--color-orange-dark: #180D0D;
-
-	--color-green-accent: #059669;
-	--color-green: #d1fae5;
-	--color-green-hover: #b4e0d2;
-	--color-green-pastel: #ecfdf5;
-	--color-green-dark: #010f0b;
-
-	--color-grey-pastel: #e5e7eb;
-	--color-grey-pastel-light: #f8f9fb;
-
-	--color-dark: #1f2937;
-	--color-dark-muted: #4b5563;
-	--color-light: #ffffff;
-
-	/* Typography */
-	--font-base: 'Rubik', system-ui, -apple-system, sans-serif;
-
-	/* Layout Limits */
-	--container-max: 1120px;
-	--radius-full: 9999px;
-
-	/*
-	 * The hero and the featured-in strip are meant to always share the first viewport as
-	 * one "fold", on phone and on desktop alike. These are the fixed pieces of that fold
-	 * (header, wave divider, strip) so the hero's height can be the dvh remainder — see
-	 * `.section--hero` and `.featured-strip.section` below. Header height is a rounded-up
-	 * estimate (real box is ~71px); rounding up avoids ever forcing a scroll to see the strip.
-	 */
 	--header-h: 4.5rem;
 	--divider-h: 77px;
-	/* Same fixed value on every breakpoint, so the strip's total height is always known. */
 	--featured-logo-h: clamp(2.25rem, 1.5rem + 4vw, 3.5rem);
 	--featured-strip-h: calc(3rem * 2 + var(--featured-logo-h));
 }
@@ -66,6 +30,7 @@ html {
 	line-height: 1.6;
 	scroll-behavior: smooth;
 	-webkit-text-size-adjust: 100%;
+	/*noinspection CssBrowserCompatibilityForProperties*/
 	interpolate-size: allow-keywords;
 }
 

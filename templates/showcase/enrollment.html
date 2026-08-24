@@ -5,8 +5,7 @@
 {% block description %}Iscriviti a Shine Parkour ASD. Carica il certificato medico e compila il modulo online per completare la tua iscrizione in pochi passi.{% endblock %}
 
 {% block head %}
-<link rel="stylesheet" href="/static/membership_form.css">
-<link rel="stylesheet" href="/static/enrollment.css">
+<link rel="stylesheet" href="/static/css/enrollment.css">
 {% endblock %}
 
 {% block content %}
@@ -17,7 +16,7 @@
 
 			{#
 			Both phases live inside one form and are toggled with `data-phase`, never
-			fetched. A file input cannot be repopulated from script, so swapping phase 1
+			fetched. A file input cannot be repopulated from the script, so swapping phase 1
 			out of the DOM would silently lose the chosen photo.
 			#}
 			<div id="enrollment-wizard" class="wizard" data-phase="1">
@@ -33,9 +32,7 @@
 				      hx-encoding="multipart/form-data"
 				      hx-target="#wizard-feedback"
 				      hx-swap="innerHTML"
-				      hx-indicator="#wizard-loading"
-				      hx-disabled-elt="find button"
-				      hx-confirm="Confermi l'invio? Controlla i dati: al termine invieremo tutto a Shine e una copia alla tua email.">
+				      hx-disabled-elt="find button">
 
 					<!-- ======================= FASE 1 ======================= -->
 					<section class="wizard__phase" data-phase="1" aria-labelledby="phase1-title">
@@ -59,7 +56,9 @@
 						</label>
 
 						<div id="certificate-preview" class="wizard__preview" hidden>
-							<button type="button" id="certificate-remove" class="wizard__preview-remove" aria-label="Rimuovi file">&times;</button>
+							<button type="button" id="certificate-remove" class="wizard__preview-remove"
+							        aria-label="Rimuovi file">&times;
+							</button>
 							<div id="certificate-preview-content" class="wizard__preview-content"></div>
 						</div>
 						<p id="certificate-preview-name" class="wizard__preview-name"></p>
@@ -76,12 +75,16 @@
 					<section class="wizard__phase" data-phase="2" aria-labelledby="phase2-title">
 						<p class="wizard__step-count">Passo 2 di 3</p>
 						<h1 id="phase2-title" class="heading-secondary">Inserisci i tuoi dati</h1>
+						<p class="wizard__lead">
+							Ti chiediamo tre cose: l'indirizzo email dove riceverai il riepilogo e la tessera UISP, i dati
+							personali per il modulo di tesseramento, e i contatti da chiamare in caso di emergenza durante gli
+							allenamenti.
+						</p>
 
-						<fieldset class="membership-form__fieldset">
-							<legend class="membership-form__legend">La tua email</legend>
-							<p class="membership-form__disclaimer">
-								Ci serve per mandarti il riepilogo dell'iscrizione e la tessera UISP.
-							</p>
+						<div class="wizard__zone">
+							<h2 class="wizard__zone-title">
+								<span class="wizard__zone-num">1</span> La tua email
+							</h2>
 							<div class="membership-form__row">
 								<div class="membership-form__field">
 									<label class="membership-form__label" for="applicant_email">Indirizzo email</label>
@@ -89,27 +92,29 @@
 									       type="email" autocomplete="email" required>
 								</div>
 							</div>
-						</fieldset>
+						</div>
 
-						{% include "partials/membership_fields.html" %}
+						<div class="wizard__zone">
+							<h2 class="wizard__zone-title">
+								<span class="wizard__zone-num">2</span> Dati per il tesseramento
+							</h2>
+							{% include "partials/membership_fields.html" %}
+						</div>
 
-						<fieldset class="membership-form__fieldset">
-							<legend class="membership-form__legend">Contatti di emergenza (facoltativo)</legend>
+						<div class="wizard__zone">
+							<h2 class="wizard__zone-title">
+								<span class="wizard__zone-num">3</span> Contatti di emergenza <span
+								class="wizard__zone-optional">(facoltativo)</span>
+							</h2>
 							<p class="membership-form__disclaimer">
 								Chi chiamiamo se serve, durante l'allenamento. Puoi indicarne fino a 4.
 							</p>
-
-							{# Rows come from the server so their markup lives in one template. #}
+							{# Rows come from the server, so their markup lives in one template. #}
 							<div id="contact-list"></div>
-
 							{#
 							`js:` makes hx-vals evaluate per request, so the server sees how many
 							rows exist right now and can refuse to hand out a fifth.
-							#}
-							{#
-							`hx-confirm="unset"` cancels the inheritance from the form: without it,
-							adding a contact would pop the "confirm the send?" dialog, because
-							hx-confirm applies to every descendant that issues a request.
+							`hx-confirm="unset"` cancels the inheritance from the form.
 							#}
 							<button type="button" id="add-contact" class="btn btn--sm btn--green"
 							        hx-get="/enrollment/emergency-contact"
@@ -119,28 +124,47 @@
 							        hx-vals='js:{count: document.querySelectorAll(".contact-row").length}'>
 								+ Aggiungi un contatto
 							</button>
-
 							<p id="contact-max" class="membership-form__disclaimer" hidden>
 								Hai raggiunto il massimo di 4 contatti. Rimuovine uno per cambiarlo.
 							</p>
-						</fieldset>
+						</div>
+						<div class="wizard__consents">
+							<div class="wizard__consent-check">
+								<label>
+									<input type="checkbox" id="consent-statute">
+									<span>Confermo di aver letto e di accettare lo <a
+										href="/statute"
+										hx-get="/statute"
+										hx-select="#legal-content"
+										hx-target="#global-dialog-content"
+										hx-swap="innerHTML"
+										hx-confirm="unset">
+										Statuto</a> e i Regolamenti dell'Associazione</span>
+								</label>
+							</div>
+							<div class="wizard__consent-check">
+								<label>
+									<input type="checkbox" id="consent-privacy">
+									<span>Confermo di aver preso visione dell'<a
+										href="/privacy-policy"
+										hx-get="/privacy-policy"
+										hx-select="#legal-content"
+										hx-target="#global-dialog-content"
+										hx-swap="innerHTML"
+										hx-confirm="unset">informativa sulla privacy</a> e dell'<a
+										href="https://drive.google.com/open?id=1Em2gAzZxTiG8DOuoimP9kzN664DKtgft"
+										target="_blank"
+										rel="noopener noreferrer">informativa GDPR</a> e
+										acconsento
+										al trattamento dei miei dati personali</span>
+								</label>
+							</div>
+						</div>
 
 						<div class="wizard__actions">
-							<button type="button" class="wizard__back-step" data-goto-phase="1">
-								&larr; Torna al certificato
-							</button>
-
-							<button type="submit" class="btn btn--green btn--full">
+							<button type="submit" class="btn btn--green btn--full" disabled>
 								Conferma e invia
 							</button>
-
-							<p class="wizard__hint">
-								Ti invieremo una copia di riepilogo direttamente via email.
-							</p>
-
-							<div id="wizard-loading" class="htmx-indicator wizard__loading">
-								<span>Invio in corso, non chiudere la pagina&hellip;</span>
-							</div>
 						</div>
 					</section>
 				</form>
@@ -151,5 +175,5 @@
 	</section>
 </main>
 
-<script src="/static/enrollment.js"></script>
+<script src="/static/scripts/enrollment.js"></script>
 {% endblock %}

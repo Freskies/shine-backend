@@ -54,8 +54,7 @@ fn transport(smtp: &SmtpConfig) -> Result<AsyncSmtpTransport<Tokio1Executor>, Em
 		AsyncSmtpTransport::<Tokio1Executor>::relay(&smtp.host)
 	} else {
 		AsyncSmtpTransport::<Tokio1Executor>::starttls_relay(&smtp.host)
-	}
-	.map_err(EmailError::Transport)?;
+	}.map_err(EmailError::Transport)?;
 
 	Ok(builder
 		.port(smtp.port)

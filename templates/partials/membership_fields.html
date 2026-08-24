@@ -1,7 +1,7 @@
 {# The membership document, unchanged: this is the official form that ends up in the PDF.
-   Extracted from the old standalone page so the enrolment wizard is the only place that
-   renders it. Field names must keep matching `MembershipForm` in
-   src/pdf/membership_2026_27/templates.rs. #}
+Extracted from the old standalone page so the enrolment wizard is the only place that
+renders it. Field names must keep matching `MembershipForm` in
+src/pdf/membership_2026_27/templates.rs. #}
 <!-- 1. DATI ANAGRAFICI -->
 <fieldset class="membership-form__fieldset">
 	<legend class="membership-form__legend">Dati Anagrafici (Maggiorenne o Genitore / Tutore)</legend>
@@ -191,6 +191,7 @@
 								Data</label>
 							<input class="membership-form__input" id="autonomy_place_and_date"
 							       name="autonomy_place_and_date" type="text"
+							       value="{{ today }}"
 							       placeholder="es. Ravenna, 17/08/2026">
 						</div>
 					</div>
@@ -241,6 +242,7 @@
 		<div class="membership-form__field">
 			<label class="membership-form__label" for="place_and_date">Luogo e Data</label>
 			<input class="membership-form__input" id="place_and_date" name="place_and_date" type="text"
+			       value="{{ today }}"
 			       placeholder="es. Ravenna, 17/08/2026" required>
 		</div>
 	</div>

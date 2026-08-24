@@ -121,7 +121,7 @@ fn decode_signature(data_url: &str) -> Result<Vec<u8>, String> {
 
 /// Escapes user input interpolated into a Typst *markup* block (`#form_data[…]`).
 ///
-/// Left unescaped, `@` starts a reference, `#` enters code mode, `$` opens math
+/// Left unescaped, `@` starts a reference, `#` enters code mode, `$` opens math, 
 /// and an odd `]` closes the enclosing block early — each aborts compilation.
 fn typst_escape(s: String) -> String {
 	let mut out = String::with_capacity(s.len());
