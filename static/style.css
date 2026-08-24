@@ -684,6 +684,26 @@ svg.logo__mark {
 /* ************************************** */
 
 /*
+ * Sfondo full-bleed della sezione corsi: pkpark.svg copre l'intera sezione e resta
+ * sotto a tutto il contenuto grazie allo pseudo-elemento con z-index negativo
+ * (la sezione ha già position: relative e z-index: 1 da `.section`).
+ */
+.section--courses {
+	position: relative;
+	overflow: hidden;
+}
+
+.section--courses::before {
+	content: "";
+	position: absolute;
+	inset: 0;
+	background: url("/static/images/svg_places/pkparklory.svg") center / cover no-repeat;
+	z-index: -1;
+	pointer-events: none;
+	opacity: 15%;
+}
+
+/*
  * A centred column with left-aligned text. Left-flush prose above a full-width row of
  * cards read as misaligned, but centring the text itself would fight the ragged edges of
  * the paragraphs — so the block is centred and its contents stay left.
@@ -1112,41 +1132,26 @@ svg.logo__mark {
 		padding: 6rem 0;
 	}
 
-	/*
-	 * Reasserts the same fluid formula as the base rule: same specificity as `.section`
-	 * above, so without this the generic desktop padding would win by source order and
-	 * clobber the hero's own clamp() values at this breakpoint.
-	 */
 	.section--hero {
 		padding: clamp(5rem, 3.4rem + 6.84vw, 7.5rem) 0 clamp(6rem, 4.4rem + 6.84vw, 8.5rem) 0;
 	}
 
-	/* Full generated height on desktop; the base rule shows a reduced one on phones. */
 	.wave-divider {
 		height: var(--wave-h);
 	}
 
-	/* Keeps `--featured-strip-h`'s dvh math in `.section--hero` correct at this breakpoint. */
 	:root {
 		--divider-h: 110px;
 	}
 
-	/*
-	 * `minmax(0, …)` rather than a bare `fr`: an `fr` track floors at its content's
-	 * min-content width, so one wide child in the right column would steal space and
-	 * crush the text. Zeroing the floor keeps the ratio no matter what goes inside.
-	 */
 	.about__container {
 		display: grid;
 		grid-template-columns: minmax(0, 1.15fr) minmax(0, 0.85fr);
 		gap: 4rem;
 		align-items: center;
 	}
-
-	/* courses-grid already flex-wrap at all sizes; no override needed. */
-	/* pricing-grid already flex-wrap at all sizes; no override needed. */
-
 }
+
 /* ************************************** */
 /* GLOBAL DIALOG & LEGAL PAGES            */
 /* ************************************** */
@@ -1162,13 +1167,18 @@ svg.logo__mark {
 	color: var(--color-dark);
 }
 
+.dialog[open] {
+	display: flex;
+	flex-direction: column;
+	overflow: hidden;
+}
+
 .dialog::backdrop {
-	background: rgb(31 41 55 / 0.55);
+	backdrop-filter: blur(10px);
 }
 
 .dialog__bar {
-	position: sticky;
-	top: 0;
+	flex-shrink: 0;
 	display: flex;
 	justify-content: flex-end;
 	padding: 0.75rem 0.75rem 0;
@@ -1191,8 +1201,27 @@ svg.logo__mark {
 	background: var(--color-orange-pastel);
 }
 
+/*noinspection CssBrowserCompatibilityForProperties*/
 .dialog__body {
+	flex: 1;
+	overflow-y: auto;
 	padding: 0 1.75rem 1.75rem;
+	scrollbar-width: thin;
+	scrollbar-color: var(--color-grey-pastel) transparent;
+}
+
+.dialog__body::-webkit-scrollbar {
+	width: 6px;
+}
+
+.dialog__body::-webkit-scrollbar-track {
+	background: transparent;
+	margin-bottom: 1.25rem;
+}
+
+.dialog__body::-webkit-scrollbar-thumb {
+	background: var(--color-grey-pastel);
+	border-radius: var(--radius-full);
 }
 
 .legal h2 {
@@ -1201,8 +1230,10 @@ svg.logo__mark {
 	margin: 1.5rem 0 0.5rem;
 }
 
-.legal ul {
-	padding-left: 1.25rem;
+.legal ul,
+.legal ol {
+	padding-left: 1.5rem;
+	list-style: revert;
 }
 
 .legal a {
