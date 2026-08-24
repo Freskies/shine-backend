@@ -15,9 +15,11 @@ cargo check
 
 ## Architecture
 
-Single Rust monolith for **Shine Parkour ASD** (Ravenna, Italy). Built with **Axum** + **Tokio**, **Askama** for compile-time templating, and an in-process **Typst** compiler for PDF generation.
+Single Rust monolith for **Shine Parkour ASD** (Ravenna, Italy). Built with **Axum** + **Tokio**, **Askama** for
+compile-time templating, and an in-process **Typst** compiler for PDF generation.
 
-Only the public-facing "showcase" area is implemented. `handlers/admin.rs` and `handlers/instructors.rs` are empty stubs. `db/models.rs` is also a stub — SQLite (via SQLx) and Hetzner S3 are planned but not yet in `Cargo.toml`.
+Only the public-facing "showcase" area is implemented. `handlers/admin.rs` and `handlers/instructors.rs` are empty
+stubs. `db/models.rs` is also a stub — SQLite (via SQLx) and Hetzner S3 are planned but not yet in `Cargo.toml`.
 
 ### Request flow
 
@@ -32,18 +34,25 @@ Static files under `static/` are served by `tower-http::ServeDir` at `/static`.
 
 Located in `src/pdf/membership_2026_27/`:
 
-- `MembershipForm` in `templates.rs` is both a `serde::Deserialize` (Axum reads it from the POST body) and an `askama::Template` (renders the `.typ` Typst source with form data interpolated).
-- `TypstCompiler` in `generator.rs` is a **`OnceLock` singleton** — it loads all system fonts via `fontdb` once per process lifetime (expensive; intentionally amortized).
-- `InMemoryWorld` implements `typst::World`. It serves the rendered Typst markup as the `main` source and the two decoded signature images (base64 canvas data URLs from the browser) as virtual files `signature.png` / `signature2.png` — no disk I/O.
+- `MembershipForm` in `templates.rs` is both a `serde::Deserialize` (Axum reads it from the POST body) and an
+  `askama::Template` (renders the `.typ` Typst source with form data interpolated).
+- `TypstCompiler` in `generator.rs` is a **`OnceLock` singleton** — it loads all system fonts via `fontdb` once per
+  process lifetime (expensive; intentionally amortized).
+- `InMemoryWorld` implements `typst::World`. It serves the rendered Typst markup as the `main` source and the two
+  decoded signature images (base64 canvas data URLs from the browser) as virtual files `signature.png` /
+  `signature2.png` — no disk I/O.
 - Typst compilation runs inside `tokio::task::spawn_blocking` because it is CPU-bound.
 
 ### Askama dual-use (HTML + Typst)
 
-Askama renders both HTML pages and the Typst markup template (`templates/pdf/membership_2026_27.typ`). The `.typ` template uses `escape = "none"` so Typst `#` syntax passes through unmodified alongside `{{ variable }}` interpolations.
+Askama renders both HTML pages and the Typst markup template (`templates/pdf/membership_2026_27.typ`). The `.typ`
+template uses `escape = "none"` so Typst `#` syntax passes through unmodified alongside `{{ variable }}` interpolations.
 
 ### Signature capture
 
-The membership form captures two canvas signatures via JS. On submit, each canvas is serialised to a PNG data URL (`canvas.toDataURL()`) placed in a hidden `<input>`. The server strips the `data:image/png;base64,` prefix and base64-decodes the rest before passing the bytes to `InMemoryWorld`.
+The membership form captures two canvas signatures via JS. On submitting, each canvas is serialized to a PNG data URL
+(`canvas.toDataURL()`) placed in a hidden `<input>`. The server strips the `data:image/png;base64,` prefix and
+base64-decodes the rest before passing the bytes to `InMemoryWorld`.
 
 ### Template / asset layout
 
@@ -60,8 +69,10 @@ HTMX is included but not yet actively used (no `hx-*` attributes in current temp
 
 ## Language
 
-The website UI and all user-facing content are in Italian. All code, variable names, comments, and commit messages must be written in English.
+The website UI and all user-facing content are in Italian. All code, variable names, comments, and commit messages must
+be written in English.
 
 ## Configuration
 
-None currently — server address (`127.0.0.1:3000`) and all paths are hard-coded in `src/main.rs`. No `.env`, no config struct. When SQLite/S3 are added they will need environment-based configuration.
+None currently — server address (`127.0.0.1:3000`) and all paths are hard-coded in `src/main.rs`. No `.env`, no config
+struct. When SQLite/S3 are added, they will need environment-based configuration.
