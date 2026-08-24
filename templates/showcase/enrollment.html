@@ -32,7 +32,12 @@
 				      hx-encoding="multipart/form-data"
 				      hx-target="#wizard-feedback"
 				      hx-swap="innerHTML"
-				      hx-disabled-elt="find button">
+				      {#
+				      `find` returns the *first* match, so a bare `button` would land on the
+				      "remove file" button of phase 1 and leave the submit button clickable
+				      throughout the send.
+				      #}
+				      hx-disabled-elt="find button[type='submit']">
 
 					<!-- ======================= FASE 1 ======================= -->
 					<section class="wizard__phase" data-phase="1" aria-labelledby="phase1-title">
@@ -159,11 +164,20 @@
 										al trattamento dei miei dati personali</span>
 								</label>
 							</div>
+							<p id="consent-error" class="wizard__error" hidden>
+								Per inviare la richiesta devi accettare lo Statuto e l'informativa sulla privacy.
+							</p>
 						</div>
 
 						<div class="wizard__actions">
+							{#
+							Two labels, one shown at a time: htmx marks the form with
+							`htmx-request` while the submission is out, and CSS does the swap.
+							#}
 							<button type="submit" class="btn btn--green btn--full" disabled>
-								Conferma e invia
+								<span class="wizard__submit-label">Conferma e invia</span>
+								<span class="htmx-indicator">Invio in corso <span class="loading-dots"
+								                                                 aria-hidden="true"><span>.</span><span>.</span><span>.</span></span></span>
 							</button>
 						</div>
 					</section>

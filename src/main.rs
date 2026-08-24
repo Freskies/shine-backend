@@ -7,6 +7,8 @@ pub mod render;
 pub mod state;
 
 use crate::config::Config;
+#[cfg(debug_assertions)]
+use crate::handlers::enrollment::enrollment_preview_sent_handler;
 use crate::handlers::enrollment::{
 	emergency_contact_row_handler, enrollment_handler, enrollment_submit_handler,
 };
@@ -106,7 +108,17 @@ async fn main() {
 			"/enrollment/emergency-contact",
 			get(emergency_contact_row_handler),
 		)
-		.nest_service("/static", static_files)
+		.nest_service("/static", static_files);
+
+	// Development aid, absent from a release build: serves the confirmation step so it can be
+	// reviewed without filling in the whole wizard. See `window.__phase3` in enrollment.js.
+	#[cfg(debug_assertions)]
+	let app = app.route(
+		"/enrollment/preview-sent",
+		get(enrollment_preview_sent_handler),
+	);
+
+	let app = app
 		// Outermost, so it also records requests rejected by the layers below it.
 		// The levels are set explicitly: TraceLayer defaults to DEBUG, which means request
 		// logging silently disappears the moment someone runs with `RUST_LOG=info`.

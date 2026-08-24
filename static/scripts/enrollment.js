@@ -13,6 +13,13 @@ const body = document.querySelector("body");
 const wizard = document.getElementById("enrollment-wizard");
 const form = document.getElementById("enrollment-form");
 
+/*
+ * HTMX halts a non-GET request whose form fails constraint validation, but by default it
+ * does so without telling anyone: this makes it show the browser's own message on the
+ * first offending field instead of appearing to ignore the click.
+ */
+htmx.config.reportValidityOfForms = true;
+
 /* PHASE NAVIGATION */
 
 function goToPhase (phase) {
@@ -149,10 +156,11 @@ syncContactLimit();
 
 /* SIGNATURE PADS */
 
-function initPad (canvasId, inputId) {
+function initPad (canvasId, inputId, errorId) {
 	const canvas = document.getElementById(canvasId);
 	if (!canvas) return null;
 	const ctx = canvas.getContext("2d");
+	const error = document.getElementById(errorId);
 	let drawing = false, drawn = false;
 
 	function resize () {
@@ -187,6 +195,7 @@ function initPad (canvasId, inputId) {
 		ctx.lineTo(p.x, p.y);
 		ctx.stroke();
 		drawn = true;
+		error.hidden = true;
 		if (e.cancelable) e.preventDefault();
 	};
 
@@ -203,6 +212,7 @@ function initPad (canvasId, inputId) {
 
 	return {
 		resize,
+		error,
 		clear () {
 			ctx.clearRect(0, 0, canvas.width, canvas.height);
 			drawn = false;
@@ -215,8 +225,9 @@ function initPad (canvasId, inputId) {
 	};
 }
 
-const mainPad = initPad("signature-pad", "signature");
-const autonomyPad = initPad("autonomy-signature-pad", "autonomy_signature");
+const mainPad = initPad("signature-pad", "signature", "signature-error");
+const autonomyPad = initPad("autonomy-signature-pad", "autonomy_signature",
+	"autonomy-signature-error");
 const pads = [mainPad, autonomyPad].filter(Boolean);
 
 document.querySelectorAll("button[data-clear]").forEach(btn => {
@@ -226,39 +237,75 @@ document.querySelectorAll("button[data-clear]").forEach(btn => {
 	});
 });
 
-/* The autonomy canvas starts hidden, so it needs measuring once revealed. */
-["is_minor", "commute_alone"].forEach(id => {
-	document.getElementById(id)?.addEventListener("change",
-		() => setTimeout(() => autonomyPad?.resize(), 50));
-});
+/* CONDITIONAL SECTIONS */
+
+/*
+ * CSS hides the minor and the autonomy blocks until their checkbox is ticked, so
+ * their fields cannot carry `required` in the markup: a required field the user cannot see
+ * would block the submission with a message the browser has nowhere to show. They get the
+ * attribute here, while they are on screen, and lose it again when the section closes.
+ */
+const isMinor = document.getElementById("is_minor");
+const commuteAlone = document.getElementById("commute_alone");
+const minorSection = document.querySelector(".section-minor");
+const autonomySection = document.querySelector(".section-autonomy");
+
+const CONDITIONAL_FIELD = "input:not([type=checkbox]):not([type=hidden])";
+const autonomyFields = [...autonomySection.querySelectorAll(CONDITIONAL_FIELD)];
+const minorFields = [...minorSection.querySelectorAll(CONDITIONAL_FIELD)]
+	.filter(field => !autonomySection.contains(field));
+
+function syncConditionalSections () {
+	/* The autonomy block sits inside the minor one, so it only counts when both are ticked. */
+	const wantsAutonomy = isMinor.checked && commuteAlone.checked;
+	minorFields.forEach(field => field.toggleAttribute("required", isMinor.checked));
+	autonomyFields.forEach(field => field.toggleAttribute("required", wantsAutonomy));
+
+	if (!wantsAutonomy && autonomyPad) autonomyPad.error.hidden = true;
+	/* The autonomy canvas starts hidden, so it needs measuring once revealed. */
+	setTimeout(() => autonomyPad?.resize(), 50);
+}
+
+isMinor.addEventListener("change", syncConditionalSections);
+commuteAlone.addEventListener("change", syncConditionalSections);
+syncConditionalSections();
 
 /* SUBMIT */
 
-const SUBMIT_LABEL = "Conferma e invia";
-const SUBMIT_LOADING_HTML = `Invio in corso <span class="loading-dots" aria-hidden="true"><span>.</span><span>.</span><span>.</span></span>`;
+function fail (error) {
+	error.hidden = false;
+	error.scrollIntoView({ behavior: "smooth", block: "center" });
+	return false;
+}
+
+/*
+ * Everything the browser cannot validate on its own. The fields the two toggles reveal are
+ * left to constraint validation (see `syncConditionalSections`); the canvases and the two
+ * consent checkboxes are not form controls, so they are checked here.
+ */
+function canSubmit () {
+	if (!(consentStatute.checked && consentPrivacy.checked)) return fail(consentError);
+
+	mainPad?.save();
+	if (mainPad && !mainPad.hasDrawn()) return fail(mainPad.error);
+
+	if (isMinor.checked && commuteAlone.checked) {
+		autonomyPad?.save();
+		if (autonomyPad && !autonomyPad.hasDrawn()) return fail(autonomyPad.error);
+	} else {
+		/* A toggle ticked and then unticked must not leave its signature behind. */
+		document.getElementById("autonomy_signature").value = "";
+	}
+
+	return true;
+}
 
 form.addEventListener("htmx:configRequest", (evt) => {
 	if (evt.detail.elt !== form) return;
 
-	const isMinor = document.getElementById("is_minor")?.checked;
-	const commuteAlone = document.getElementById("commute_alone")?.checked;
-
-	mainPad?.save();
-	if (!mainPad?.hasDrawn()) {
-		alert("Manca la firma: tracciala nel riquadro prima di inviare.");
+	if (!canSubmit()) {
 		evt.preventDefault();
 		return;
-	}
-
-	if (isMinor && commuteAlone) {
-		autonomyPad?.save();
-		if (!autonomyPad?.hasDrawn()) {
-			alert("Hai indicato che il minore fa il tragitto da solo: serve anche la seconda firma.");
-			evt.preventDefault();
-			return;
-		}
-	} else {
-		document.getElementById("autonomy_signature").value = "";
 	}
 
 	/*
@@ -268,31 +315,53 @@ form.addEventListener("htmx:configRequest", (evt) => {
 	 */
 	evt.detail.parameters["signature"] = document.getElementById("signature").value;
 	evt.detail.parameters["autonomy_signature"] = document.getElementById("autonomy_signature").value;
-
-	submitBtn.innerHTML = SUBMIT_LOADING_HTML;
-	submitBtn.disabled = true;
 });
 
-/* Restore button label if the server returned an error (on success the whole wizard is replaced). */
-form.addEventListener("htmx:afterRequest", (evt) => {
-	if (evt.detail.elt !== form) return;
-	submitBtn.textContent = SUBMIT_LABEL;
-});
+/*
+ * Nothing here toggles the sending state: `hx-disabled-elt` on the form disables the button
+ * while the request is out, and the `htmx-indicator` span inside it swaps the label for
+ * "Invio in corso" through CSS alone.
+ */
 
 /* CONSENT CHECKBOXES */
 
 const consentStatute = document.getElementById("consent-statute");
 const consentPrivacy = document.getElementById("consent-privacy");
-const submitBtn = form.querySelector('button[type="submit"]');
+const consentError = document.getElementById("consent-error");
+const submitBtn = form.querySelector("button[type=\"submit\"]");
 
 function syncSubmitBtn () {
 	submitBtn.disabled = !(consentStatute.checked && consentPrivacy.checked);
+	if (!submitBtn.disabled) consentError.hidden = true;
 }
 
 consentStatute.addEventListener("change", syncSubmitBtn);
 consentPrivacy.addEventListener("change", syncSubmitBtn);
-/* Re-sync after HTMX re-enables elements following any sub-request (e.g. add contact) */
+/* Re-sync after HTMX re-enables elements following any sub-request (e.g., add contact) */
 form.addEventListener("htmx:afterRequest", syncSubmitBtn);
+
+/* ENTER KEY */
+
+/*
+ * Enter while filling in a field must never send the form — on a form this long it is far
+ * too easy to fire the request halfway through — so it moves to the next control instead.
+ * Buttons and links keep their native behavior: tabbing onto "Conferma e invia" and
+ * pressing Enter still submits.
+ */
+const FOCUSABLE = "input:not([type=hidden]), select, textarea, button, a[href]";
+
+form.addEventListener("keydown", (e) => {
+	if (e.key !== "Enter" || e.isComposing) return;
+	if (e.target.matches("button, a[href], textarea")) return;
+
+	e.preventDefault();
+
+	/* `offsetParent` is null for the phase, and the sections CSS is currently hiding. */
+	const fields = [...form.querySelectorAll(FOCUSABLE)]
+		.filter(field => !field.disabled && field.offsetParent !== null);
+	const current = fields.indexOf(e.target);
+	if (current !== -1) fields[current + 1]?.focus();
+});
 
 /* Leaving midway loses everything typed, so warn unless the sending already succeeded. */
 let submitted = false;
@@ -305,32 +374,14 @@ window.addEventListener("beforeunload", (e) => {
 	e.preventDefault();
 });
 
-/* DEV ONLY — call window.__phase3() in the console to preview the confirmation step. */
-window.__phase3 = () => {
-	document.getElementById("enrollment-wizard").outerHTML =
-		`<div class="wizard" data-phase="3">
-			<ol class="wizard__steps" aria-label="Avanzamento">
-				<li class="wizard__stepper" data-step="1">Certificato</li>
-				<li class="wizard__stepper" data-step="2">I tuoi dati</li>
-				<li class="wizard__stepper" data-step="3">Conferma</li>
-			</ol>
-			<div class="wizard__done">
-				<p class="wizard__step-count">Passo 3 di 3</p>
-				<h2 class="heading-secondary">Ci siamo quasi!</h2>
-				<p class="wizard__lead">
-					I tuoi dati sono stati registrati. Ti abbiamo inviato una copia di riepilogo a
-					<strong>test@example.com</strong>, con il modulo di tesseramento in allegato.
-				</p>
-				<p class="wizard__lead">
-					Manca solo un passaggio: apri WhatsApp e mandaci il messaggio già pronto, così sappiamo che
-					possiamo procedere.
-				</p>
-				<p class="wizard__notice wizard__notice--warn">
-					[Anteprima — il pulsante WhatsApp non è attivo in questa modalità]
-				</p>
-				<p class="wizard__hint">Non usi WhatsApp? Va bene comunque: abbiamo già tutto, ti scriviamo noi.</p>
-				<a href="/" class="wizard__back-home">Torna alla home</a>
-			</div>
-		</div>`;
-	submitted = true;
-};
+/*
+ * DEV ONLY — call window.__phase3() in the console to preview the confirmation step.
+ *
+ * The markup comes from the same partial a real submission returns, served by a route that
+ * only exists in debug builds, so the preview cannot drift from what an applicant sees. The
+ * response carries `HX-Trigger: enrollmentSent`, which lifts the unload guard above.
+ */
+window.__phase3 = () => htmx.ajax("GET", "/enrollment/preview-sent", {
+	target: "#enrollment-wizard",
+	swap: "outerHTML",
+});

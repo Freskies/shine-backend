@@ -270,12 +270,6 @@ h1, h2, h3, h4, h5, h6 {
 	animation: wave-drift var(--wave-speed) linear infinite;
 }
 
-/*
- * The wave is a repeating background tile, not a stretched SVG. Its width is fixed in
- * px, so the crests keep the same size on every screen and a phone simply shows fewer
- * of them instead of squeezing them all in. Regenerate the tiles with
- * playground/wave_divider_playground.html.
- */
 .wave-divider {
 	-webkit-mask-image: url("/static/wave_divider/wave_divider.svg");
 	mask-image: url("/static/wave_divider/wave_divider.svg");
@@ -302,12 +296,6 @@ h1, h2, h3, h4, h5, h6 {
 	background-color: var(--color-grey-pastel-light);
 }
 
-/*
- * The tile is scaled to a fractional height, so its flat edge can land mid-pixel and
- * leave a hairline of page background between the wave and the same-coloured section
- * next to it. A 1px overlap on the solid side hides it; both sides are the same green,
- * so the overlap itself is invisible.
- */
 .wave-divider--top {
 	margin-bottom: -1px;
 	transform: scaleY(-1);
@@ -315,12 +303,10 @@ h1, h2, h3, h4, h5, h6 {
 
 .wave-divider--bottom {
 	margin-top: -1px;
-	/* Opposite direction and a slower tempo, so the two edges never march in step. */
 	animation-direction: reverse;
 	animation-duration: calc(var(--wave-speed) * 1.3);
 }
 
-/* Scrolling by exactly one tile width returns to the starting frame. */
 @keyframes wave-drift {
 	from {
 		-webkit-mask-position: 0 0;
@@ -416,7 +402,6 @@ h1, h2, h3, h4, h5, h6 {
 	font-size: 0.85rem;
 }
 
-/* Clipped small buttons need the room back that the silhouette takes off each side. */
 .btn--sm.fluid-shape {
 	padding: 0.85rem 2.1rem;
 }
@@ -430,10 +415,6 @@ h1, h2, h3, h4, h5, h6 {
 	background-color: var(--color-orange-hover);
 }
 
-/*
- * Filled counterpart of `.btn--green-outline`, for use with `.fluid-shape`: a clip-path
- * cuts straight through a border, so an outlined button reads as broken once clipped.
- */
 .btn--green {
 	background-color: var(--color-green);
 	color: var(--color-dark);
@@ -443,12 +424,10 @@ h1, h2, h3, h4, h5, h6 {
 	background-color: var(--color-green-hover);
 }
 
-/* The silhouette insets roughly 5% per side, so the label needs room to clear it. */
 .btn.fluid-shape {
 	padding: 1.3rem 3rem;
 }
 
-/* Second CTA out of phase with the first, so the pair does not pulse in unison. */
 .hero__cta-group .fluid-shape:nth-child(2) {
 	animation-delay: -6s;
 }
@@ -519,12 +498,6 @@ svg.logo__mark {
 /* HERO SECTION                           */
 /* ************************************** */
 
-/*
- * One continuous formula for every screen size, instead of a mobile value and a separate
- * desktop override: padding scales fluidly between the same min/max the two breakpoints
- * used to hard-code, and min-height fills whatever dvh remains after the header, the wave
- * divider and the featured-in strip, so the two sections always occupy one screen together.
- */
 .section--hero {
 	background: linear-gradient(180deg, #ffffff 0%, var(--color-green-pastel) 100%);
 	padding: clamp(5rem, 3.4rem + 6.84vw, 7.5rem) 0 clamp(6rem, 4.4rem + 6.84vw, 8.5rem) 0;
@@ -542,21 +515,11 @@ svg.logo__mark {
 /* FEATURED IN STRIP                      */
 /* ************************************** */
 
-/*
- * A white band of its own, so the strip reads as separate from the hero above it. Padding
- * is a fixed 3rem on every screen (not left to `.section`, and not reduced on phone), so
- * `--featured-strip-h` above can know the strip's exact height and size the hero against it.
- */
 .featured-strip.section {
 	background-color: var(--color-light);
 	padding: 3rem 0;
 }
 
-/*
- * `nowrap` plus a shrinkable flex item per logo (below) means the row can never wrap to a
- * second line: on a narrow phone the logos give up width, never position. Gap shrinks with
- * the viewport too, so three logos plus their gaps never demand more width than there is.
- */
 .featured-strip__list {
 	display: flex;
 	flex-wrap: nowrap;
@@ -580,12 +543,6 @@ svg.logo__mark {
 	width: 100%;
 }
 
-/*
- * Height is the same fixed value at every breakpoint (`--featured-logo-h`). Width is 100%
- * of the shrinkable flex item, so `object-fit: contain` scales the logo down to whatever
- * width is available instead of overflowing — the row stays intact even if that means a
- * logo reads slightly shorter than the target height on the narrowest phones.
- */
 .featured-strip__logo {
 	display: block;
 	width: 100%;
@@ -630,11 +587,6 @@ svg.logo__mark {
 /* ABOUT COLLAGE                            */
 /* ---------------------------------------- */
 
-/*
- * Three overlapping shots, each clipped to the fluid silhouette. Positions are
- * percentages inside a fixed-ratio box, so the arrangement holds at any width
- * instead of reflowing into a grid.
- */
 .about__collage {
 	position: relative;
 	width: 100%;
@@ -677,10 +629,6 @@ svg.logo__mark {
 	z-index: 1;
 }
 
-/*
- * The silhouette is driven by `--a`, so offsetting the animation means the three
- * shapes are never in the same phase — one polygon, three different outlines.
- */
 .about__shot--2 {
 	animation-delay: -4s;
 }
@@ -702,31 +650,25 @@ svg.logo__mark {
 /* COURSES SECTION                        */
 /* ************************************** */
 
-/*
- * Sfondo full-bleed della sezione corsi: pkpark.svg copre l'intera sezione e resta
- * sotto a tutto il contenuto grazie allo pseudo-elemento con z-index negativo
- * (la sezione ha già position: relative e z-index: 1 da `.section`).
- */
 .section--courses {
 	position: relative;
 	overflow: hidden;
+	background-origin: padding-box;
 }
 
 .section--courses::before {
 	content: "";
 	position: absolute;
 	inset: 0;
-	background: url("/static/images/svg_places/pkparklory.svg") center / cover no-repeat;
+	background-image: url("/static/images/svg_places/pkparklory.svg");
+	background-repeat: no-repeat;
+	background-position: center center;
+	background-size: auto 100%;
 	z-index: -1;
 	pointer-events: none;
-	opacity: 15%;
+	opacity: 0.10;
 }
 
-/*
- * A centred column with left-aligned text. Left-flush prose above a full-width row of
- * cards read as misaligned, but centring the text itself would fight the ragged edges of
- * the paragraphs — so the block is centred and its contents stay left.
- */
 .section__header {
 	max-width: 800px;
 	margin-inline: auto;
@@ -738,12 +680,6 @@ svg.logo__mark {
 	color: var(--color-dark-muted);
 }
 
-/*
- * Fixed-width cards that wrap naturally: 3 → 2+1 → 1 per row as the viewport narrows.
- * `flex: 0 0 320px` prevents any shrinking, so the card width never changes — the layout
- * just reflows. On a 375px phone (327px usable after container padding) a 320px card leaves
- * a small margin on each side instead of going edge-to-edge.
- */
 .courses-grid {
 	display: flex;
 	flex-wrap: wrap;

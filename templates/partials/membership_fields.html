@@ -210,6 +210,11 @@ src/pdf/membership_2026_27/templates.rs. #}
 								</button>
 							</div>
 							<input type="hidden" id="autonomy_signature" name="autonomy_signature">
+							{# Canvases are invisible to constraint validation, so the script reveals this. #}
+							<p id="autonomy-signature-error" class="wizard__error" hidden>
+								Hai indicato che il minore fa il tragitto da solo: serve anche questa
+								firma.
+							</p>
 						</div>
 					</div>
 				</div>
@@ -259,6 +264,9 @@ src/pdf/membership_2026_27/templates.rs. #}
 				</button>
 			</div>
 			<input type="hidden" id="signature" name="signature">
+			<p id="signature-error" class="wizard__error" hidden>
+				Manca la firma: tracciala nel riquadro prima di inviare.
+			</p>
 		</div>
 	</div>
 </fieldset>

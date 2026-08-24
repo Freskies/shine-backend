@@ -613,6 +613,11 @@ form.htmx-request {
 	opacity: 0.85;
 }
 
+/* The submit button hides its idle label while its own indicator is showing. */
+.htmx-request .wizard__submit-label {
+	display: none;
+}
+
 button:disabled,
 input:disabled {
 	cursor: not-allowed;

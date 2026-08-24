@@ -235,10 +235,14 @@ async fn parse_submission(mut multipart: Multipart) -> Result<Submission, String
 	})
 }
 
-/// Builds the WhatsApp message the applicant sends as the final confirmation.
-fn whatsapp_url(state: &AppState, form: &MembershipForm) -> Option<String> {
+/// Wraps a prepared message into a `wa.me` link, or `None` when no number is configured.
+fn whatsapp_url(state: &AppState, message: &str) -> Option<String> {
 	let number = state.config.whatsapp_number.as_ref()?;
+	Some(format!("https://wa.me/{}?text={}", number, encode(message)))
+}
 
+/// Builds the WhatsApp message the applicant sends as the final confirmation.
+fn whatsapp_message(form: &MembershipForm) -> String {
 	let subject = match form.minor_first_name.as_deref().map(str::trim) {
 		Some(minor) if !minor.is_empty() => format!(
 			" per {} {}",
@@ -247,20 +251,34 @@ fn whatsapp_url(state: &AppState, form: &MembershipForm) -> Option<String> {
 		),
 		_ => "".to_string(),
 	};
-	let message = format!(
+
+	format!(
 		"Sono {} {} e ho appena completato l'iscrizione online{}. \
 		 Ho inviato il certificato medico e il modulo di tesseramento. \
 		 Potete confermarmi che è tutto arrivato e dirmi quando posso venire la prima volta?",
 		form.first_name.trim(),
 		form.last_name.trim(),
 		subject
-	);
+	)
+}
 
-	Some(format!(
-		"https://wa.me/{}?text={}",
-		number,
-		encode(&message)
-	))
+/// Serves the last wizard step on its own, so it can be looked at without filling in the
+/// whole form and sending two real emails.
+///
+/// Compiled only in debug builds: it is a development aid and has no business answering on
+/// a deployed server. Call `window.__phase3()` from the browser console to swap it in.
+#[cfg(debug_assertions)]
+pub async fn enrollment_preview_sent_handler(State(state): State<AppState>) -> Response {
+	let mut response = HtmlTemplate(EnrollmentSentTemplate {
+		whatsapp_url: whatsapp_url(&state, "Anteprima del messaggio di conferma."),
+		applicant_email: "anteprima@example.com".to_string(),
+	}).into_response();
+
+	// As in the real success path, this lets the page drop its "you will lose your data" guard.
+	response
+		.headers_mut()
+		.insert("HX-Trigger", HeaderValue::from_static("enrollmentSent"));
+	response
 }
 
 /// Receives the whole enrolment, emails both copies, and returns the final step.
@@ -310,7 +328,7 @@ pub async fn enrollment_submit_handler(
 		Err(e) => return enrollment_error(&format!("notice template failed: {e}")),
 	};
 
-	let whatsapp = whatsapp_url(&state, &submission.form);
+	let whatsapp = whatsapp_url(&state, &whatsapp_message(&submission.form));
 	let applicant_name = format!(
 		"{} {}",
 		submission.form.first_name.trim(),
