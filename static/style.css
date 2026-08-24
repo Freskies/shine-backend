@@ -4,14 +4,16 @@
 
 :root {
 	/* Colors */
-	--color-orange: #f97316;
-	--color-orange-hover: #ea580c;
+	--color-orange: #ffbf69;
+	--color-orange-hover: #ffac3d;
 	--color-orange-pastel: #ffedd5;
+	--color-orange-dark: #180D0D;
 
-	--color-green: #059669;
-	--color-green-hover: #047857;
-	--color-green-soft: #d1fae5;
+	--color-green-accent: #059669;
+	--color-green: #d1fae5;
+	--color-green-hover: #b4e0d2;
 	--color-green-pastel: #ecfdf5;
+	--color-green-dark: #010f0b;
 
 	--color-grey-pastel: #e5e7eb;
 	--color-grey-pastel-light: #f8f9fb;
@@ -39,6 +41,12 @@
 	/* Same fixed value on every breakpoint, so the strip's total height is always known. */
 	--featured-logo-h: clamp(2.25rem, 1.5rem + 4vw, 3.5rem);
 	--featured-strip-h: calc(3rem * 2 + var(--featured-logo-h));
+}
+
+@media (min-width: 960px) {
+	:root {
+		--divider-h: 110px;
+	}
 }
 
 /* ************************************** */
@@ -114,6 +122,12 @@ h1, h2, h3, h4, h5, h6 {
 	padding: 4rem 0;
 	position: relative;
 	z-index: 1;
+}
+
+@media (min-width: 960px) {
+	.section {
+		padding: 6rem 0;
+	}
 }
 
 /* ************************************** */
@@ -345,6 +359,12 @@ h1, h2, h3, h4, h5, h6 {
 	}
 }
 
+@media (min-width: 960px) {
+	.wave-divider {
+		height: var(--wave-h);
+	}
+}
+
 .icon-sm {
 	width: 16px;
 	height: 16px;
@@ -370,7 +390,7 @@ h1, h2, h3, h4, h5, h6 {
 }
 
 .text-green {
-	color: var(--color-green);
+	color: var(--color-green-accent);
 }
 
 .text-orange {
@@ -424,7 +444,7 @@ h1, h2, h3, h4, h5, h6 {
 
 .btn--orange {
 	background-color: var(--color-orange);
-	color: var(--color-light);
+	color: var(--color-dark);
 }
 
 .btn--orange:hover {
@@ -435,14 +455,13 @@ h1, h2, h3, h4, h5, h6 {
  * Filled counterpart of `.btn--green-outline`, for use with `.fluid-shape`: a clip-path
  * cuts straight through a border, so an outlined button reads as broken once clipped.
  */
-.btn--green-soft {
-	background-color: var(--color-green-soft);
-	color: var(--color-green-hover);
+.btn--green {
+	background-color: var(--color-green);
+	color: var(--color-dark);
 }
 
-.btn--green-soft:hover {
-	background-color: var(--color-green);
-	color: var(--color-light);
+.btn--green:hover {
+	background-color: var(--color-green-hover);
 }
 
 /* The silhouette insets roughly 5% per side, so the label needs room to clear it. */
@@ -456,18 +475,24 @@ h1, h2, h3, h4, h5, h6 {
 }
 
 .btn--green-outline {
-	border-color: var(--color-green);
-	color: var(--color-green);
+	border-color: var(--color-green-accent);
+	color: var(--color-green-accent);
 	background-color: transparent;
 }
 
 .btn--green-outline:hover {
-	background-color: var(--color-green);
+	background-color: var(--color-green-accent);
 	color: var(--color-light);
 }
 
 .btn--full {
 	width: 100%;
+}
+
+@media (min-width: 640px) {
+	.btn--full {
+		width: auto;
+	}
 }
 
 /* ************************************** */
@@ -602,6 +627,12 @@ svg.logo__mark {
 	gap: 0.85rem;
 }
 
+@media (min-width: 640px) {
+	.hero__cta-group {
+		flex-direction: row;
+	}
+}
+
 /* ************************************** */
 /* ABOUT SECTION                          */
 /* ************************************** */
@@ -677,6 +708,15 @@ svg.logo__mark {
 
 .about__shot--3 {
 	animation-delay: -8s;
+}
+
+@media (min-width: 960px) {
+	.about__container {
+		display: grid;
+		grid-template-columns: minmax(0, 1.15fr) minmax(0, 0.85fr);
+		gap: 4rem;
+		align-items: center;
+	}
 }
 
 /* ************************************** */
@@ -755,7 +795,7 @@ svg.logo__mark {
 	padding: 0.35rem 1.1rem;
 	margin: 0 0.15rem;
 	vertical-align: middle;
-	background-color: var(--color-green);
+	background-color: var(--color-green-accent);
 	color: var(--color-light);
 	font-size: 0.85rem;
 	font-weight: 800;
@@ -797,7 +837,7 @@ svg.logo__mark {
 
 .course-card__schedule--green {
 	background-color: var(--color-light);
-	color: var(--color-green);
+	color: var(--color-green-accent);
 }
 
 .course-card__schedule--orange {
@@ -902,7 +942,7 @@ svg.logo__mark {
 }
 
 .steps-list__link {
-	color: var(--color-green);
+	color: var(--color-green-accent);
 	font-weight: 700;
 }
 
@@ -955,7 +995,7 @@ svg.logo__mark {
 	left: 50%;
 	transform: translateX(-50%);
 	background-color: var(--color-orange);
-	color: var(--color-light);
+	color: var(--color-orange-dark);
 	font-size: 0.75rem;
 	font-weight: 800;
 	padding: 0.55rem 1.6rem;
@@ -1024,7 +1064,11 @@ svg.logo__mark {
 	width: fit-content;
 	max-width: 100%;
 	position: relative;
-	transition: width 0.35s ease;
+	transition: width 0.35s ease, background-color 0.2s ease;
+}
+
+.faq-item:hover {
+	background-color: #d1d5db;
 }
 
 .faq-item[open] {
@@ -1085,70 +1129,194 @@ svg.logo__mark {
 }
 
 /* ************************************** */
+/* CONTACT                                */
+/* ************************************** */
+
+.section--contact {
+	margin-bottom: 3rem;
+}
+
+.contact__social {
+	margin-top: 2rem;
+}
+
+.contact__social-subtitle {
+	font-size: 1.1rem;
+	font-weight: 600;
+	color: var(--color-dark);
+	margin-bottom: 1rem;
+}
+
+.contact__social-list {
+	display: flex;
+	gap: 0.75rem;
+	padding-left: 1rem;
+}
+
+.contact__social-list a {
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	width: 3rem;
+	height: 3rem;
+	background-color: var(--color-orange-pastel);
+	color: var(--color-orange-dark);
+	transition: background-color 0.2s ease;
+}
+
+.contact__social-list a:hover {
+	background-color: var(--color-orange);
+}
+
+/* ************************************** */
 /* FOOTER                                 */
 /* ************************************** */
 
 .footer {
-	padding: 2.5rem 0;
 	border-top: 1px solid #f3f4f6;
 	font-size: 0.85rem;
 	color: var(--color-dark-muted);
+	background-color: var(--color-grey-pastel-light);
 }
 
-.footer__container {
+.footer__body {
+	display: grid;
+	grid-template-areas:
+		"general"
+		"bank"
+		"legal";
+	grid-template-columns: auto;
+	justify-content: space-evenly;
+	gap: 2.5rem;
+	padding-block: 3rem;
+}
+
+.footer__col {
+	text-align: left;
+}
+
+.footer__col--general {
+	grid-area: general;
+}
+
+.footer__col--bank {
+	grid-area: bank;
+}
+
+.footer__col--legal {
+	grid-area: legal;
+}
+
+.footer__col-heading {
+	font-size: 0.72rem;
+	font-weight: 700;
+	text-transform: uppercase;
+	letter-spacing: 0.09em;
+	color: var(--color-dark);
+	margin-bottom: 0.85rem;
+}
+
+.footer__meta {
+	display: grid;
+	grid-template-columns: auto 1fr;
+	gap: 0.3rem 0.75rem;
+	align-items: baseline;
+}
+
+.footer__meta dt {
+	font-weight: 600;
+	color: var(--color-dark);
+	white-space: nowrap;
+}
+
+.footer__meta a {
+	text-decoration: underline;
+}
+
+.footer__meta a:hover {
+	opacity: 0.7;
+}
+
+.footer__bank {
+	display: grid;
+	grid-template-columns: auto 1fr;
+	gap: 0.3rem 0.75rem;
+	align-items: baseline;
+}
+
+.footer__bank dt {
+	font-weight: 600;
+	color: var(--color-dark);
+	white-space: nowrap;
+}
+
+.footer__iban {
+	font-family: ui-monospace, 'Cascadia Code', 'Source Code Pro', Menlo, Consolas, monospace;
+	font-size: 0.78rem;
+	letter-spacing: 0.03em;
+}
+
+.footer__social {
+	display: flex;
+	gap: 0.5rem;
+}
+
+
+.footer__social a {
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	width: 2.25rem;
+	height: 2.25rem;
+	border-radius: var(--radius-full);
+	background-color: var(--color-grey-pastel);
+	color: var(--color-dark-muted);
+	transition: background-color 0.2s ease, color 0.2s ease;
+}
+
+.footer__social a:hover {
+	background-color: var(--color-green-accent);
+	color: var(--color-light);
+}
+
+.footer__legal-links {
 	display: flex;
 	flex-direction: column;
-	gap: 1rem;
+	gap: 0.4rem;
+}
+
+.footer__legal-links a {
+	text-decoration: underline;
+}
+
+.footer__legal-links a:hover {
+	opacity: 0.7;
+}
+
+.footer__bar {
+	border-top: 1px solid #f3f4f6;
+	padding: 1.25rem 0;
+	background-color: var(--color-grey-pastel-light);
+}
+
+.footer__bar-inner {
 	text-align: center;
+	font-size: 0.8rem;
 }
-
-.footer__links {
-	display: flex;
-	justify-content: center;
-	gap: 1.25rem;
-}
-
-/* ************************************** */
-/* DESKTOP BREAKPOINTS                    */
-/* ************************************** */
 
 @media (min-width: 640px) {
-	.hero__cta-group {
-		flex-direction: row;
-	}
-
-	.btn--full {
-		width: auto;
-	}
-
-	.footer__container {
-		flex-direction: row;
-		justify-content: space-between;
+	.footer__body {
+		grid-template-areas:
+			"general bank"
+			"general legal";
+		grid-template-columns: auto auto;
 	}
 }
 
 @media (min-width: 960px) {
-	.section {
-		padding: 6rem 0;
-	}
-
-	.section--hero {
-		padding: clamp(5rem, 3.4rem + 6.84vw, 7.5rem) 0 clamp(6rem, 4.4rem + 6.84vw, 8.5rem) 0;
-	}
-
-	.wave-divider {
-		height: var(--wave-h);
-	}
-
-	:root {
-		--divider-h: 110px;
-	}
-
-	.about__container {
-		display: grid;
-		grid-template-columns: minmax(0, 1.15fr) minmax(0, 0.85fr);
-		gap: 4rem;
-		align-items: center;
+	.footer__body {
+		grid-template-areas: "general bank legal";
+		grid-template-columns: auto auto auto;
 	}
 }
 
@@ -1237,7 +1405,7 @@ svg.logo__mark {
 }
 
 .legal a {
-	color: var(--color-green);
+	color: var(--color-green-accent);
 }
 
 .legal__updated {

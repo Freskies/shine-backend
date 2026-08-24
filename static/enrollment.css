@@ -57,7 +57,7 @@
 .wizard[data-phase="1"] .wizard__stepper[data-step="1"],
 .wizard[data-phase="2"] .wizard__stepper[data-step="1"],
 .wizard[data-phase="2"] .wizard__stepper[data-step="2"] {
-	border-top-color: var(--color-green);
+	border-top-color: var(--color-green-accent);
 	color: var(--color-green-hover);
 }
 
@@ -66,7 +66,7 @@
 	font-weight: 700;
 	text-transform: uppercase;
 	letter-spacing: 0.08em;
-	color: var(--color-green);
+	color: var(--color-green-accent);
 	margin-bottom: 0.35rem;
 }
 
@@ -92,7 +92,7 @@
 	justify-content: center;
 	gap: 0.75rem;
 	padding: 2.5rem 1.5rem;
-	border: 3px dashed var(--color-green);
+	border: 3px dashed var(--color-green-accent);
 	border-radius: 14px;
 	background-color: var(--color-green-pastel);
 	cursor: pointer;
@@ -120,7 +120,7 @@
 	width: 3rem;
 	height: 3rem;
 	border-radius: var(--radius-full);
-	background-color: var(--color-green);
+	background-color: var(--color-green-accent);
 	color: var(--color-light);
 	font-size: 1.8rem;
 	font-weight: 800;

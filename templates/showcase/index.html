@@ -22,7 +22,7 @@
 				</p>
 				<div class="hero__cta-group">
 					<a href="#join" class="btn btn--orange btn--full fluid-shape">Prenota Prova Gratuita</a>
-					<a href="#courses" class="btn btn--green-soft btn--full fluid-shape">Scopri i Corsi</a>
+					<a href="#courses" class="btn btn--green btn--full fluid-shape">Scopri i Corsi</a>
 				</div>
 			</div>
 		</div>
@@ -148,10 +148,10 @@
 			<ol class="steps-list">
 				<li class="steps-list__item">
 					<div class="steps-list__content">
-						<h4>
+						<h3>
 							<span class="steps-list__number">1</span>
 							<strong class="steps-list__title">Richiedi il certificato medico</strong>
-						</h4>
+						</h3>
 						<p class="steps-list__text">
 							Serve il certificato medico per attività sportiva non agonistica. Scarica il nostro foglio di
 							richiesta da mostrare al tuo medico per non sbagliare.
@@ -164,10 +164,10 @@
 				</li>
 				<li class="steps-list__item">
 					<div class="steps-list__content">
-						<h4>
+						<h3>
 							<span class="steps-list__number">2</span>
 							<strong class="steps-list__title">Completa l'iscrizione online</strong>
-						</h4>
+						</h3>
 						<p class="steps-list__text">
 							Hai il certificato a portata di mano? Clicca qui sotto per caricare la foto del certificato e
 							inserire i tuoi dati. Riceverai subito la conferma via email.
@@ -185,7 +185,7 @@
 	<section class="section section--pricing">
 		<div class="container">
 			<div class="section__header">
-				<h2 class="heading-secondary">Tariffe Semplici e Chiare</h2>
+				<h2 class="heading-secondary">Le nostre tariffe</h2>
 				<p class="section__intro">
 					I pagamenti sono accettati esclusivamente tramite bonifico bancario. A eccezione della lezione di
 					prova, è richiesto il versamento di una quota associativa annuale di 20€.
@@ -276,24 +276,91 @@
 					con la registrazione, scrivici una mail: ti risponderemo il prima possibile.
 				</p>
 			</div>
-			<a href="mailto:shineparkour@yahoo.it" class="btn btn--green-soft fluid-shape">shineparkour@yahoo.it</a>
+			<a href="mailto:shineparkour@yahoo.it" class="btn btn--green fluid-shape">shineparkour@yahoo.it</a>
+
+			<div class="contact__social">
+				<p class="contact__social-subtitle">Seguici sui nostri social!</p>
+				<nav aria-label="Social media">
+					<ul class="contact__social-list">
+						<li>
+							<a href="https://www.facebook.com/ShineSchoolOfMovement/" aria-label="Facebook" target="_blank" rel="noopener noreferrer" class="fluid-shape">
+								<img src="/static/images/svg_social/facebook.svg" alt="Facebook">
+							</a>
+						</li>
+						<li>
+							<a href="https://www.instagram.com/shine_school_of_movement/" aria-label="Instagram" target="_blank" rel="noopener noreferrer" class="fluid-shape">
+								<img src="/static/images/svg_social/instagram.svg" alt="Instagram">
+							</a>
+						</li>
+						<li>
+							<a href="https://www.youtube.com/user/usethisnameWTF" aria-label="YouTube" target="_blank" rel="noopener noreferrer" class="fluid-shape">
+								<img src="/static/images/svg_social/youtube.svg" alt="YouTube">
+							</a>
+						</li>
+					</ul>
+				</nav>
+			</div>
 		</div>
 	</section>
 </main>
 
-<footer class="footer">
-	<div class="container footer__container">
-		<p class="footer__copy">&copy; 2026 Shine Parkour ASD &bull; Esplorazione & Allenamento Outdoor</p>
-		<div class="footer__links">
-			<!-- href keeps the standalone page reachable (no-JS, new tab, legal deep link);
-			     with JS, htmx intercepts the click and shows the same content in the dialog. -->
-			<a href="/privacy-policy"
-			   hx-get="/privacy-policy" hx-select="#legal-content"
-			   hx-target="#global-dialog-content" hx-swap="innerHTML">Privacy Policy</a>
-			<a href="/statute"
-			   hx-get="/statute" hx-select="#legal-content"
-			   hx-target="#global-dialog-content" hx-swap="innerHTML">Statuto ASD</a>
+<footer class="footer footer__bar">
+	<div class="container footer__body">
+
+		<!-- Dati associativi -->
+		<div class="footer__col footer__col--general">
+			<p class="footer__col-heading">Shine Parkour ASD</p>
+			<dl class="footer__meta">
+				<dt>Sede</dt>
+				<dd>Via Piceno 2, Ravenna</dd>
+				<dt>Email</dt>
+				<dd><a href="mailto:shineparkour@yahoo.it">shineparkour@yahoo.it</a></dd>
+				<dt>C.F.</dt>
+				<dd>92079540396</dd>
+				<dt>P.&nbsp;IVA</dt>
+				<dd>02509640393</dd>
+				<!-- Aggiungere numero affiliazione UISP quando disponibile -->
+				<dt>Affiliazione</dt>
+				<dd>UISP</dd>
+				<!-- Aggiungere numero RASD quando disponibile -->
+				<dt>Iscr. RASD</dt>
+				<dd>–</dd>
+			</dl>
 		</div>
+
+		<!-- Coordinate bancarie -->
+		<div class="footer__col footer__col--bank">
+			<p class="footer__col-heading">Bonifico bancario</p>
+			<dl class="footer__bank">
+				<dt>Intestatario</dt>
+				<dd>SHINE A.S.D.</dd>
+				<dt>IBAN</dt>
+				<dd><code class="footer__iban">IT11&nbsp;V030&nbsp;6967&nbsp;6845&nbsp;1074&nbsp;5671&nbsp;712</code></dd>
+			</dl>
+		</div>
+
+		<!-- Legale -->
+		<div class="footer__col footer__col--legal">
+			<p class="footer__col-heading">Legale</p>
+			<nav aria-label="Link legali">
+				<ul class="footer__legal-links">
+					<li>
+						<a href="/privacy-policy"
+						   hx-get="/privacy-policy" hx-select="#legal-content"
+						   hx-target="#global-dialog-content" hx-swap="innerHTML">Privacy &amp; Cookie Policy</a>
+					</li>
+					<li>
+						<a href="/statute"
+						   hx-get="/statute" hx-select="#legal-content"
+						   hx-target="#global-dialog-content" hx-swap="innerHTML">Statuto ASD</a>
+					</li>
+					<li>
+						<p>&copy; 2026 Shine Parkour ASD</p>
+					</li>
+				</ul>
+			</nav>
+		</div>
+
 	</div>
 </footer>
 {% endblock %}

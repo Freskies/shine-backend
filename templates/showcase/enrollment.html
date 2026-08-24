@@ -2,6 +2,8 @@
 
 {% block title %}Iscriviti &bull; Shine Parkour ASD{% endblock %}
 
+{% block description %}Iscriviti a Shine Parkour ASD. Carica il certificato medico e compila il modulo online per completare la tua iscrizione in pochi passi.{% endblock %}
+
 {% block head %}
 <link rel="stylesheet" href="/static/membership_form.css">
 <link rel="stylesheet" href="/static/enrollment.css">
@@ -94,15 +96,15 @@
 							<div id="contact-list"></div>
 
 							{#
-							  `js:` makes hx-vals evaluate per request, so the server sees how many
-							  rows exist right now and can refuse to hand out a fifth.
+							`js:` makes hx-vals evaluate per request, so the server sees how many
+							rows exist right now and can refuse to hand out a fifth.
 							#}
 							{#
-							  `hx-confirm="unset"` cancels the inheritance from the form: without it,
-							  adding a contact would pop the "confirm the send?" dialog, because
-							  hx-confirm applies to every descendant that issues a request.
+							`hx-confirm="unset"` cancels the inheritance from the form: without it,
+							adding a contact would pop the "confirm the send?" dialog, because
+							hx-confirm applies to every descendant that issues a request.
 							#}
-							<button type="button" id="add-contact" class="btn btn--sm btn--green-soft fluid-shape"
+							<button type="button" id="add-contact" class="btn btn--sm btn--green fluid-shape"
 							        hx-get="/enrollment/emergency-contact"
 							        hx-target="#contact-list"
 							        hx-swap="beforeend"

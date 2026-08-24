@@ -81,9 +81,9 @@
 }
 
 .membership-form__input:focus-visible {
-	outline: 2px solid var(--color-green);
+	outline: 2px solid var(--color-green-accent);
 	outline-offset: 1px;
-	border-color: var(--color-green);
+	border-color: var(--color-green-accent);
 }
 
 .membership-form__input--upper {
@@ -213,7 +213,7 @@ input:disabled {
 
 .membership-form__loading {
 	margin-top: 1rem;
-	color: var(--color-green);
+	color: var(--color-green-accent);
 	font-weight: 500;
 }
 
@@ -240,7 +240,7 @@ input:disabled {
 
 .form-feedback--success {
 	background-color: var(--color-green-pastel);
-	border-color: var(--color-green);
+	border-color: var(--color-green-accent);
 	color: var(--color-green-hover);
 }
 
