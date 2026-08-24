@@ -210,8 +210,6 @@ async fn parse_submission(mut multipart: Multipart) -> Result<Submission, String
 		.filter(EmergencyContact::is_usable)
 		.collect();
 
-	// Rejected rather than truncated: quietly dropping an emergency contact somebody chose
-	// to give us is the worse failure.
 	if contacts.len() > MAX_EMERGENCY_CONTACTS {
 		return Err(format!(
 			"too many emergency contacts: {} (max {MAX_EMERGENCY_CONTACTS})",

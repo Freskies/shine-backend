@@ -40,15 +40,16 @@
 					<!-- ======================= FASE 1 ======================= -->
 					<section class="wizard__phase" data-phase="1" aria-labelledby="phase1-title">
 						<p class="wizard__step-count">Passo 1 di 3</p>
-						<h1 id="phase1-title" class="heading-secondary">Fai una foto al certificato medico</h1>
+						<h1 id="phase1-title" class="heading-secondary">Carica il certificato medico</h1>
 						<p class="wizard__lead">
-							Scatta una foto chiara o scegli il file dal tuo dispositivo.
+							Scatta una foto chiara, scegli un'immagine o carica un <strong>PDF</strong>.
 							Assicurati che <strong>data e timbro siano leggibili</strong>.
 						</p>
 
-						<label class="wizard__filepick" for="certificate">
+						<label id="certificate-filepick" class="wizard__filepick" for="certificate">
 							<span class="wizard__filepick-icon" aria-hidden="true">+</span>
-							<span class="wizard__filepick-text">Scegli foto o scatta foto</span>
+							<span class="wizard__filepick-text">Scegli un file o trascina qui</span>
+							<span class="wizard__filepick-hint">Immagine o PDF &middot; 1 file al massimo</span>
 							{#
 							`capture` is only a hint: on a phone it offers the camera, on a
 							desktop the browser ignores it and opens the file picker.
@@ -57,9 +58,15 @@
 							       accept="image/*,application/pdf" capture="environment" required>
 						</label>
 
-						<p id="certificate-chosen" class="wizard__chosen" role="status"></p>
+						<div id="certificate-preview" class="wizard__preview" hidden>
+							<button type="button" id="certificate-remove" class="wizard__preview-remove" aria-label="Rimuovi file">&times;</button>
+							<div id="certificate-preview-content" class="wizard__preview-content"></div>
+						</div>
+						<p id="certificate-preview-name" class="wizard__preview-name"></p>
 
-						<button type="button" class="btn btn--green btn--full fluid-shape wizard__next"
+						<p id="certificate-error" class="wizard__error" hidden></p>
+
+						<button type="button" class="btn btn--green btn--full wizard__next"
 						        data-goto-phase="2" disabled>
 							Avanti
 						</button>
@@ -104,7 +111,7 @@
 							adding a contact would pop the "confirm the send?" dialog, because
 							hx-confirm applies to every descendant that issues a request.
 							#}
-							<button type="button" id="add-contact" class="btn btn--sm btn--green fluid-shape"
+							<button type="button" id="add-contact" class="btn btn--sm btn--green"
 							        hx-get="/enrollment/emergency-contact"
 							        hx-target="#contact-list"
 							        hx-swap="beforeend"
@@ -123,7 +130,7 @@
 								&larr; Torna al certificato
 							</button>
 
-							<button type="submit" class="btn btn--green btn--full fluid-shape">
+							<button type="submit" class="btn btn--green btn--full">
 								Conferma e invia
 							</button>
 

@@ -2,11 +2,6 @@
 /* ENROLMENT WIZARD  (/enrollment)         */
 /* ************************************** */
 
-/*
- * Deliberately plain and large. This is the one page where a mistake costs somebody their
- * enrolment, so targets are big, one decision is visible at a time, and nothing moves.
- */
-
 .wizard__back {
 	display: inline-block;
 	margin-bottom: 1.5rem;
@@ -53,7 +48,6 @@
 	color: #9ca3af;
 }
 
-/* The current phase and every phase already cleared read as done. */
 .wizard[data-phase="1"] .wizard__stepper[data-step="1"],
 .wizard[data-phase="2"] .wizard__stepper[data-step="1"],
 .wizard[data-phase="2"] .wizard__stepper[data-step="2"] {
@@ -81,22 +75,24 @@
 /* CERTIFICATE PICKER                       */
 /* ---------------------------------------- */
 
-/*
- * A label wrapping a visually hidden input: the whole panel becomes the tap target, which
- * is far easier to hit than a native file button.
- */
 .wizard__filepick {
 	display: flex;
 	flex-direction: column;
 	align-items: center;
 	justify-content: center;
 	gap: 0.75rem;
-	padding: 2.5rem 1.5rem;
+	height: 13rem;
+	padding: 1.5rem;
 	border: 3px dashed var(--color-green-accent);
 	border-radius: 14px;
 	background-color: var(--color-green-pastel);
 	cursor: pointer;
 	text-align: center;
+	box-sizing: border-box;
+}
+
+.wizard__filepick[hidden] {
+	display: none;
 }
 
 .wizard__filepick:hover,
@@ -284,4 +280,116 @@
 	.wizard__stepper {
 		font-size: 0.7rem;
 	}
+}
+
+/* ---------------------------------------- */
+/* CERTIFICATE PICKER — EXTRAS              */
+/* ---------------------------------------- */
+
+.wizard__filepick-hint {
+	font-size: 0.83rem;
+	font-weight: 400;
+	color: var(--color-dark-muted);
+}
+
+.wizard__filepick--dragover {
+	border-color: var(--color-green-hover);
+	background-color: #d9fbe9;
+	transform: scale(1.01);
+}
+
+/* ---------------------------------------- */
+/* CERTIFICATE PREVIEW                      */
+/* ---------------------------------------- */
+
+.wizard__preview[hidden] {
+	display: none;
+}
+
+.wizard__preview {
+	position: relative;
+	height: 13rem;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	border: 2px solid var(--color-green-accent);
+	border-radius: 14px;
+	overflow: hidden;
+	background-color: var(--color-green-pastel);
+	box-sizing: border-box;
+}
+
+.wizard__preview-remove {
+	position: absolute;
+	top: 0.6rem;
+	right: 0.6rem;
+	z-index: 1;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	width: 2rem;
+	height: 2rem;
+	border: none;
+	border-radius: var(--radius-full);
+	background-color: rgba(0, 0, 0, 0.55);
+	color: #fff;
+	font-size: 1.3rem;
+	line-height: 1;
+	cursor: pointer;
+}
+
+.wizard__preview-remove:hover {
+	background-color: #dc2626;
+}
+
+.wizard__preview-content {
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	width: 100%;
+	height: 100%;
+	padding: 0.75rem;
+	box-sizing: border-box;
+}
+
+.wizard__preview-img {
+	display: block;
+	/* constrain to the content area; natural aspect ratio is preserved because only
+	   the max values are set — the browser picks whichever axis hits its limit first */
+	max-width: 100%;
+	max-height: 100%;
+	width: auto;
+	height: auto;
+	border-radius: 6px;
+}
+
+.wizard__preview-pdf {
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	width: 6rem;
+	height: 7rem;
+	border-radius: 8px;
+	background-color: #ef4444;
+	color: #fff;
+	font-size: 1.3rem;
+	font-weight: 900;
+	letter-spacing: 0.05em;
+}
+
+.wizard__preview-name {
+	margin: 0.5rem 0 0;
+	font-size: 0.875rem;
+	font-weight: 600;
+	color: var(--color-dark-muted);
+	word-break: break-all;
+	text-align: center;
+}
+
+.wizard__error {
+	margin: 0.5rem 0 0;
+	font-size: 0.9rem;
+	font-weight: 600;
+	color: #dc2626;
+	text-align: center;
 }

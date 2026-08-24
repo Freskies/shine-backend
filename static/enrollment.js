@@ -1,18 +1,19 @@
+"use strict";
+
 /*
  * Enrolment wizard: phase navigation, signature pads, emergency-contact removal and the
  * pre-submit checks.
  *
  * The two phases are sections of a single form, toggled by `data-phase` on the wrapper.
- * They are never fetched or removed, because a file input cannot be repopulated from
+ * They are never fetched or removed because a file input cannot be repopulated from
  * script: dropping phase 1 from the DOM would lose the chosen photo.
  */
 
+const body = document.querySelector("body");
 const wizard = document.getElementById("enrollment-wizard");
 const form = document.getElementById("enrollment-form");
 
-/* ---------------------------------------------------------------- */
-/* PHASE NAVIGATION                                                 */
-/* ---------------------------------------------------------------- */
+/* PHASE NAVIGATION */
 
 function goToPhase (phase) {
 	wizard.dataset.phase = String(phase);
@@ -34,29 +35,90 @@ wizard.addEventListener("click", (e) => {
 	goToPhase(next);
 });
 
-/* ---------------------------------------------------------------- */
-/* CERTIFICATE PICKER                                               */
-/* ---------------------------------------------------------------- */
+/* CERTIFICATE PICKER */
 
 const certificate = document.getElementById("certificate");
-const chosen = document.getElementById("certificate-chosen");
+const filepick = document.getElementById("certificate-filepick");
+const preview = document.getElementById("certificate-preview");
+const previewContent = document.getElementById("certificate-preview-content");
+const previewName = document.getElementById("certificate-preview-name");
+const certError = document.getElementById("certificate-error");
 const nextButton = wizard.querySelector(".wizard__next");
+
+function showPreview (file) {
+	filepick.hidden = true;
+	certError.hidden = true;
+
+	previewName.textContent = `${file.name} (${(file.size / (1024 * 1024)).toFixed(1)} MB)`;
+	previewContent.replaceChildren();
+
+	if (file.type.startsWith("image/")) {
+		const img = document.createElement("img");
+		img.src = URL.createObjectURL(file);
+		img.className = "wizard__preview-img";
+		img.alt = file.name;
+		previewContent.appendChild(img);
+	} else {
+		const icon = document.createElement("div");
+		icon.className = "wizard__preview-pdf";
+		icon.textContent = "PDF";
+		previewContent.appendChild(icon);
+	}
+
+	preview.hidden = false;
+	nextButton.disabled = false;
+}
+
+function clearPreview () {
+	const dt = new DataTransfer();
+	certificate.files = dt.files;
+	previewContent.replaceChildren();
+	previewName.textContent = "";
+	preview.hidden = true;
+	filepick.hidden = false;
+	nextButton.disabled = true;
+}
 
 certificate.addEventListener("change", () => {
 	const file = certificate.files[0];
 	if (!file) {
-		chosen.textContent = "";
-		nextButton.disabled = true;
+		clearPreview();
 		return;
 	}
-	const megabytes = (file.size / (1024 * 1024)).toFixed(1);
-	chosen.textContent = `Selezionato: ${file.name} (${megabytes} MB)`;
-	nextButton.disabled = false;
+	showPreview(file);
 });
 
-/* ---------------------------------------------------------------- */
-/* EMERGENCY CONTACTS                                               */
-/* ---------------------------------------------------------------- */
+document.getElementById("certificate-remove").addEventListener("click", clearPreview);
+
+/* Drag-and-drop onto the picker area */
+filepick.addEventListener("dragover", (e) => {
+	e.preventDefault();
+	filepick.classList.add("wizard__filepick--dragover");
+});
+
+filepick.addEventListener("dragleave", (e) => {
+	if (!filepick.contains(e.relatedTarget))
+		filepick.classList.remove("wizard__filepick--dragover");
+});
+
+filepick.addEventListener("drop", (e) => {
+	e.preventDefault();
+	filepick.classList.remove("wizard__filepick--dragover");
+	const files = e.dataTransfer.files;
+	if (files.length > 1) {
+		certError.textContent = "Puoi caricare solo 1 file alla volta.";
+		certError.hidden = false;
+		return;
+	}
+	if (files.length === 1) {
+		const dt = new DataTransfer();
+		dt.items.add(files[0]);
+		certificate.files = dt.files;
+		certificate.dispatchEvent(new Event("change"));
+	}
+});
+
+/* EMERGENCY CONTACTS */
 
 /* Must match MAX_EMERGENCY_CONTACTS in src/handlers/enrollment.rs, which is authoritative:
    this only spares the user from filling in a row the server would reject. */
@@ -85,15 +147,13 @@ contactList.addEventListener("htmx:afterSwap", syncContactLimit);
 
 syncContactLimit();
 
-/* ---------------------------------------------------------------- */
-/* SIGNATURE PADS                                                   */
-/* ---------------------------------------------------------------- */
+/* SIGNATURE PADS */
 
 function initPad (canvasId, inputId) {
 	const canvas = document.getElementById(canvasId);
 	if (!canvas) return null;
 	const ctx = canvas.getContext("2d");
-	let drawing = false, hasDrawn = false;
+	let drawing = false, drawn = false;
 
 	function resize () {
 		if (canvas.offsetWidth === 0) return;
@@ -126,11 +186,13 @@ function initPad (canvasId, inputId) {
 		const p = pos(e);
 		ctx.lineTo(p.x, p.y);
 		ctx.stroke();
-		hasDrawn = true;
+		drawn = true;
 		if (e.cancelable) e.preventDefault();
 	};
 
-	const end = () => drawing = false;
+	const end = () => {
+		drawing = false;
+	};
 
 	canvas.addEventListener("mousedown", start);
 	canvas.addEventListener("mousemove", draw);
@@ -143,13 +205,13 @@ function initPad (canvasId, inputId) {
 		resize,
 		clear () {
 			ctx.clearRect(0, 0, canvas.width, canvas.height);
-			hasDrawn = false;
+			drawn = false;
 			document.getElementById(inputId).value = "";
 		},
 		save () {
-			document.getElementById(inputId).value = hasDrawn ? canvas.toDataURL("image/png") : "";
+			document.getElementById(inputId).value = drawn ? canvas.toDataURL("image/png") : "";
 		},
-		hasDrawn: () => hasDrawn,
+		hasDrawn: () => drawn,
 	};
 }
 
@@ -170,9 +232,7 @@ document.querySelectorAll("button[data-clear]").forEach(btn => {
 		() => setTimeout(() => autonomyPad?.resize(), 50));
 });
 
-/* ---------------------------------------------------------------- */
-/* SUBMIT                                                           */
-/* ---------------------------------------------------------------- */
+/* SUBMIT */
 
 form.addEventListener("htmx:configRequest", (evt) => {
 	const isMinor = document.getElementById("is_minor")?.checked;
@@ -198,16 +258,18 @@ form.addEventListener("htmx:configRequest", (evt) => {
 
 	/*
 	 * HTMX snapshots the form values *before* firing this event, so writing to the hidden
-	 * inputs above is not enough — the freshly serialised signatures have to be pushed
+	 * inputs above are not enough — the freshly serialized signatures have to be pushed
 	 * into the outgoing parameters by hand.
 	 */
 	evt.detail.parameters["signature"] = document.getElementById("signature").value;
 	evt.detail.parameters["autonomy_signature"] = document.getElementById("autonomy_signature").value;
 });
 
-/* Leaving mid-way loses everything typed, so warn unless the send already succeeded. */
+/* Leaving midway loses everything typed, so warn unless the sending already succeeded. */
 let submitted = false;
-document.body.addEventListener("enrollmentSent", () => submitted = true);
+body.addEventListener("enrollmentSent", () => {
+	submitted = true;
+});
 window.addEventListener("beforeunload", (e) => {
 	if (submitted) return;
 	if (!document.getElementById("applicant_email").value && !certificate.files.length) return;
