@@ -4,7 +4,7 @@
 <header class="header">
 	<div class="container header__container">
 		<a href="#" class="logo">
-			<img class="logo__mark" src="/static/logo_shine.svg" alt="Logo Shine">
+			<img class="logo__mark" src="/static/logo_shine.svg" alt="Logo Shine" width="108" height="76">
 			Shine
 		</a>
 	</div>
@@ -37,19 +37,22 @@
 			<ul class="featured-strip__list">
 				<li>
 					<a href="https://www.coni.it/" target="_blank">
-						<img class="featured-strip__logo" src="/static/images/featured-in/logo_coni.avif" alt="CONI"
+						<img class="featured-strip__logo" src="/static/images/featured-in/logo_coni.avif" width="166"
+						     height="105" alt="CONI"
 						     loading="lazy" decoding="async">
 					</a>
 				</li>
 				<li>
 					<a href="https://www.uisp.it/nazionale/" target="_blank">
-						<img class="featured-strip__logo" src="/static/images/featured-in/logo_uisp.avif" alt="UISP"
+						<img class="featured-strip__logo" src="/static/images/featured-in/logo_uisp.avif" width="194"
+						     height="105" alt="UISP"
 						     loading="lazy" decoding="async">
 					</a>
 				</li>
 				<li>
 					<a href="https://adaptqualifications.com/" target="_blank">
-						<img class="featured-strip__logo" src="/static/images/featured-in/logo_adapt.avif" alt="ADAPT"
+						<img class="featured-strip__logo" src="/static/images/featured-in/logo_adapt.avif" width="234"
+						     height="86" alt="ADAPT"
 						     loading="lazy" decoding="async">
 					</a>
 				</li>
@@ -75,18 +78,46 @@
 				</p>
 			</div>
 
+			<!--
+			Each shot occupies a fixed percentage of the collage, so `sizes` can state its
+			painted width exactly: a px value once the two-column grid kicks in at 960px,
+			a vw share of the container below that. Regenerate the ladders with
+			playground/generate_about_variants.py.
+			-->
 			<div class="about__collage">
 				<div class="about__shot about__shot--1 fluid-shape">
-					<img src="/static/images/about/about-1.webp"
+					<img src="/static/images/about/about-1-480.webp"
+					     srcset="/static/images/about/about-1-240.webp 240w,
+					             /static/images/about/about-1-360.webp 360w,
+					             /static/images/about/about-1-480.webp 480w,
+					             /static/images/about/about-1-640.webp 640w,
+					             /static/images/about/about-1-800.webp 800w"
+					     sizes="(min-width: 960px) 201px, 47vw"
+					     width="480" height="372"
 					     alt="Gruppo di allievi attorno ad un muretto che ascoltano il prossimo esercizio" loading="lazy"
 					     decoding="async">
 				</div>
 				<div class="about__shot about__shot--2 fluid-shape">
-					<img src="/static/images/about/about-2.webp" alt="Ragazzo che fa backflip" loading="lazy"
+					<img src="/static/images/about/about-2-480.webp"
+					     srcset="/static/images/about/about-2-240.webp 240w,
+					             /static/images/about/about-2-360.webp 360w,
+					             /static/images/about/about-2-480.webp 480w,
+					             /static/images/about/about-2-640.webp 640w,
+					             /static/images/about/about-2-900.webp 900w"
+					     sizes="(min-width: 960px) 223px, 52vw"
+					     width="480" height="309"
+					     alt="Ragazzo che fa backflip" loading="lazy"
 					     decoding="async">
 				</div>
 				<div class="about__shot about__shot--3 fluid-shape">
-					<img src="/static/images/about/about-3.webp"
+					<img src="/static/images/about/about-3-640.webp"
+					     srcset="/static/images/about/about-3-320.webp 320w,
+					             /static/images/about/about-3-480.webp 480w,
+					             /static/images/about/about-3-640.webp 640w,
+					             /static/images/about/about-3-880.webp 880w,
+					             /static/images/about/about-3-1110.webp 1110w"
+					     sizes="(min-width: 960px) 330px, 77vw"
+					     width="640" height="415"
 					     alt="Gruppo di bambini che attraversano un muro lateralmente stando appesi" loading="lazy"
 					     decoding="async">
 				</div>
@@ -290,19 +321,19 @@
 						<li>
 							<a href="https://www.facebook.com/ShineSchoolOfMovement/" aria-label="Facebook" target="_blank"
 							   rel="noopener noreferrer" class="fluid-shape">
-								<img src="/static/images/svg_social/facebook.svg" alt="Facebook">
+								<img src="/static/images/svg_social/facebook.svg" alt="Facebook" width="22" height="22">
 							</a>
 						</li>
 						<li>
 							<a href="https://www.instagram.com/shine_school_of_movement/" aria-label="Instagram"
 							   target="_blank" rel="noopener noreferrer" class="fluid-shape">
-								<img src="/static/images/svg_social/instagram.svg" alt="Instagram">
+								<img src="/static/images/svg_social/instagram.svg" alt="Instagram" width="22" height="22">
 							</a>
 						</li>
 						<li>
 							<a href="https://www.youtube.com/user/usethisnameWTF" aria-label="YouTube" target="_blank"
 							   rel="noopener noreferrer" class="fluid-shape">
-								<img src="/static/images/svg_social/youtube.svg" alt="YouTube">
+								<img src="/static/images/svg_social/youtube.svg" alt="YouTube" width="22" height="22">
 							</a>
 						</li>
 					</ul>

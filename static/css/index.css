@@ -1,4 +1,4 @@
-@import url("/static/css/variables.css");
+/* @import("/static/css/variables.css"); */
 
 :root {
 	--header-h: 4.5rem;
@@ -232,7 +232,21 @@ h1, h2, h3, h4, h5, h6 {
 		}
 	}
 
-	@media (prefers-reduced-motion: reduce) {
+	/*
+	 * Two reasons to hold the silhouette still, same outcome: the reader asked for no
+	 * motion, or the device cannot afford it. Each vertex above costs three trigonometric
+	 * calls, and there are 64 of them across ~28 elements on the home page — recomputed
+	 * every frame, that is the single largest source of main-thread work on a phone.
+	 *
+	 * The second query tests the *input device*, not the viewport: a desktop reports
+	 * `pointer: fine` however narrow its window gets, so dragging a browser window thin
+	 * keeps the animation, while a touch phone or tablet never starts it. Deliberately not
+	 * `any-pointer`/`any-hover`, which would also match a laptop with a touchscreen.
+	 *
+	 * `--a: 75deg` is a frozen pose rather than the 0deg initial value: it reads as an
+	 * intentional shape instead of the loop's start frame.
+	 */
+	@media (prefers-reduced-motion: reduce), (hover: none) and (pointer: coarse) {
 		.fluid-shape {
 			animation: none !important;
 			--a: 75deg;

@@ -14,8 +14,15 @@
 	<meta name="apple-mobile-web-app-title" content="Shine"/>
 	<link rel="manifest" href="/static/site.webmanifest"/>
 
+	<link rel="preload" href="/static/css/fonts/rubik-v31-latin-800.woff2" as="font" type="font/woff2" crossorigin>
+	<link rel="preload" href="/static/css/fonts/rubik-v31-latin-700.woff2" as="font" type="font/woff2" crossorigin>
+	<link rel="preload" href="/static/css/fonts/rubik-v31-latin-regular.woff2" as="font" type="font/woff2" crossorigin>
+
+	<link rel="stylesheet" href="/static/css/variables.css">
 	<link rel="stylesheet" href="/static/css/index.css">
-	<script src="/static/htmx.min.js"></script>
+
+	<!-- Nothing htmx drives is needed for the first paint, so it must not block parsing. -->
+	<script src="/static/htmx.min.js" defer></script>
 	{% block head %}{% endblock %}
 </head>
 <body>
