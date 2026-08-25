@@ -25,10 +25,37 @@ stubs. `db/models.rs` is also a stub — SQLite (via SQLx) and Hetzner S3 are pl
 
 ```
 main.rs (Router) → handlers/showcase.rs → HtmlTemplate<T> (render.rs) → Askama → Axum response
-                                         → pdf/membership_2026_27/generator.rs → Typst → PDF bytes
+                 → handlers/enrollment.rs → validation::normalize + validate
+                                          → pdf/membership_2026_27/generator.rs → Typst → PDF bytes
+                                          → email.rs → SMTP
 ```
 
 Static files under `static/` are served by `tower-http::ServeDir` at `/static`.
+
+### Form validation (`src/validation/`)
+
+`RULES` in `mod.rs` is the **single description of every enrolment field**: name, label, character-set pattern,
+lengths, date window, and when it is required. It is read twice — `validate()` enforces it on the POST, and
+`client_rules()` serializes it to JSON that `enrollment.js` turns into native constraint attributes (`pattern`,
+`minlength`, `min`/`max`, …). So no regex is written twice and there are **no per-field validation endpoints**.
+
+Consequences worth knowing before touching it:
+
+- Patterns must be valid **both** as Rust regexes and as JS regexes under the `v` flag HTML compiles `pattern` with.
+  In practice: always `[0-9]`, never `\d`; escape `/` and `-` inside character classes. They are stored unanchored —
+  both sides add `^(?:…)$`.
+- `required` is deliberately *not* in the JSON. It stays in the markup and in `syncConditionalSections()`, the only
+  party that knows whether the minor / autonomy sections are on screen.
+- Date bounds are resolved per request from `Local::now()`, so "at least 18 years old" moves with the calendar.
+- `normalize()` runs **before** `validate()` and before the emails. It trims, uppercases fiscal codes and province
+  abbreviations, strips phone separators, and clears the sections the two toggles turned off. That last job used to
+  live in `generator.rs`, where it ran after the emails were already rendered.
+- Server-only checks (no browser counterpart, because a regex cannot express them): the fiscal-code check character
+  and its agreement with the declared birth date, in `fiscal_code.rs`.
+
+Two failure paths, and they must not be merged: `enrollment_invalid()` returns the list of fields to fix plus an
+`HX-Trigger` naming them, while `enrollment_error()` is only for failures that are ours (PDF, SMTP, template) and is
+the one that says "contact us".
 
 ### PDF generation (the most complex part)
 

@@ -185,6 +185,19 @@
 				</form>
 
 				<div id="wizard-feedback"></div>
+
+				{#
+				The field rules, generated from `RULES` in src/validation/mod.rs — the same
+				table the submission is judged against. `enrollment.js` turns each entry into
+				the native constraint attributes, so no regex is written twice and the two
+				sides cannot drift apart. `required` is deliberately absent: it stays in the
+				markup and in `syncConditionalSections()`, which is the only party that knows
+				which conditional sections are on screen.
+
+				A `<script type="application/json">` rather than an attribute or a global:
+				the browser does not execute it, and the JSON travels verbatim.
+				#}
+				<script id="validation-rules" type="application/json">{{ rules_json|safe }}</script>
 			</div>
 		</div>
 	</section>

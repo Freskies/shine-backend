@@ -5,6 +5,7 @@ pub mod handlers;
 pub mod pdf;
 pub mod render;
 pub mod state;
+pub mod validation;
 
 use crate::config::Config;
 #[cfg(debug_assertions)]

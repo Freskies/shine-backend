@@ -2,6 +2,13 @@
 Extracted from the old standalone page so the enrolment wizard is the only place that
 renders it. Field names must keep matching `MembershipForm` in
 src/pdf/membership_2026_27/templates.rs. #}
+{# The four province fields point at this with `list`, which `enrollment.js` sets from the
+same closed list the server checks them against. Kept here rather than in the page so the
+partial stays self-contained. #}
+<datalist id="province-list">
+	{% for province in provinces %}<option value="{{ province }}"></option>{% endfor %}
+</datalist>
+
 <!-- 1. DATI ANAGRAFICI -->
 <fieldset class="membership-form__fieldset">
 	<legend class="membership-form__legend">Dati Anagrafici (Maggiorenne o Genitore / Tutore)</legend>

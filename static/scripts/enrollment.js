@@ -20,6 +20,99 @@ const form = document.getElementById("enrollment-form");
  */
 htmx.config.reportValidityOfForms = true;
 
+/* FIELD RULES */
+
+/*
+ * Every format rule arrives as JSON generated from `RULES` in src/validation/mod.rs — the
+ * same table the submission is judged against. Applying them from here, rather than writing
+ * `pattern="…"` into the markup, is what keeps one description of each rule: for the browser
+ * and the server to disagree, the server would have to send a rule it does not itself
+ * enforce.
+ *
+ * `required` is deliberately not in the JSON. It stays in the markup and in
+ * syncConditionalSections(), which is the only party that knows whether the minor and the
+ * autonomy sections are currently on screen.
+ */
+const RULES = new Map(
+	JSON.parse(document.getElementById("validation-rules").textContent)
+		.map(rule => [rule.name, rule]),
+);
+
+/*
+ * The browser's own wording for a failed `pattern` is "Match the requested format", which
+ * tells nobody anything. These are the sentences the server would have answered with.
+ */
+function messageFor (input, rule) {
+	const v = input.validity;
+	if (v.valueMissing) return "Questo campo è obbligatorio.";
+	if (v.tooShort) return `Servono almeno ${rule.minLength} caratteri.`;
+	if (v.tooLong) return `Non può superare i ${rule.maxLength} caratteri.`;
+	if (v.rangeUnderflow) return rule.minMessage || rule.hint;
+	if (v.rangeOverflow) return rule.maxMessage || rule.hint;
+	if (v.patternMismatch || v.typeMismatch || v.badInput) return rule.hint;
+	return "";
+}
+
+/*
+ * Re-runs the native checks and replaces whatever message they produced.
+ *
+ * setCustomValidity() is sticky — a non-empty message keeps the field invalid until it is
+ * cleared — so it is emptied first, the validity flags are read while they mean something,
+ * and only then is the replacement set.
+ */
+function refreshValidity (input, rule) {
+	input.setCustomValidity("");
+	const message = messageFor(input, rule);
+	input.setCustomValidity(message);
+	return message;
+}
+
+function applyRules (root) {
+	for (const input of root.querySelectorAll("input[name]")) {
+		const rule = RULES.get(input.name);
+		/* Ruled once: this runs again for every contact row HTMX appends, and the listeners
+		   below must not stack up on the inputs that were already there. */
+		if (!rule || input.dataset.ruled) continue;
+		input.dataset.ruled = "1";
+
+		if (rule.pattern) input.pattern = rule.pattern;
+		if (rule.minLength) input.minLength = rule.minLength;
+		if (rule.maxLength) input.maxLength = rule.maxLength;
+		if (rule.min) input.min = rule.min;
+		if (rule.max) input.max = rule.max;
+		if (rule.list) input.setAttribute("list", rule.list);
+		input.title = rule.hint;
+
+		/* Province abbreviations and fiscal codes are matched against uppercase-only
+		   patterns, which is also what the server compares after normalising, so the field
+		   is kept uppercase as it is typed rather than corrected afterwards. */
+		if (rule.uppercase && input.type === "text") {
+			input.addEventListener("input", () => {
+				const caret = input.selectionStart;
+				input.value = input.value.toUpperCase();
+				input.setSelectionRange(caret, caret);
+			});
+		}
+
+		input.addEventListener("input", () => {
+			input.setCustomValidity("");
+			input.removeAttribute("aria-invalid");
+		});
+
+		/* Only on blur, and only once there is something to judge: flagging a field the
+		   moment it is tabbed past would light up the whole form on the way down. An empty
+		   required field is caught at submit, where the browser reports it in place. */
+		input.addEventListener("blur", () => {
+			if (!input.value) return;
+			input.toggleAttribute("aria-invalid", refreshValidity(input, rule) !== "");
+		});
+
+		input.addEventListener("invalid", () => refreshValidity(input, rule));
+	}
+}
+
+applyRules(document);
+
 /* PHASE NAVIGATION */
 
 function goToPhase (phase) {
@@ -149,8 +242,12 @@ contactList.addEventListener("click", (e) => {
 	syncContactLimit();
 });
 
-/* Fires after HTMX has appended the new row, so the count is already up to date. */
-contactList.addEventListener("htmx:afterSwap", syncContactLimit);
+/* Fires after HTMX has appended the new row, so the count is already up to date and the
+   row's four inputs are in the DOM waiting for their rules. */
+contactList.addEventListener("htmx:afterSwap", () => {
+	syncContactLimit();
+	applyRules(contactList);
+});
 
 syncContactLimit();
 
@@ -348,6 +445,57 @@ form.addEventListener("htmx:afterRequest", (evt) => {
  * hangs off a detached form by then. The `enrollmentSent` trigger the response carries fires on
  * the body instead, which is what unfreezes the confirmation step. See the handler below.
  */
+
+/* SERVER-SIDE REJECTION */
+
+/*
+ * The server refused the submission and named the fields. The fragment it returned already
+ * lists them with what is wrong; this is the part markup cannot do — marking the inputs,
+ * moving to the step that holds one, and putting the cursor in it.
+ *
+ * A name may carry a `:index` suffix. That is how the server tells the emergency-contact
+ * rows apart: they all post under the same four names, in DOM order.
+ */
+function inputNamed (reference) {
+	const [name, index] = reference.split(":");
+	const matches = form.querySelectorAll(`[name="${name}"]`);
+	return matches[index === undefined ? 0 : Number(index)] || null;
+}
+
+function focusField (reference) {
+	const input = inputNamed(reference);
+	if (!input) return;
+
+	/* The certificate is on the first step and everything else on the second, so the phase
+	   comes from the input rather than from an assumption. */
+	const phase = input.closest("[data-phase]");
+	if (phase) goToPhase(phase.dataset.phase);
+
+	/* After the smooth scroll goToPhase starts, or the two fight over the viewport. A
+	   signature is a hidden input and cannot take focus, so its field is scrolled to. */
+	setTimeout(() => {
+		if (input.type === "hidden") {
+			input.closest(".membership-form__field")
+				?.scrollIntoView({ behavior: "smooth", block: "center" });
+			return;
+		}
+		input.focus();
+		input.scrollIntoView({ behavior: "smooth", block: "center" });
+	}, 400);
+}
+
+body.addEventListener("enrollmentInvalid", (e) => {
+	const fields = e.detail?.fields ?? [];
+	const inputs = fields.map(inputNamed).filter(Boolean);
+	inputs.forEach(input => input.setAttribute("aria-invalid", "true"));
+	if (fields.length) focusField(fields[0]);
+});
+
+/* Delegated on the container, because HTMX replaces the fragment inside it on every try. */
+document.getElementById("wizard-feedback").addEventListener("click", (e) => {
+	const jump = e.target.closest("[data-field]");
+	if (jump) focusField(jump.dataset.field);
+});
 
 /* CONSENT CHECKBOXES */
 

@@ -121,7 +121,7 @@ fn decode_signature(data_url: &str) -> Result<Vec<u8>, String> {
 
 /// Escapes user input interpolated into a Typst *markup* block (`#form_data[…]`).
 ///
-/// Left unescaped, `@` starts a reference, `#` enters code mode, `$` opens math, 
+/// Left unescaped, `@` starts a reference, `#` enters code mode, `$` opens math,
 /// and an odd `]` closes the enclosing block early — each aborts compilation.
 fn typst_escape(s: String) -> String {
 	let mut out = String::with_capacity(s.len());
@@ -157,36 +157,15 @@ fn is_drawn_signature(value: &str) -> bool {
 }
 
 pub fn generate(mut form: MembershipForm) -> Result<Vec<u8>, String> {
-	// The conditional sections are only hidden by CSS `:has()`, so their inputs
-	// are still submitted. Clear whatever the toggles say does not apply, rather
-	// than trusting the browser to have blanked the fields.
-	if form.is_minor.is_none() {
-		form.minor_last_name = None;
-		form.minor_first_name = None;
-		form.minor_birth_place = None;
-		form.minor_birth_province = None;
-		form.minor_birth_date = None;
-		form.minor_residence_city = None;
-		form.minor_residence_address = None;
-		form.minor_residence_number = None;
-		form.minor_residence_cap = None;
-		form.minor_residence_province = None;
-		form.minor_fiscal_code = None;
-		form.commute_alone = None;
-	}
-
-	if form.commute_alone.is_none() {
-		form.autonomy_signature = None;
-		form.autonomy_place_and_date = None;
-	}
-
+	// The conditional sections are only hidden by CSS `:has()`, so their inputs are still
+	// submitted; clearing the ones the toggles say do not apply is
+	// `crate::validation::normalize`, which the handler runs before rendering the emails as
+	// well. It used to happen here, which was too late for them.
+	//
+	// The two checks below are the backstop for the caller that forgets: an empty signature
+	// would decode to zero bytes and surface much later as an opaque Typst image error.
 	form.autonomy_signature = form.autonomy_signature.filter(|s| is_drawn_signature(s));
-	form.autonomy_place_and_date = form
-		.autonomy_place_and_date
-		.filter(|s| !s.trim().is_empty());
 
-	// An empty main signature would decode to zero bytes and only fail later, as
-	// an opaque Typst image error.
 	if !is_drawn_signature(&form.signature) {
 		return Err("Firma del richiedente mancante".to_string());
 	}
