@@ -23,6 +23,8 @@
 
 	<!-- Nothing htmx drives is needed for the first paint, so it must not block parsing. -->
 	<script src="/static/htmx.min.js" defer></script>
+	<!-- After htmx: it hooks htmx:afterSwap to catch shapes that arrive in swapped markup. -->
+	<script src="/static/scripts/fluid-shapes.js" defer></script>
 	{% block head %}{% endblock %}
 </head>
 <body>

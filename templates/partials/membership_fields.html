@@ -2,12 +2,11 @@
 Extracted from the old standalone page so the enrolment wizard is the only place that
 renders it. Field names must keep matching `MembershipForm` in
 src/pdf/membership_2026_27/templates.rs. #}
-{# The four province fields point at this with `list`, which `enrollment.js` sets from the
-same closed list the server checks them against. Kept here rather than in the page so the
-partial stays self-contained. #}
-<datalist id="province-list">
-	{% for province in provinces %}<option value="{{ province }}"></option>{% endfor %}
-</datalist>
+{# The four province fields are the one exception to "required lives in the markup": they are
+mandatory, but the browser's "please fill in this field" is the wrong sentence for the person
+who leaves one empty — usually somebody born abroad, for whom the answer is EE. Without the
+attribute the field reaches the server, which says so. See `Kind::Choice` in
+src/validation/mod.rs. #}
 
 <!-- 1. DATI ANAGRAFICI -->
 <fieldset class="membership-form__fieldset">
@@ -32,7 +31,7 @@ partial stays self-contained. #}
 		<div class="membership-form__field">
 			<label class="membership-form__label" for="birth_province">Provincia (Sigla)</label>
 			<input class="membership-form__input" id="birth_province" name="birth_province" type="text"
-			       maxlength="2" placeholder="RA" required>
+			       maxlength="2" placeholder="RA">
 		</div>
 		<div class="membership-form__field">
 			<label class="membership-form__label" for="birth_date">Data di nascita</label>
@@ -67,7 +66,7 @@ partial stays self-contained. #}
 		<div class="membership-form__field">
 			<label class="membership-form__label" for="residence_province">Provincia di residenza</label>
 			<input class="membership-form__input" id="residence_province" name="residence_province"
-			       type="text" maxlength="2" placeholder="RA" required>
+			       type="text" maxlength="2" placeholder="RA">
 		</div>
 	</div>
 
@@ -124,8 +123,11 @@ partial stays self-contained. #}
 				</div>
 				<div class="membership-form__field">
 					<label class="membership-form__label" for="minor_birth_province">Provincia</label>
+					{# `data-server-required` keeps `syncConditionalSections()` from adding the
+					`required` this field deliberately does not carry. #}
 					<input class="membership-form__input" id="minor_birth_province"
-					       name="minor_birth_province" type="text" maxlength="2">
+					       name="minor_birth_province" type="text" maxlength="2"
+					       data-server-required>
 				</div>
 				<div class="membership-form__field">
 					<label class="membership-form__label" for="minor_birth_date">Data di nascita del
@@ -163,7 +165,8 @@ partial stays self-contained. #}
 				<div class="membership-form__field">
 					<label class="membership-form__label" for="minor_residence_province">Provincia</label>
 					<input class="membership-form__input" id="minor_residence_province"
-					       name="minor_residence_province" type="text" maxlength="2">
+					       name="minor_residence_province" type="text" maxlength="2"
+					       data-server-required>
 				</div>
 			</div>
 

@@ -1,9 +1,15 @@
-//! The two fiscal-code checks a regex cannot express.
+//! The three fiscal-code checks a regex cannot express.
 //!
-//! Both run on the server only. The check character needs a lookup table, a modulo, and
-//! an agreement between the encoded birthday. The declared one needs a calendar —
-//! reimplementing either in the browser would be the duplication this module set out to
-//! avoid, so the page validates the *shape* of the code and leaves these to the submission.
+//! All of them run on the server only. The check character needs a lookup table and a modulo,
+//! the encoded birthday needs a calendar, and the encoded name needs the consonant rules
+//! below — reimplementing any of them in the browser would be the duplication this module set
+//! out to avoid, so the page validates the *shape* of the code and leaves these to the
+//! submission.
+//!
+//! Between them they are what makes the field worth a check at all: the shape accepts almost
+//! any sixteen characters in the right arrangement, the checksum accepts any code that was
+//! ever issued to anybody, and only [`agrees_with_birth_date`] and [`agrees_with_name`] can
+//! tell that a perfectly valid code belongs to somebody else.
 
 use chrono::{Datelike, NaiveDate};
 
@@ -63,9 +69,7 @@ fn digit(c: char) -> Option<u32> {
 
 /// True when the sixteenth character is the one, the first fifteen imply.
 ///
-/// This is what turns a single mistyped letter from an accepted code into a rejected one,
-/// and it is the reason the field is worth validating at all: the shape alone accepts
-/// almost any sixteen characters in the right arrangement.
+/// This is what turns a single mistyped letter from an accepted code into a rejected one.
 pub fn checksum_is_valid(code: &str) -> bool {
 	// Uppercase ASCII throughout, so bytes and characters line up and a slice is safe.
 	if code.len() != 16 || !code.bytes().all(|b| b.is_ascii_alphanumeric()) {
@@ -129,9 +133,104 @@ pub fn agrees_with_birth_date(code: &str, declared: NaiveDate) -> bool {
 		&& declared.day() == day
 }
 
+// --- The name ---
+
+const VOWELS: [char; 5] = ['A', 'E', 'I', 'O', 'U'];
+
+/// The base letter an accented one stands for.
+///
+/// Only the Latin-1 letters an Italian registry actually produces. Anything outside this set
+/// is what makes [`letters`] give up rather than guess.
+fn fold(c: char) -> Option<char> {
+	match c {
+		'A'..='Z' => Some(c),
+		'À' | 'Á' | 'Â' | 'Ã' | 'Ä' | 'Å' => Some('A'),
+		'Ç' => Some('C'),
+		'È' | 'É' | 'Ê' | 'Ë' => Some('E'),
+		'Ì' | 'Í' | 'Î' | 'Ï' => Some('I'),
+		'Ñ' => Some('N'),
+		'Ò' | 'Ó' | 'Ô' | 'Õ' | 'Ö' | 'Ø' => Some('O'),
+		'Ù' | 'Ú' | 'Û' | 'Ü' => Some('U'),
+		'Ý' | 'Ÿ' => Some('Y'),
+		_ => None,
+	}
+}
+
+/// A name as the tax office reads it: uppercase, accents folded onto their base letter, and
+/// the punctuation of "D'Angelo" or "De Luca" dropped, since the code is computed over the
+/// letters alone.
+///
+/// `None` when a letter cannot be folded. That is the conservative answer and it matters: a
+/// name written in an alphabet this function does not know is a name whose code it cannot
+/// predict, and refusing a valid enrolment is a worse outcome than missing a check.
+fn letters(name: &str) -> Option<String> {
+	let mut out = String::new();
+	for c in name.to_uppercase().chars() {
+		if c.is_whitespace() || matches!(c, '\'' | '-' | '.' | ',') {
+			continue;
+		}
+		out.push(fold(c)?);
+	}
+	Some(out)
+}
+
+/// The three characters a surname contributes: consonants first, then vowels, padded with `X`
+/// when there are fewer than three letters to give.
+fn surname_code(letters: &str) -> String {
+	let consonants = letters.chars().filter(|c| !VOWELS.contains(c));
+	let vowels = letters.chars().filter(|c| VOWELS.contains(c));
+	consonants
+		.chain(vowels)
+		.chain("XXX".chars())
+		.take(3)
+		.collect()
+}
+
+/// As [`surname_code`], except that a given name with four or more consonants skips its
+/// second one — the rule that makes Giovanni `GNN` rather than `GVN`.
+fn given_name_code(letters: &str) -> String {
+	let consonants: Vec<char> = letters.chars().filter(|c| !VOWELS.contains(c)).collect();
+	if consonants.len() >= 4 {
+		return [consonants[0], consonants[2], consonants[3]]
+			.iter()
+			.collect();
+	}
+	surname_code(letters)
+}
+
+/// True when the first six characters of `code` are the ones this surname and this given name
+/// encode.
+///
+/// Omocodia only ever substitutes letters for *digits*, so these six are the same in every
+/// variant of a code and can be compared as written.
+///
+/// Two ways out without a verdict, both deliberate: a name [`letters`] cannot fold, and a name
+/// that carries no letters at all. In either case the name field has its own rule to report,
+/// and this one stays quiet instead of blaming the fiscal code for it.
+///
+/// One false rejection is left standing on purpose. Somebody registered as "Anna Maria" whose
+/// code therefore reads `NNM` will be refused if they type "Anna" alone — the message says to
+/// write the name as it appears on the health card, which is also what the membership document
+/// is supposed to carry.
+pub fn agrees_with_name(code: &str, last_name: &str, first_name: &str) -> bool {
+	let head: String = code.chars().take(6).collect();
+	if head.chars().count() != 6 {
+		return false;
+	}
+
+	let (Some(surname), Some(given)) = (letters(last_name), letters(first_name)) else {
+		return true;
+	};
+	if surname.is_empty() || given.is_empty() {
+		return true;
+	}
+
+	head == format!("{}{}", surname_code(&surname), given_name_code(&given))
+}
+
 #[cfg(test)]
 mod tests {
-	use super::{agrees_with_birth_date, checksum_is_valid};
+	use super::{agrees_with_birth_date, agrees_with_name, checksum_is_valid};
 	use chrono::NaiveDate;
 
 	/// The canonical example: Mario Rossi, born in Milan on 10 December 1985 —
@@ -182,5 +281,45 @@ mod tests {
 	fn omocodia_letters_read_as_digits() {
 		let born = NaiveDate::from_ymd_opt(1985, 12, 10).unwrap();
 		assert!(agrees_with_birth_date("RSSMRA85T1LA562S", born));
+	}
+
+	/// The check the checksum cannot make, and the one this form used to be missing: a code
+	/// whose arithmetic is perfect but whose owner is somebody else.
+	#[test]
+	fn the_encoded_name_is_read_back() {
+		assert!(agrees_with_name(MARIO, "Rossi", "Mario"));
+		assert!(agrees_with_name(MARIO, " rossi ", "MARIO"));
+
+		assert!(!agrees_with_name(MARIO, "Bianchi", "Mario"));
+		assert!(!agrees_with_name(MARIO, "Rossi", "Luca"));
+	}
+
+	/// A given name with four consonants drops the second: Giovanni is `GNN`.
+	#[test]
+	fn a_long_given_name_skips_its_second_consonant() {
+		// VRDGNN99A01A001? — only the first six characters matter here.
+		assert!(agrees_with_name("VRDGNN99A01A001A", "Verdi", "Giovanni"));
+		assert!(!agrees_with_name("VRDGVN99A01A001A", "Verdi", "Giovanni"));
+	}
+
+	/// Apostrophes, spaces and accents are not letters, and a name with fewer than three of
+	/// them is padded with `X`.
+	#[test]
+	fn punctuation_is_dropped_and_short_names_are_padded() {
+		assert!(agrees_with_name("DNGMRA99A01A001A", "D'Angelo", "Maria"));
+		assert!(agrees_with_name("DLCNNA99A01A001A", "De Luca", "Anna"));
+		// Two given names are one string: IVALDOEMILIO gives V, D, M.
+		assert!(agrees_with_name("BOXVDM99A01A001A", "Bo", "Ivaldo Emilio"));
+		assert!(agrees_with_name("RSSMRA99A01A001A", "Rossì", "Mario"));
+	}
+
+	/// Both ways out: nothing to compare against, and an alphabet the folding does not know.
+	#[test]
+	fn an_unreadable_name_is_not_a_verdict() {
+		assert!(agrees_with_name(MARIO, "", "Mario"));
+		assert!(agrees_with_name(MARIO, "Rossi", "   "));
+		assert!(agrees_with_name(MARIO, "Иванов", "Мария"));
+		// A code too short to hold a name is still a rejection.
+		assert!(!agrees_with_name("RSS", "Rossi", "Mario"));
 	}
 }

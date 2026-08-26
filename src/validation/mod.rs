@@ -14,14 +14,18 @@
 //! stays in the markup and in `syncConditionalSections()` — the browser is the only party
 //! that knows which conditional sections are currently on screen.
 //!
-//! Two checks have no client-side counterpart at all, because a regex cannot express them:
-//! the fiscal-code check character and its agreement with the declared birth date. See
-//! [`fiscal_code`].
+//! Three checks have no client-side counterpart at all, because a regex cannot express them:
+//! the fiscal-code check character and its agreement with the declared birth date and with
+//! the declared name. See [`fiscal_code`].
+//!
+//! One more is server-only by choice rather than by necessity: the province abbreviations of
+//! [`Kind::Choice`], because the browser has nothing useful to say about either a wrong one or
+//! a missing one.
 
 mod fiscal_code;
 mod provinces;
 
-pub use provinces::PROVINCES;
+use provinces::PROVINCES;
 
 use crate::pdf::membership_2026_27::templates::MembershipForm;
 use chrono::{Months, NaiveDate, TimeDelta};
@@ -33,7 +37,8 @@ use std::sync::LazyLock;
 /// The format `type="date"` posts and `<input min|max>` expects.
 const ISO: &str = "%Y-%m-%d";
 
-/// The format the membership document prints dates in.
+/// The format the membership document prints dates in, and the one the applicant types in the
+/// single field that is not a date input: "Ravenna, 17/08/2026".
 const ITALIAN_DATE: &str = "%d/%m/%Y";
 
 /// Nobody enrolling in 2026 was born before this, and a date this old is a mistyped year
@@ -195,17 +200,30 @@ pub enum Kind {
 	Text(Format),
 	/// As [`Kind::Text`], with the separators stripped on the way in.
 	Phone(Format),
-	/// Uppercase text from a closed list, which the page also offers as a `<datalist>`.
+	/// Uppercase text from a closed list, checked here and nowhere else.
+	///
+	/// The list could be handed to the browser as an alternation, and used to be. It is not
+	/// any more, because everything the browser could then say about a province field is worse
+	/// than what this kind says: "match the requested format" for a wrong abbreviation, and
+	/// "please fill in this field" for an empty one — when the applicant who leaves it empty
+	/// is usually somebody born abroad, who has no province to give and no way of knowing that
+	/// `EE` stands in for one. So the four province inputs carry no `required` and no
+	/// `pattern`, and the two sentences below are what answers them.
 	Choice {
 		options: &'static [&'static str],
-		/// `id` of the `<datalist>` element holding the options.
-		list: &'static str,
+		/// Shown when the value is not in `options`.
 		hint: &'static str,
+		/// Shown when the field is required and empty, in place of the bare "this field is
+		/// mandatory" every other kind gets.
+		missing: &'static str,
 	},
-	/// Shape, check character, and agreement with the date field named here.
+	/// Shape, check character, and agreement with the three fields named here.
 	FiscalCode {
 		/// Name of the rule holding this person's birth date.
 		birth_date: &'static str,
+		/// And the two holding their name, which the first six characters encode.
+		last_name: &'static str,
+		first_name: &'static str,
 	},
 	/// A calendar day inside a window that moves with today's date.
 	Date {
@@ -335,8 +353,10 @@ pub static RULES: &[Rule] = &[
 			label: "Provincia di nascita",
 			kind: Kind::Choice {
 				options: PROVINCES,
-				list: "province-list",
-				hint: "Usa la sigla della provincia, o EE se sei nato all'estero.",
+				hint: "Questa sigla non è una provincia italiana. Se sei nato all'estero \
+				       scrivi EE.",
+				missing: "Manca la provincia di nascita: scrivi la sigla, per esempio RA. \
+				          Se sei nato all'estero scrivi EE.",
 			},
 			min_len: 2,
 			max_len: 2,
@@ -418,8 +438,8 @@ pub static RULES: &[Rule] = &[
 			label: "Provincia di residenza",
 			kind: Kind::Choice {
 				options: PROVINCES,
-				list: "province-list",
-				hint: "Usa la sigla della provincia, per esempio RA.",
+				hint: "Questa sigla non è una provincia italiana: controllala.",
+				missing: "Manca la provincia: scrivi la sigla, per esempio RA.",
 			},
 			min_len: 2,
 			max_len: 2,
@@ -458,6 +478,8 @@ pub static RULES: &[Rule] = &[
 			label: "Codice fiscale",
 			kind: Kind::FiscalCode {
 				birth_date: "birth_date",
+				last_name: "last_name",
+				first_name: "first_name",
 			},
 			min_len: 16,
 			max_len: 16,
@@ -509,8 +531,10 @@ pub static RULES: &[Rule] = &[
 			label: "Provincia di nascita del minore",
 			kind: Kind::Choice {
 				options: PROVINCES,
-				list: "province-list",
-				hint: "Usa la sigla della provincia, o EE se è nato all'estero.",
+				hint: "Questa sigla non è una provincia italiana. Se il minore è nato \
+				       all'estero scrivi EE.",
+				missing: "Manca la provincia di nascita del minore: scrivi la sigla, per \
+				          esempio RA. Se è nato all'estero scrivi EE.",
 			},
 			min_len: 2,
 			max_len: 2,
@@ -592,8 +616,8 @@ pub static RULES: &[Rule] = &[
 			label: "Provincia di residenza del minore",
 			kind: Kind::Choice {
 				options: PROVINCES,
-				list: "province-list",
-				hint: "Usa la sigla della provincia, per esempio RA.",
+				hint: "Questa sigla non è una provincia italiana: controllala.",
+				missing: "Manca la provincia: scrivi la sigla, per esempio RA.",
 			},
 			min_len: 2,
 			max_len: 2,
@@ -608,6 +632,8 @@ pub static RULES: &[Rule] = &[
 			label: "Codice fiscale del minore",
 			kind: Kind::FiscalCode {
 				birth_date: "minor_birth_date",
+				last_name: "minor_last_name",
+				first_name: "minor_first_name",
 			},
 			min_len: 16,
 			max_len: 16,
@@ -746,12 +772,29 @@ static COMPILED: LazyLock<HashMap<&'static str, Regex>> = LazyLock::new(|| {
 
 /// One rejected field, as the page needs it: a name to focus, a label to name, and a
 /// sentence explaining what to do.
+///
+/// Serialized whole into the `HX-Trigger` payload of a refused submission: the page prints
+/// each message above the field it belongs to, so the three parts travel together rather
+/// than the sentence being rendered server-side and only the name being sent.
+#[derive(Serialize)]
 pub struct FieldError {
 	/// The input's `name`. Repeated names — the contact columns — carry a `:index` suffix
 	/// so the page can tell the rows apart.
 	pub field: String,
 	pub label: String,
 	pub message: String,
+}
+
+/// The other values a field needs to see to judge its own.
+///
+/// Only [`Kind::FiscalCode`] reads any of them — the code has to agree with the birth date and
+/// with the name of the person it belongs to — so every other caller passes
+/// `Related::default()` and the signature stays one argument instead of three.
+#[derive(Clone, Copy, Default)]
+pub struct Related<'a> {
+	pub birth_date: Option<&'a str>,
+	pub last_name: Option<&'a str>,
+	pub first_name: Option<&'a str>,
 }
 
 impl Field {
@@ -766,19 +809,28 @@ impl Field {
 	/// Judges one value. `None` means it passed.
 	///
 	/// `required` is the caller's decision, because for the conditional sections it depends
-	/// on the two toggles rather than on anything visible here. `birth_date` is read only by
-	/// [`Kind::FiscalCode`]; pass `None` for every other kind.
+	/// on the two toggles rather than on anything visible here. `related` is read only by
+	/// [`Kind::FiscalCode`]; pass `Related::default()` for every other kind.
 	pub fn check(
 		&self,
 		value: &str,
 		required: bool,
 		today: NaiveDate,
-		birth_date: Option<&str>,
+		related: Related<'_>,
 	) -> Option<FieldError> {
 		let value = value.trim();
 
 		if value.is_empty() {
-			return required.then(|| self.error("Questo campo è obbligatorio."));
+			if !required {
+				return None;
+			}
+			// A missing province is the one blank this form cannot explain with "questo campo
+			// è obbligatorio": the applicant is usually somebody born abroad who has no
+			// province to give and no way of knowing that `EE` is what stands in for one.
+			return Some(match self.kind {
+				Kind::Choice { missing, .. } => self.error(missing),
+				_ => self.error("Questo campo è obbligatorio."),
+			});
 		}
 
 		// Characters, not bytes: an accented name is shorter than its UTF-8 length, and
@@ -806,7 +858,10 @@ impl Field {
 			}
 
 			// The pattern above has already established the shape, so what is left is the
-			// arithmetic and the cross-check against the date field.
+			// arithmetic and the two cross-checks: the birthday the code encodes, and the
+			// name. Without the second one a valid code belonging to somebody else — or
+			// simply copied from the wrong family member — passes every other test on this
+			// form.
 			Kind::FiscalCode { .. } => {
 				if !fiscal_code::checksum_is_valid(value) {
 					return Some(self.error(
@@ -816,18 +871,27 @@ impl Field {
 				}
 				// Skipped when the date itself was rejected, so one mistyped birthday does
 				// not come back as two separate problems.
-				let declared = birth_date
+				let declared = related
+					.birth_date
 					.and_then(|d| NaiveDate::parse_from_str(d.trim(), ISO).ok())
 					.filter(|d| *d <= today);
-				match declared {
-					Some(date) if !fiscal_code::agrees_with_birth_date(value, date) => {
-						Some(self.error(
-							"Il codice fiscale non corrisponde alla data di nascita \
-							 indicata: controlla entrambi.",
-						))
-					}
-					_ => None,
+				if let Some(date) = declared
+					&& !fiscal_code::agrees_with_birth_date(value, date)
+				{
+					return Some(self.error(
+						"Il codice fiscale non corrisponde alla data di nascita indicata: \
+						 controlla entrambi.",
+					));
 				}
+				let last = related.last_name.unwrap_or_default();
+				let first = related.first_name.unwrap_or_default();
+				(!fiscal_code::agrees_with_name(value, last, first)).then(|| {
+					self.error(
+						"Il codice fiscale non corrisponde al nome e al cognome indicati. \
+						 Scrivili come sulla tessera sanitaria, per intero e senza \
+						 abbreviazioni.",
+					)
+				})
 			}
 
 			Kind::Date {
@@ -948,11 +1012,21 @@ pub fn validate(form: &MembershipForm, today: NaiveDate) -> Vec<FieldError> {
 				return None;
 			}
 
-			let birth_date = match rule.field.kind {
-				Kind::FiscalCode { birth_date } => value_of(form, birth_date),
-				_ => None,
+			// Read from the form rather than passed in, so adding a second fiscal-code field
+			// is a matter of naming the three fields it has to agree with.
+			let related = match rule.field.kind {
+				Kind::FiscalCode {
+					birth_date,
+					last_name,
+					first_name,
+				} => Related {
+					birth_date: value_of(form, birth_date),
+					last_name: value_of(form, last_name),
+					first_name: value_of(form, first_name),
+				},
+				_ => Related::default(),
 			};
-			rule.field.check(value, required, today, birth_date)
+			rule.field.check(value, required, today, related)
 		})
 		.collect()
 }
@@ -994,9 +1068,6 @@ struct ClientRule {
 	min_message: Option<&'static str>,
 	#[serde(skip_serializing_if = "Option::is_none")]
 	max_message: Option<&'static str>,
-	/// `id` of the `<datalist>` to attach.
-	#[serde(skip_serializing_if = "Option::is_none")]
-	list: Option<&'static str>,
 	/// Whether the page should uppercase what is typed, so the value matches the
 	/// uppercase-only pattern it is judged against.
 	#[serde(skip_serializing_if = "std::ops::Not::not")]
@@ -1020,7 +1091,6 @@ impl ClientRule {
 			max: None,
 			min_message: None,
 			max_message: None,
-			list: None,
 			uppercase: field.kind.is_uppercase(),
 		};
 
@@ -1028,17 +1098,9 @@ impl ClientRule {
 			Kind::Text(f) | Kind::Phone(f) => rule.hint = f.hint,
 			Kind::PlaceAndDate => rule.hint = PLACE_AND_DATE.hint,
 			Kind::FiscalCode { .. } => rule.hint = FISCAL_CODE.hint,
-			Kind::Choice {
-				options,
-				list,
-				hint,
-			} => {
-				// A closed list is a regex the browser can enforce on its own; every
-				// option is uppercase ASCII, so nothing here needs escaping.
-				rule.pattern = Some(options.join("|"));
-				rule.list = Some(list);
-				rule.hint = hint;
-			}
+			// Two length limits and the uppercasing, and nothing else: the closed list stays
+			// on the server, where it can explain itself. See [`Kind::Choice`].
+			Kind::Choice { hint, .. } => rule.hint = hint,
 			Kind::Date {
 				min,
 				max,
@@ -1111,15 +1173,23 @@ mod tests {
 		assert_eq!(names.len(), total, "a field name is used twice");
 	}
 
-	/// Every `Kind::FiscalCode` names a rule that exists, since a typo there would silently
-	/// skip the cross-check instead of failing.
+	/// Every `Kind::FiscalCode` names three rules that exist, since a typo there would
+	/// silently skip a cross-check instead of failing.
 	#[test]
-	fn fiscal_code_rules_point_at_a_real_date_field() {
+	fn fiscal_code_rules_point_at_real_fields() {
 		for rule in RULES {
-			if let Kind::FiscalCode { birth_date } = rule.field.kind {
+			let Kind::FiscalCode {
+				birth_date,
+				last_name,
+				first_name,
+			} = rule.field.kind
+			else {
+				continue;
+			};
+			for named in [birth_date, last_name, first_name] {
 				assert!(
-					RULES.iter().any(|r| r.field.name == birth_date),
-					"{} points at the missing field {birth_date}",
+					RULES.iter().any(|r| r.field.name == named),
+					"{} points at the missing field {named}",
 					rule.field.name
 				);
 			}
@@ -1127,7 +1197,9 @@ mod tests {
 	}
 
 	fn check(field: &Field, value: &str) -> Option<String> {
-		field.check(value, true, today(), None).map(|e| e.message)
+		field
+			.check(value, true, today(), Related::default())
+			.map(|e| e.message)
 	}
 
 	#[test]
@@ -1234,6 +1306,19 @@ mod tests {
 		assert!(check(&province, "ra").is_some());
 	}
 
+	/// The whole reason `Kind::Choice` carries a second sentence: nothing else on this form
+	/// tells somebody born abroad what to put in a field that has no answer for them.
+	#[test]
+	fn an_empty_province_is_told_about_ee() {
+		let province = RULES
+			.iter()
+			.find(|r| r.field.name == "birth_province")
+			.unwrap()
+			.field;
+
+		assert!(check(&province, "").unwrap().contains("EE"));
+	}
+
 	#[test]
 	fn the_fiscal_code_checksum_is_enforced() {
 		let code = RULES
@@ -1242,33 +1327,49 @@ mod tests {
 			.unwrap()
 			.field;
 
-		assert!(
-			code.check("RSSMRA85T10A562S", true, today(), None)
-				.is_none()
-		);
-		assert!(
-			code.check("RSSMRA85T10A562T", true, today(), None)
-				.is_some()
-		);
+		assert!(check(&code, "RSSMRA85T10A562S").is_none());
+		assert!(check(&code, "RSSMRA85T10A562T").is_some());
 	}
 
-	#[test]
-	fn the_fiscal_code_must_agree_with_the_birth_date() {
+	/// The three fields a code is read back against. `Related::default()` leaves all of them
+	/// unknown, which is the "nothing to compare" case every other kind passes.
+	fn check_code(value: &str, related: Related<'_>) -> Option<String> {
 		let code = RULES
 			.iter()
 			.find(|r| r.field.name == "fiscal_code")
 			.unwrap()
 			.field;
 
-		let right = code.check("RSSMRA85T10A562S", true, today(), Some("1985-12-10"));
-		assert!(right.is_none());
+		code.check(value, true, today(), related).map(|e| e.message)
+	}
 
-		let wrong = code.check("RSSMRA85T10A562S", true, today(), Some("1985-12-11"));
-		assert!(wrong.is_some());
+	#[test]
+	fn the_fiscal_code_must_agree_with_the_birth_date() {
+		let born = |iso| Related {
+			birth_date: Some(iso),
+			..Related::default()
+		};
 
+		assert!(check_code("RSSMRA85T10A562S", born("1985-12-10")).is_none());
+		assert!(check_code("RSSMRA85T10A562S", born("1985-12-11")).is_some());
 		// An unusable date is somebody else's error to report.
-		let unknown = code.check("RSSMRA85T10A562S", true, today(), Some(""));
-		assert!(unknown.is_none());
+		assert!(check_code("RSSMRA85T10A562S", born("")).is_none());
+	}
+
+	/// The check that catches a code copied from the wrong family member: perfect arithmetic,
+	/// perfect birthday, somebody else's name.
+	#[test]
+	fn the_fiscal_code_must_agree_with_the_name() {
+		let named = |last, first| Related {
+			last_name: Some(last),
+			first_name: Some(first),
+			..Related::default()
+		};
+
+		assert!(check_code("RSSMRA85T10A562S", named("Rossi", "Mario")).is_none());
+		assert!(check_code("RSSMRA85T10A562S", named("Rossi", "Luca")).is_some());
+		// A name the form has its own error for is not blamed on the code.
+		assert!(check_code("RSSMRA85T10A562S", named("", "")).is_none());
 	}
 
 	#[test]
@@ -1377,6 +1478,19 @@ mod tests {
 		assert!(fields.contains(&"residence_cap"));
 		assert!(fields.contains(&"phone"));
 		assert!(fields.contains(&"birth_date"));
+	}
+
+	/// `validate` is what wires the three names in `Kind::FiscalCode` to the fields they point
+	/// at, so the cross-check is worth asserting through the whole table and not only on the
+	/// `Field` in isolation.
+	#[test]
+	fn a_code_belonging_to_somebody_else_is_rejected() {
+		let mut form = adult_form();
+		form.first_name = "Luca".into();
+		normalize(&mut form);
+
+		let errors = validate(&form, today());
+		assert!(errors.iter().any(|e| e.field == "fiscal_code"));
 	}
 
 	/// What the page is handed has to cover every field the page shows, or a rule silently

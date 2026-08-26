@@ -141,26 +141,51 @@ input[type="range"] {
 	background-color: var(--wave-green);
 }
 
+/*
+ * Deliberately the same construction as `.wave-divider` in static/css/index.css, down to the
+ * `::before` and the `transform` drift: an approximation here would let a tile look right in
+ * the playground and wrong on the page. The one difference is the fill, which production
+ * varies per section.
+ */
 .wave {
 	width: 100%;
-	height: 90px;
-	background-repeat: repeat-x;
-	background-size: var(--tile-w) 100%;
-	background-position: 0 0;
+	height: 110px;
+	--wave-fill: var(--wave-green);
+	/* Keeps the overhanging tile of `::before` from widening the stage. */
+	overflow: hidden;
+}
+
+.wave::before {
+	content: "";
+	display: block;
+	height: 100%;
+	/* Exactly one tile wider than the box, which is what makes the loop seamless. */
+	width: calc(100% + var(--tile-w));
+	background-color: var(--wave-fill);
+
+	mask-image: var(--wave-mask);
+	mask-repeat: repeat-x;
+	mask-size: var(--tile-w) 100%;
+
 	animation: wave-drift var(--speed, 22s) linear infinite;
 }
 
-.wave--bottom {
+/* Production mirrors the single tile rather than shipping a second, flipped asset. */
+.wave--top {
+	transform: scaleY(-1);
+}
+
+.wave--bottom::before {
 	animation-direction: reverse;
 	animation-duration: calc(var(--speed, 22s) * 1.3);
 }
 
 @keyframes wave-drift {
 	from {
-		background-position: 0 0;
+		transform: translateX(0);
 	}
 	to {
-		background-position: var(--tile-w) 0;
+		transform: translateX(calc(-1 * var(--tile-w)));
 	}
 }
 
@@ -195,9 +220,9 @@ input[type="range"] {
 	color: var(--accent);
 }
 
-#output {
+.output {
 	width: 100%;
-	height: 150px;
+	height: 130px;
 	box-sizing: border-box;
 	background: #112229;
 	color: #7bd88f;
@@ -211,7 +236,7 @@ input[type="range"] {
 }
 
 @media (prefers-reduced-motion: reduce) {
-	.wave {
+	.wave::before {
 		animation: none;
 	}
 }

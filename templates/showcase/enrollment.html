@@ -184,6 +184,13 @@
 					</section>
 				</form>
 
+				{#
+				Only the failures that are ours are announced here — a PDF that would not
+				compile, an SMTP server that would not answer. A submission refused for its
+				contents answers with an empty body, which clears this area, and carries the
+				list in `HX-Trigger`: `enrollment.js` prints each message above the field it
+				is about, where the reader does not have to match a name to an input.
+				#}
 				<div id="wizard-feedback"></div>
 
 				{#
@@ -203,5 +210,12 @@
 	</section>
 </main>
 
-<script src="/static/scripts/enrollment.js" defer></script>
+{#
+A module, not a classic script: its ~30 top-level declarations would otherwise land in the
+lexical scope every other script on the page shares, where a name reused by one of them kills
+whichever is compiled second — outright, before it runs a line. `defer` is not repeated
+because modules are deferred already. Ordering still holds: deferred classic scripts and
+modules execute in document order, so htmx is loaded by the time this runs.
+#}
+<script type="module" src="/static/scripts/enrollment.js"></script>
 {% endblock %}

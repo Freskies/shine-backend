@@ -1,8 +1,10 @@
-"use strict";
-
 /*
  * Enrolment wizard: phase navigation, signature pads, emergency-contact removal and the
  * pre-submit checks.
+ *
+ * Loaded as a module (see enrollment.html), so the declarations below are scoped to this file
+ * and strict mode is already on — hence no "use strict". Anything the outside has to reach
+ * must be put on `window` explicitly, as `__phase3` at the bottom is.
  *
  * The two phases are sections of a single form, toggled by `data-phase` on the wrapper.
  * They are never fetched or removed because a file input cannot be repopulated from
@@ -37,6 +39,72 @@ const RULES = new Map(
 	JSON.parse(document.getElementById("validation-rules").textContent)
 		.map(rule => [rule.name, rule]),
 );
+
+/* FIELD-LEVEL ERRORS */
+
+/*
+ * Every message is shown above the field it is about — the browser's own bubble vanishes on
+ * the next click, and a list at the foot of a form this long makes the reader match names to
+ * inputs by hand. Client and server print through the same two functions, so a rejected CAP
+ * reads the same whether the browser caught it on blur or the server caught it on submit.
+ *
+ * Three fields keep the paragraph they already have in the markup: the certificate sits in
+ * the file picker of phase 1, outside any `.membership-form__field`, and the two canvases are
+ * not form controls, so `canSubmit` writes their messages itself. Everything else gets a
+ * paragraph created on first use and then reused, so a second failed attempt rewrites the
+ * text in place instead of moving the field down the page again.
+ */
+const MARKUP_ERRORS = new Map([
+	["certificate", "certificate-error"],
+	["signature", "signature-error"],
+	["autonomy_signature", "autonomy-signature-error"],
+]);
+
+let errorSlotCount = 0;
+
+function errorSlot (input, create) {
+	const inMarkup = MARKUP_ERRORS.get(input.name);
+	if (inMarkup) return document.getElementById(inMarkup);
+
+	const field = input.closest(".membership-form__field");
+	if (!field) return null;
+
+	const existing = field.querySelector(":scope > .membership-form__error");
+	if (existing || !create) return existing;
+
+	const slot = document.createElement("p");
+	slot.className = "membership-form__error";
+	/* Its own id, not one derived from the input's: the four contact inputs are appended
+	   again for every row, so those ids are not unique and cannot anchor anything. */
+	slot.id = `field-error-${++errorSlotCount}`;
+	field.prepend(slot);
+	return slot;
+}
+
+function showFieldError (input, message) {
+	if (!message) return clearFieldError(input);
+
+	input.setAttribute("aria-invalid", "true");
+	const slot = errorSlot(input, true);
+	if (!slot) return;
+
+	slot.textContent = message;
+	slot.hidden = false;
+	/* Read out when the field takes focus, which is where a rejection sends it. */
+	input.setAttribute("aria-describedby", slot.id);
+}
+
+function clearFieldError (input) {
+	input.removeAttribute("aria-invalid");
+	const slot = errorSlot(input, false);
+	if (slot) slot.hidden = true;
+}
+
+/* A fresh attempt must not leave the previous one's messages standing next to fields that
+   have since been corrected. */
+function clearAllFieldErrors () {
+	form.querySelectorAll("[aria-invalid]").forEach(clearFieldError);
+}
 
 /*
  * The browser's own wording for a failed `pattern` is "Match the requested format", which
@@ -80,7 +148,6 @@ function applyRules (root) {
 		if (rule.maxLength) input.maxLength = rule.maxLength;
 		if (rule.min) input.min = rule.min;
 		if (rule.max) input.max = rule.max;
-		if (rule.list) input.setAttribute("list", rule.list);
 		input.title = rule.hint;
 
 		/* Province abbreviations and fiscal codes are matched against uppercase-only
@@ -96,18 +163,21 @@ function applyRules (root) {
 
 		input.addEventListener("input", () => {
 			input.setCustomValidity("");
-			input.removeAttribute("aria-invalid");
+			clearFieldError(input);
 		});
 
 		/* Only on blur, and only once there is something to judge: flagging a field the
 		   moment it is tabbed past would light up the whole form on the way down. An empty
-		   required field is caught at submit, where the browser reports it in place. */
+		   required field is caught by the `invalid` handler below. */
 		input.addEventListener("blur", () => {
 			if (!input.value) return;
-			input.toggleAttribute("aria-invalid", refreshValidity(input, rule) !== "");
+			showFieldError(input, refreshValidity(input, rule));
 		});
 
-		input.addEventListener("invalid", () => refreshValidity(input, rule));
+		/* Fired by the browser's own pass over the form at submit — `reportValidityOfForms`
+		   above is what makes HTMX run it — so an empty required field gets the same
+		   paragraph as everything else, not just the bubble that disappears on the next click. */
+		input.addEventListener("invalid", () => showFieldError(input, refreshValidity(input, rule)));
 	}
 }
 
@@ -260,14 +330,38 @@ function initPad (canvasId, inputId, errorId) {
 	const error = document.getElementById(errorId);
 	let drawing = false, drawn = false;
 
+	/*
+	 * Assigning `width` or `height` wipes the canvas — even when the number written is the
+	 * one already there — and this runs on every phase change. That is how a refused
+	 * submission used to erase a signature the hidden input was still carrying: the applicant
+	 * saw an empty box and sent the stroke anyway. So an unchanged box is left alone, and a
+	 * box that really did change gets its strokes drawn back.
+	 */
 	function resize () {
 		if (canvas.offsetWidth === 0) return;
 		const ratio = Math.max(window.devicePixelRatio || 1, 1);
-		canvas.width = canvas.offsetWidth * ratio;
-		canvas.height = canvas.offsetHeight * ratio;
+		const width = canvas.offsetWidth * ratio;
+		const height = canvas.offsetHeight * ratio;
+		if (canvas.width === width && canvas.height === height) return;
+
+		/* Copied before the wipe, because the canvas is the only place the strokes exist. */
+		let previous = null;
+		if (drawn) {
+			previous = document.createElement("canvas");
+			previous.width = canvas.width;
+			previous.height = canvas.height;
+			previous.getContext("2d").drawImage(canvas, 0, 0);
+		}
+
+		canvas.width = width;
+		canvas.height = height;
+		/* The wipe also resets the transform, so this scale does not stack up across calls. */
 		ctx.scale(ratio, ratio);
 		ctx.lineWidth = 2;
 		ctx.lineCap = "round";
+		/* In CSS pixels, since the context is scaled: the old box is stretched over the new
+		   one, which is what a rotated phone should show. */
+		if (previous) ctx.drawImage(previous, 0, 0, canvas.offsetWidth, canvas.offsetHeight);
 	}
 
 	setTimeout(resize, 100);
@@ -347,7 +441,10 @@ const commuteAlone = document.getElementById("commute_alone");
 const minorSection = document.querySelector(".section-minor");
 const autonomySection = document.querySelector(".section-autonomy");
 
-const CONDITIONAL_FIELD = "input:not([type=checkbox]):not([type=hidden])";
+/* `data-server-required` is excluded: the province fields are mandatory, but the sentence
+   they need when empty names EE and only the server has it. See `Kind::Choice`. */
+const CONDITIONAL_FIELD =
+	"input:not([type=checkbox]):not([type=hidden]):not([data-server-required])";
 const autonomyFields = [...autonomySection.querySelectorAll(CONDITIONAL_FIELD)];
 const minorFields = [...minorSection.querySelectorAll(CONDITIONAL_FIELD)]
 	.filter(field => !autonomySection.contains(field));
@@ -449,9 +546,10 @@ form.addEventListener("htmx:afterRequest", (evt) => {
 /* SERVER-SIDE REJECTION */
 
 /*
- * The server refused the submission and named the fields. The fragment it returned already
- * lists them with what is wrong; this is the part markup cannot do — marking the inputs,
- * moving to the step that holds one, and putting the cursor in it.
+ * The server refused the submission and sent, for each field, its name and the sentence
+ * explaining it — the response body is empty on purpose. Nothing is listed anywhere: each
+ * message is printed above its own field, the inputs are marked, and the wizard moves to the
+ * step holding the first one and puts the cursor in it.
  *
  * A name may carry a `:index` suffix. That is how the server tells the emergency-contact
  * rows apart: they all post under the same four names, in DOM order.
@@ -485,16 +583,15 @@ function focusField (reference) {
 }
 
 body.addEventListener("enrollmentInvalid", (e) => {
-	const fields = e.detail?.fields ?? [];
-	const inputs = fields.map(inputNamed).filter(Boolean);
-	inputs.forEach(input => input.setAttribute("aria-invalid", "true"));
-	if (fields.length) focusField(fields[0]);
-});
+	const errors = e.detail?.fields ?? [];
 
-/* Delegated on the container, because HTMX replaces the fragment inside it on every try. */
-document.getElementById("wizard-feedback").addEventListener("click", (e) => {
-	const jump = e.target.closest("[data-field]");
-	if (jump) focusField(jump.dataset.field);
+	clearAllFieldErrors();
+	for (const error of errors) {
+		const input = inputNamed(error.field);
+		if (input) showFieldError(input, error.message);
+	}
+
+	if (errors.length) focusField(errors[0].field);
 });
 
 /* CONSENT CHECKBOXES */

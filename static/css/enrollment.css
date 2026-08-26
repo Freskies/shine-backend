@@ -462,6 +462,28 @@
 	text-transform: uppercase;
 }
 
+/* One rejected field, said above the field itself — created by enrollment.js on blur and on a
+   refused submission, hidden again as soon as the field is edited. It sits before the label
+   rather than after the input so a two-line message pushes the field down instead of pushing
+   whatever follows it, and so the reader meets the problem before the box to fix. */
+.membership-form__error {
+	margin: 0 0 0.35rem;
+	font-size: 0.8rem;
+	font-weight: 600;
+	line-height: 1.3;
+	color: var(--color-orange-hover);
+}
+
+.membership-form__error[hidden] {
+	display: none;
+}
+
+/* Set alongside the message above, and removed with it. */
+.membership-form__input[aria-invalid="true"] {
+	border-color: var(--color-orange);
+	background-color: var(--color-orange-pastel);
+}
+
 /* ---------------------------------------- */
 /* CHECKBOXES                               */
 /* ---------------------------------------- */
@@ -645,11 +667,13 @@ input:disabled {
 }
 
 /* ---------------------------------------- */
-/* FEEDBACK FRAGMENTS (#form-feedback)      */
+/* FEEDBACK FRAGMENTS (#wizard-feedback)    */
 /* Swapped in by HTMX after submitting.     */
 /* ---------------------------------------- */
 
-#form-feedback {
+/* Only failures that are ours land here. A refused submission answers with an empty body and
+   says what is wrong above each field instead — see `.membership-form__error`. */
+#wizard-feedback {
 	margin-top: 1.5rem;
 	text-align: center;
 }
@@ -675,48 +699,6 @@ input:disabled {
 	background-color: var(--color-orange-pastel);
 	border-color: var(--color-orange);
 	color: var(--color-orange-hover);
-}
-
-/* One entry per rejected field, left-aligned against the centred #wizard-feedback so a
-   two-line reason does not read as a ragged block. */
-.form-feedback__list {
-	margin: 0.75rem 0 0;
-	padding: 0;
-	list-style: none;
-	text-align: left;
-}
-
-.form-feedback__item + .form-feedback__item {
-	margin-top: 0.6rem;
-	padding-top: 0.6rem;
-	border-top: 1px solid var(--color-orange);
-}
-
-/* A button, not a link: it moves the wizard to the step holding the field, which an anchor
-   cannot do. Styled as a link so it still reads as one. */
-.form-feedback__jump {
-	display: block;
-	padding: 0;
-	border: 0;
-	background: none;
-	font: inherit;
-	font-weight: 700;
-	color: inherit;
-	text-align: left;
-	text-decoration: underline;
-	cursor: pointer;
-}
-
-.form-feedback__reason {
-	display: block;
-	font-size: 0.9rem;
-}
-
-/* Set by enrollment.js on blur and on a rejected submission, and removed as soon as the
-   field is edited again. */
-.membership-form__input[aria-invalid="true"] {
-	border-color: var(--color-orange);
-	background-color: var(--color-orange-pastel);
 }
 
 /* ---------------------------------------- */

@@ -10,7 +10,7 @@ use crate::pdf::membership_2026_27::generator;
 use crate::pdf::membership_2026_27::templates::MembershipForm;
 use crate::render::HtmlTemplate;
 use crate::state::AppState;
-use crate::validation::{self, FieldError};
+use crate::validation::{self, FieldError, Related};
 use tracing::{error, info, warn};
 
 /// Cap on the certificate photo. Phone cameras produce 3–8 MB, and the whole thing is
@@ -56,8 +56,6 @@ pub struct EnrollmentTemplate {
 	/// from the same table the submission is judged against, so the page cannot enforce a
 	/// rule the server does not — or miss one it does.
 	pub rules_json: String,
-	/// Fills the `<datalist>` the two province fields offer.
-	pub provinces: &'static [&'static str],
 }
 
 #[derive(Template)]
@@ -77,14 +75,6 @@ pub struct EnrollmentSentTemplate {
 #[template(path = "partials/enrollment_error.html")]
 pub struct EnrollmentErrorTemplate {
 	pub message: String,
-}
-
-/// The rejected fields, named. Kept apart from [`EnrollmentErrorTemplate`] because the two
-/// say opposite things: this one is "here is what to fix", that one is "this is on us".
-#[derive(Template)]
-#[template(path = "partials/enrollment_invalid.html")]
-pub struct EnrollmentInvalidTemplate {
-	pub errors: Vec<FieldError>,
 }
 
 // --- Email bodies ---
@@ -115,7 +105,6 @@ pub async fn enrollment_handler() -> impl IntoResponse {
 		// Resolved per request, not per build: the "at least 18 years old" bound moves every
 		// day, and a server left running for months would otherwise hand out a stale one.
 		rules_json: validation::client_rules(now.date_naive()),
-		provinces: validation::PROVINCES,
 	})
 }
 
@@ -338,7 +327,7 @@ fn validate_contacts(contacts: &[EmergencyContact], today: NaiveDate) -> Vec<Fie
 		.enumerate()
 		.flat_map(|(row, contact)| {
 			columns.iter().filter_map(move |(field, read, required)| {
-				let mut error = field.check(read(contact), *required, today, None)?;
+				let mut error = field.check(read(contact), *required, today, Related::default())?;
 				error.field = format!("{}:{row}", error.field);
 				error.label = format!("{} (contatto {})", error.label, row + 1);
 				Some(error)
@@ -421,7 +410,7 @@ pub async fn enrollment_submit_handler(
 		&submission.applicant_email,
 		true,
 		today,
-		None,
+		Related::default(),
 	));
 	errors.extend(validate_contacts(&submission.contacts, today));
 	if !errors.is_empty() {
@@ -543,11 +532,37 @@ fn enrollment_error(detail: &str) -> Response {
 	.into_response()
 }
 
-/// Returns the list of fields to fix, and tells the page which ones they are.
+/// Escapes every non-ASCII character as the `\uXXXX` sequence JSON defines.
 ///
-/// The `HX-Trigger` payload is what lets the browser do the part a fragment cannot: mark
-/// each offending input, move to the step holding the first one, and focus it. Same `200 OK`
-/// reasoning as above — the applicant's data has to stay on screen.
+/// The payload below rides in a response header, and a browser decodes header bytes one at a
+/// time as Latin-1: the two bytes of the "è" in "Il codice fiscale non è valido" would reach
+/// the page as "Ã¨". JSON's own escape is pure ASCII and `JSON.parse` turns it back into the
+/// character, so the messages survive the trip whatever the header carries.
+fn ascii_json(value: &serde_json::Value) -> String {
+	use std::fmt::Write;
+
+	let mut escaped = String::new();
+	for character in value.to_string().chars() {
+		if character.is_ascii() {
+			escaped.push(character);
+			continue;
+		}
+		// Anything outside the BMP needs a surrogate pair, which is what `encode_utf16`
+		// yields — one `\uXXXX` per unit, exactly as JSON expects.
+		for unit in character.encode_utf16(&mut [0; 2]) {
+			let _ = write!(escaped, "\\u{unit:04x}");
+		}
+	}
+	escaped
+}
+
+/// Names the rejected fields and what is wrong with each, and returns nothing to show.
+///
+/// The messages are printed above the fields they belong to, which is something a fragment
+/// swapped into one corner of the page cannot do — so the whole list travels in the
+/// `HX-Trigger` payload and `enrollment.js` places it. The empty body is deliberate: it
+/// clears whatever the previous attempt left in the feedback area. Same `200 OK` reasoning
+/// as above — the applicant's data has to stay on screen.
 fn enrollment_invalid(errors: Vec<FieldError>) -> Response {
 	warn!(
 		count = errors.len(),
@@ -559,16 +574,59 @@ fn enrollment_invalid(errors: Vec<FieldError>) -> Response {
 		"enrollment rejected: invalid fields"
 	);
 
-	let fields: Vec<&str> = errors.iter().map(|e| e.field.as_str()).collect();
-	let payload = serde_json::json!({ "enrollmentInvalid": { "fields": fields } });
+	let payload = serde_json::json!({ "enrollmentInvalid": { "fields": errors } });
+	let mut response = Html(String::new()).into_response();
 
-	let mut response = HtmlTemplate(EnrollmentInvalidTemplate { errors }).into_response();
-
-	// Field names come from the rule table and are ASCII, so this only fails if somebody
-	// adds one with a character a header cannot carry — in which case the page still shows
-	// the list, it just stops highlighting.
-	if let Ok(value) = HeaderValue::from_str(&payload.to_string()) {
-		response.headers_mut().insert("HX-Trigger", value);
+	// `ascii_json` leaves nothing a header cannot carry, so this only fails if a message ever
+	// grows a control character. The submission stays refused either way; the page just
+	// stops being told why, which is why it is logged above rather than only reported here.
+	match HeaderValue::from_str(&ascii_json(&payload)) {
+		Ok(value) => {
+			response.headers_mut().insert("HX-Trigger", value);
+		}
+		Err(e) => error!(%e, "the rejection payload would not fit in a header"),
 	}
 	response
+}
+
+#[cfg(test)]
+mod tests {
+	use super::*;
+
+	/// The messages are Italian and full of accents, and they now travel in a header. Nothing
+	/// in the browser would complain about a mangled one — the page would simply print
+	/// "Ã¨" — so the escaping is checked here rather than noticed by an applicant.
+	#[test]
+	fn payload_survives_a_header() {
+		let errors = vec![FieldError {
+			field: "fiscal_code".to_string(),
+			label: "Codice Fiscale".to_string(),
+			message: "Il carattere di controllo non è quello atteso: ricontrollalo.".to_string(),
+		}];
+		let payload = serde_json::json!({ "enrollmentInvalid": { "fields": errors } });
+
+		let escaped = ascii_json(&payload);
+		assert!(escaped.is_ascii(), "a header cannot carry this: {escaped}");
+
+		// What `JSON.parse` does on the other side, and the message has to come back whole.
+		let parsed: serde_json::Value = serde_json::from_str(&escaped).unwrap();
+		assert_eq!(
+			parsed["enrollmentInvalid"]["fields"][0]["message"],
+			"Il carattere di controllo non è quello atteso: ricontrollalo."
+		);
+		HeaderValue::from_str(&escaped).expect("the escaped payload is not a valid header");
+	}
+
+	/// Outside the BMP a character is two `\uXXXX` escapes, not one. No message contains an
+	/// emoji today; this is here so that one added later does not truncate the payload.
+	#[test]
+	fn escapes_beyond_the_bmp_survive_too() {
+		let payload = serde_json::json!({ "message": "attenzione ⚠️ 🤸" });
+
+		let escaped = ascii_json(&payload);
+		assert!(escaped.is_ascii());
+
+		let parsed: serde_json::Value = serde_json::from_str(&escaped).unwrap();
+		assert_eq!(parsed["message"], "attenzione ⚠️ 🤸");
+	}
 }
