@@ -49,10 +49,12 @@ async fn revalidate_static(mut response: Response) -> Response {
 
 /// Turns a document into a download instead of a page.
 ///
-/// The `download` attribute on an `<a>` is only a hint, and iOS WebKit — which every browser
-/// on the platform is built on — ignores it for cross-document navigation: the PDF opens in
-/// the viewer with no way to save it. `Content-Disposition: attachment` is the header the
-/// viewer does obey, so the decision is made here rather than in the markup.
+/// The `download` attribute on an `<a>` is only a hint, and the Firefox family on mobile
+/// ignores it for a PDF: the file opens in a viewer that offers no way to save it. Safari and
+/// Chrome on iOS honour the attribute, so they keep using `/static` and only the browsers
+/// that need it are sent here — `index_handler` picks the URL. `Content-Disposition:
+/// attachment` is the instruction a viewer cannot reinterpret, which is why it lives in a
+/// header rather than in the markup.
 ///
 /// The name is taken from the request rather than hard-coded, so it stays right for whatever
 /// else lands in the directory. A segment carrying anything but the plain file-name

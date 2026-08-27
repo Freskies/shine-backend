@@ -192,19 +192,12 @@
 							Serve il certificato medico per attività sportiva non agonistica. Scarica il nostro foglio di
 							richiesta da mostrare al tuo medico per non sbagliare.
 						</p>
-						<a href="/static/documents/shine_richiesta_certificato_medico_25_26.pdf" download="" hx-boost="false"
+						{# One button, two possible targets: `index_handler` picks the mount that the
+						   visitor's browser can actually save from. #}
+						<a href="{{ certificate_url }}" download="" hx-boost="false"
 						   class="btn btn--orange btn--sm fluid-shape">
 							Scarica richiesta per il medico
 						</a>
-						{# Rendered only for the browsers that ignore `download` on a PDF, decided
-						   server-side from the User-Agent so nothing flashes in and out. #}
-						{% if pdf_viewer_hint %}
-						<p class="steps-list__hint">
-							Su Firefox il PDF si apre nel visualizzatore invece di essere scaricato: per
-							salvarlo, usa l'icona di download del visualizzatore, oppure tieni premuto il
-							pulsante qui sopra e scegli «Scarica link».
-						</p>
-						{% endif %}
 					</div>
 				</li>
 				<li class="steps-list__item">
