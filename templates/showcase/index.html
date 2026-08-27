@@ -198,6 +198,13 @@
 						   class="btn btn--orange btn--sm fluid-shape">
 							Scarica richiesta per il medico
 						</a>
+						{# Last resort, for the browsers where neither route saves the file. #}
+						{% if suggest_other_browser %}
+						<p class="steps-list__hint">
+							Firefox su iPhone e iPad non riesce a salvare i PDF: apri questa pagina con
+							Safari o Chrome per scaricare il modulo.
+						</p>
+						{% endif %}
 					</div>
 				</li>
 				<li class="steps-list__item">

@@ -846,6 +846,18 @@ svg.logo__mark {
 	line-height: 1.6;
 }
 
+/* Shown only where the PDF cannot be saved at all. See `PdfDownload::Unsupported`. */
+.steps-list__hint {
+	align-self: flex-start;
+	margin-top: 0.35rem;
+	padding: 0.6rem 0.8rem;
+	border-radius: 8px;
+	background-color: var(--color-orange-pastel);
+	color: var(--color-dark-muted);
+	font-size: 0.85rem;
+	line-height: 1.5;
+}
+
 .steps-list__link {
 	color: var(--color-green-accent);
 	font-weight: 700;
