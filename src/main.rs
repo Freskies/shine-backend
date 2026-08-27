@@ -17,7 +17,7 @@ use crate::handlers::showcase::{index_handler, privacy_policy_handler, statute_h
 use crate::state::AppState;
 use axum::Router;
 use axum::extract::DefaultBodyLimit;
-use axum::http::header::{CACHE_CONTROL, HeaderValue};
+use axum::http::header::{CACHE_CONTROL, CONTENT_DISPOSITION, HeaderValue};
 use axum::middleware;
 use axum::response::Response;
 use axum::routing::{get, post};
@@ -43,6 +43,20 @@ async fn revalidate_static(mut response: Response) -> Response {
 	response
 		.headers_mut()
 		.insert(CACHE_CONTROL, HeaderValue::from_static("no-cache"));
+	response
+}
+
+/// Turns a document into a download instead of a page.
+///
+/// The `download` attribute on an `<a>` is only a hint, and iOS WebKit — which every browser
+/// on the platform is built on — ignores it for cross-document navigation: the PDF opens in
+/// the viewer with no way to save it. `Content-Disposition: attachment` is the header the
+/// viewer does obey, so the decision is made here rather than in the markup. No `filename`
+/// is set: browsers then use the last path segment, which is already the name we want.
+async fn force_download(mut response: Response) -> Response {
+	response
+		.headers_mut()
+		.insert(CONTENT_DISPOSITION, HeaderValue::from_static("attachment"));
 	response
 }
 
@@ -96,6 +110,13 @@ async fn main() {
 		.fallback_service(ServeDir::new("static"))
 		.layer(middleware::map_response(revalidate_static));
 
+	// Same files as `/static/documents`, served as attachments. Kept as its own mount so the
+	// header applies to the whole directory and nothing else.
+	let documents = Router::new()
+		.fallback_service(ServeDir::new("static/documents"))
+		.layer(middleware::map_response(force_download))
+		.layer(middleware::map_response(revalidate_static));
+
 	let app = Router::new()
 		.route("/", get(index_handler))
 		.route("/privacy-policy", get(privacy_policy_handler))
@@ -109,7 +130,8 @@ async fn main() {
 			"/enrollment/emergency-contact",
 			get(emergency_contact_row_handler),
 		)
-		.nest_service("/static", static_files);
+		.nest_service("/static", static_files)
+		.nest_service("/documents", documents);
 
 	// Development aid, absent from a release build: serves the confirmation step so it can be
 	// reviewed without filling in the whole wizard. See `window.__phase3` in enrollment.js.
