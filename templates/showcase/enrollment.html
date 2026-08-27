@@ -32,11 +32,6 @@
 				      hx-encoding="multipart/form-data"
 				      hx-target="#wizard-feedback"
 				      hx-swap="innerHTML"
-				      {#
-				      `find` returns the *first* match, so a bare `button` would land on the
-				      "remove file" button of phase 1 and leave the submit button clickable
-				      throughout the send.
-				      #}
 				      hx-disabled-elt="find button[type='submit']">
 
 					<!-- ======================= FASE 1 ======================= -->
@@ -178,7 +173,7 @@
 							<button type="submit" class="btn btn--green btn--full" disabled>
 								<span class="wizard__submit-label">Conferma e invia</span>
 								<span class="htmx-indicator">Invio in corso <span class="loading-dots"
-								                                                 aria-hidden="true"><span>.</span><span>.</span><span>.</span></span></span>
+								                                                  aria-hidden="true"><span>.</span><span>.</span><span>.</span></span></span>
 							</button>
 						</div>
 					</section>
@@ -200,11 +195,8 @@
 				sides cannot drift apart. `required` is deliberately absent: it stays in the
 				markup and in `syncConditionalSections()`, which is the only party that knows
 				which conditional sections are on screen.
-
-				A `<script type="application/json">` rather than an attribute or a global:
-				the browser does not execute it, and the JSON travels verbatim.
 				#}
-				<script id="validation-rules" type="application/json">{{ rules_json|safe }}</script>
+				<script id="validation-rules" type="application/json">{{rules_json|safe}}</script>
 			</div>
 		</div>
 	</section>
