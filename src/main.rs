@@ -5,7 +5,6 @@ pub mod handlers;
 pub mod pdf;
 pub mod render;
 pub mod state;
-pub mod user_agent;
 pub mod validation;
 
 use crate::config::Config;
@@ -54,10 +53,10 @@ async fn revalidate_static(mut response: Response) -> Response {
 /// `Content-Disposition: attachment` is the instruction a viewer cannot reinterpret, which is
 /// why it lives in a header rather than in the markup.
 ///
-/// Only the browsers that need this are sent here; `index_handler` picks the URL from
-/// `PdfDownload`. Notably *not* Firefox on iOS: there an attachment fails outright with
-/// "Frame load interrupted", so that one keeps the inline URL and gets told to use another
-/// browser.
+/// The same files are also served inline under `/static/documents`, which is what the markup
+/// links to. Only the browsers that need this mount are sent here, and the decision is made
+/// in `pdf-download.js` rather than from the `User-Agent`, so that the page stays one
+/// cacheable document for everybody.
 ///
 /// The name is taken from the request rather than hard-coded, so it stays right for whatever
 /// else lands in the directory. A segment carrying anything but the plain file-name

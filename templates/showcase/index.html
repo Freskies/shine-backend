@@ -1,5 +1,10 @@
 {% extends "base.html" %}
 
+{% block head %}
+<!-- Retargets the certificate download, or explains itself, per browser. -->
+<script src="/static/scripts/pdf-download.js" defer></script>
+{% endblock %}
+
 {% block content %}
 <header class="header">
 	<div class="container header__container">
@@ -192,19 +197,21 @@
 							Serve il certificato medico per attività sportiva non agonistica. Scarica il nostro foglio di
 							richiesta da mostrare al tuo medico per non sbagliare.
 						</p>
-						{# One button, two possible targets: `index_handler` picks the mount that the
-						   visitor's browser can actually save from. #}
-						<a href="{{ certificate_url }}" download="" hx-boost="false"
+						{#
+						The same markup for every visitor, so no cache can serve one browser's
+						variant to another. `pdf-download.js` retargets the link, or reveals the
+						note below it, on the browsers that need it — see that file for which.
+						#}
+						<a id="certificate-download" href="/static/documents/shine_richiesta_certificato_medico_25_26.pdf"
+						   data-attachment-url="/documents/shine_richiesta_certificato_medico_25_26.pdf"
+						   download="" hx-boost="false"
 						   class="btn btn--orange btn--sm fluid-shape">
 							Scarica richiesta per il medico
 						</a>
-						{# Last resort, for the browsers where neither route saves the file. #}
-						{% if suggest_other_browser %}
-						<p class="steps-list__hint">
+						<p id="certificate-note" class="steps-list__hint" hidden>
 							Firefox su iPhone e iPad non riesce a salvare i PDF: apri questa pagina con
 							Safari o Chrome per scaricare il modulo.
 						</p>
-						{% endif %}
 					</div>
 				</li>
 				<li class="steps-list__item">
@@ -381,7 +388,7 @@
 				<dt>Intestatario</dt>
 				<dd>SHINE A.S.D.</dd>
 				<dt>IBAN</dt>
-				<dd class="footer__iban">IT11&nbsp;V030&nbsp;6967&nbsp;6845&nbsp;1074&nbsp;5671&nbsp;712</dd>
+				<dd class="footer__iban">IT11V03&nbsp;0696&nbsp;7684&nbsp;5107&nbsp;4567&nbsp;1712</dd>
 			</dl>
 		</div>
 
