@@ -180,7 +180,12 @@ async fn main() {
 		)
 		.with_state(AppState::new(config));
 
-	let addr = SocketAddr::from(([127, 0, 0, 1], 3000));
+	let port: u16 = std::env::var("PORT")
+		.ok()
+		.and_then(|p| p.parse().ok())
+		.unwrap_or(3000);
+
+	let addr = SocketAddr::from(([127, 0, 0, 1], port));
 
 	let listener = match tokio::net::TcpListener::bind(addr).await {
 		Ok(listener) => listener,
@@ -189,7 +194,7 @@ async fn main() {
 			std::process::exit(1);
 		}
 	};
-	info!("listening on http://{addr}");
+	info!("listening on https://{addr}");
 
 	if let Err(e) = axum::serve(listener, app).await {
 		tracing::error!("server stopped: {e}");
