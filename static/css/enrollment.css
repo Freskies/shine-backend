@@ -155,6 +155,8 @@
 	display: grid;
 	grid-template-columns: 1fr 1fr;
 	gap: 1rem;
+	/* As `.membership-form__row`: one field carrying a message must not leave the row. */
+	align-items: end;
 }
 
 .contact-row__remove {
@@ -412,6 +414,13 @@
 	display: grid;
 	gap: 1rem;
 	margin-top: 1rem;
+	/*
+	 * A message above one field makes that field taller than the others sharing its row.
+	 * Ending the row rather than stretching it keeps the row a row: the untouched fields drop
+	 * to the bottom of the track, so every input in it stays on the same line as the one being
+	 * complained about, instead of that one alone sliding down.
+	 */
+	align-items: end;
 }
 
 /* The first row sits directly under the legend, which already provides spacing. */
@@ -434,6 +443,12 @@
 .membership-form__field {
 	display: flex;
 	flex-direction: column;
+	/*
+	 * A grid item is `min-width: auto` by default, which is "never narrower than my contents"
+	 * — that is what lets one wide control push its column, and the row, past the edge of the
+	 * form. Every field here is happy to be as narrow as its track.
+	 */
+	min-width: 0;
 }
 
 .membership-form__label {
@@ -460,6 +475,32 @@
 
 .membership-form__input--upper {
 	text-transform: uppercase;
+}
+
+/* ---------------------------------------- */
+/* DATE INPUT                               */
+/* ---------------------------------------- */
+
+/*
+ * The two birth dates. A `type="date"` inherits the rest from `.membership-form__input`; these
+ * are the things it gets wrong on its own inside a narrow grid column.
+ */
+.membership-form__input--date {
+	/*
+	 * WebKit sizes the control from its own contents and then ignores `width: 100%`, which is
+	 * what used to push the row past the edge of the form on iOS. Dropping the native
+	 * appearance is what makes it obey its track; the picker itself is untouched.
+	 */
+	appearance: none;
+	-webkit-appearance: none;
+	min-width: 0;
+	/* Below 16px iOS zooms the page when the control takes focus, and does not zoom back. */
+	font-size: 1rem;
+}
+
+/* The calendar button, which is the half of the control that is not typed into. */
+.membership-form__input--date::-webkit-calendar-picker-indicator {
+	cursor: pointer;
 }
 
 /* One rejected field, said above the field itself — created by enrollment.js on blur and on a

@@ -33,9 +33,15 @@ src/validation/mod.rs. #}
 			<input class="membership-form__input" id="birth_province" name="birth_province" type="text"
 			       maxlength="2" placeholder="RA">
 		</div>
+		{# One control, not three lists: the digits can be typed straight in, and the browser's
+		own picker is there for whoever would rather click. `min` and `max` are applied by
+		`enrollment.js` from the same date window the rule carries, so the days it accepts are
+		the days the server accepts, and the value it posts is already the ISO format
+		`Kind::Date` reads. #}
 		<div class="membership-form__field">
 			<label class="membership-form__label" for="birth_date">Data di nascita</label>
-			<input class="membership-form__input" id="birth_date" name="birth_date" type="date" required>
+			<input class="membership-form__input membership-form__input--date" id="birth_date"
+			       name="birth_date" type="date" autocomplete="bday" required>
 		</div>
 	</div>
 
@@ -129,11 +135,14 @@ src/validation/mod.rs. #}
 					       name="minor_birth_province" type="text" maxlength="2"
 					       data-server-required>
 				</div>
+				{# As the applicant's own birth date above. No `required` in the markup: the
+				section is hidden until the toggle is ticked, and `syncConditionalSections()`
+				is what adds the attribute while the field is on screen. #}
 				<div class="membership-form__field">
-					<label class="membership-form__label" for="minor_birth_date">Data di nascita del
-						minore</label>
-					<input class="membership-form__input" id="minor_birth_date" name="minor_birth_date"
-					       type="date">
+					<label class="membership-form__label" for="minor_birth_date">Data di nascita
+						del minore</label>
+					<input class="membership-form__input membership-form__input--date"
+					       id="minor_birth_date" name="minor_birth_date" type="date">
 				</div>
 			</div>
 

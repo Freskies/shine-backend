@@ -117,6 +117,9 @@ function messageFor (input, rule) {
 	if (v.tooLong) return `Non può superare i ${rule.maxLength} caratteri.`;
 	if (v.rangeUnderflow) return rule.minMessage || rule.hint;
 	if (v.rangeOverflow) return rule.maxMessage || rule.hint;
+	/* A date left half typed — a day and a month with no year — is `badInput`, and the hint a
+	   date rule carries is about its window, which has nothing to say about that. */
+	if (v.badInput && input.type === "date") return "Questa non è una data valida.";
 	if (v.patternMismatch || v.typeMismatch || v.badInput) return rule.hint;
 	return "";
 }
@@ -141,6 +144,10 @@ function applyRules (root) {
 		/* Ruled once: this runs again for every contact row HTMX appends, and the listeners
 		   below must not stack up on the inputs that were already there. */
 		if (!rule || input.dataset.ruled) continue;
+		/* The two signatures. A hidden input is exempt from constraint validation, so there is
+		   nothing for the browser to enforce and no `blur` to enforce it on; whether the pad
+		   was drawn on is reported by `canSubmit` instead. */
+		if (input.type === "hidden") continue;
 		input.dataset.ruled = "1";
 
 		if (rule.pattern) input.pattern = rule.pattern;
@@ -182,6 +189,13 @@ function applyRules (root) {
 }
 
 applyRules(document);
+
+/*
+ * The two birth dates need nothing beyond the loop above. They are `type="date"` inputs, so the
+ * digits can be typed straight in and the picker is the browser's own, and `min`/`max` from the
+ * rule are enforced by constraint validation like every other field on the page — the
+ * eighteen-year window included, with the sentence explaining the minor toggle as its message.
+ */
 
 /* PHASE NAVIGATION */
 
@@ -449,6 +463,14 @@ const autonomyFields = [...autonomySection.querySelectorAll(CONDITIONAL_FIELD)];
 const minorFields = [...minorSection.querySelectorAll(CONDITIONAL_FIELD)]
 	.filter(field => !autonomySection.contains(field));
 
+/* Drops what the last attempt said about a field that is on its way off screen. The message is
+   the visible half; `setCustomValidity` is the other, and it is sticky — left set, it keeps a
+   field nobody can see, and nobody has to fill in, refusing the submission. */
+function release (field) {
+	field.setCustomValidity("");
+	clearFieldError(field);
+}
+
 function syncConditionalSections () {
 	/* The autonomy block sits inside the minor one, so it only counts when both are ticked. */
 	const wantsAutonomy = isMinor.checked && commuteAlone.checked;
@@ -456,6 +478,9 @@ function syncConditionalSections () {
 	autonomyFields.forEach(field => field.toggleAttribute("required", wantsAutonomy));
 
 	if (!wantsAutonomy && autonomyPad) autonomyPad.error.hidden = true;
+	/* A message left standing inside a section that has been closed would come back with it. */
+	if (!isMinor.checked) minorFields.forEach(release);
+	if (!wantsAutonomy) autonomyFields.forEach(release);
 	/* The autonomy canvas starts hidden, so it needs measuring once revealed. */
 	setTimeout(() => autonomyPad?.resize(), 50);
 }
@@ -570,7 +595,7 @@ function focusField (reference) {
 	if (phase) goToPhase(phase.dataset.phase);
 
 	/* After the smooth scroll goToPhase starts, or the two fight over the viewport. A
-	   signature is a hidden input and cannot take focus, so its field is scrolled to. */
+	   signature is a hidden input and cannot take focus, so its field is scrolled to instead. */
 	setTimeout(() => {
 		if (input.type === "hidden") {
 			input.closest(".membership-form__field")

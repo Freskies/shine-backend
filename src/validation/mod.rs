@@ -18,9 +18,15 @@
 //! the fiscal-code check character and its agreement with the declared birth date and with
 //! the declared name. See [`fiscal_code`].
 //!
-//! One more is server-only by choice rather than by necessity: the province abbreviations of
-//! [`Kind::Choice`], because the browser has nothing useful to say about either a wrong one or
-//! a missing one.
+//! Two more are server-only by choice rather than by necessity, both for the same reason —
+//! everything the browser could say about the field is worse than what the server says:
+//!
+//! - the province abbreviations of [`Kind::Choice`], which have nothing useful to answer
+//!   either a wrong one or a missing one with;
+//! - the *shape* of a fiscal code, which the browser used to enforce. A refused `pattern` is
+//!   answered with one sentence about the sixteen characters, and it arrives instead of the
+//!   three above: the submission never reaches the server that would have named the real
+//!   problem. The whole field is now judged in one place, on the way in.
 
 mod fiscal_code;
 mod provinces;
@@ -862,11 +868,22 @@ impl Field {
 			// name. Without the second one a valid code belonging to somebody else — or
 			// simply copied from the wrong family member — passes every other test on this
 			// form.
+			//
+			// The two cross-checks come first, and their order matters more than it looks.
+			// Any single mistyped character breaks the check character as well, so asking the
+			// arithmetic first means almost every wrong code comes back as "il codice fiscale
+			// non è valido" — the one sentence that cannot say *which* part is wrong, when
+			// the name and the date can each name their own. The checksum is left to answer
+			// what those two cannot see: a code whose name and birthday are right and whose
+			// birthplace or check character is not.
 			Kind::FiscalCode { .. } => {
-				if !fiscal_code::checksum_is_valid(value) {
+				let last = related.last_name.unwrap_or_default();
+				let first = related.first_name.unwrap_or_default();
+				if !fiscal_code::agrees_with_name(value, last, first) {
 					return Some(self.error(
-						"Il codice fiscale non è valido: controlla di averlo copiato \
-						 correttamente.",
+						"Il codice fiscale non corrisponde al nome e al cognome indicati. \
+						 Scrivili come sulla tessera sanitaria, per intero e senza \
+						 abbreviazioni.",
 					));
 				}
 				// Skipped when the date itself was rejected, so one mistyped birthday does
@@ -883,13 +900,14 @@ impl Field {
 						 controlla entrambi.",
 					));
 				}
-				let last = related.last_name.unwrap_or_default();
-				let first = related.first_name.unwrap_or_default();
-				(!fiscal_code::agrees_with_name(value, last, first)).then(|| {
+				(!fiscal_code::checksum_is_valid(value)).then(|| {
 					self.error(
-						"Il codice fiscale non corrisponde al nome e al cognome indicati. \
-						 Scrivili come sulla tessera sanitaria, per intero e senza \
-						 abbreviazioni.",
+						// Deliberately does not claim that the name and the date agree: both
+						// checks have a way out — a name in an alphabet they cannot fold, a
+						// date field that is itself empty — and neither says so here.
+						"Il codice fiscale non è valido: ricontrollalo una lettera alla \
+						 volta, soprattutto la parte finale con il codice del comune di \
+						 nascita e l'ultimo carattere.",
 					)
 				})
 			}
@@ -1097,7 +1115,16 @@ impl ClientRule {
 		match field.kind {
 			Kind::Text(f) | Kind::Phone(f) => rule.hint = f.hint,
 			Kind::PlaceAndDate => rule.hint = PLACE_AND_DATE.hint,
-			Kind::FiscalCode { .. } => rule.hint = FISCAL_CODE.hint,
+			// Server-only, like `Kind::Choice` and for the same reason: everything the browser
+			// could say about a fiscal code is worse than what the server says. A refused
+			// `pattern` gets one sentence about the shape, and it arrives *instead of* the
+			// three that name the actual problem — the name, the birth date, the check
+			// character — because the browser never lets the submission through to reach them.
+			// The length limits stay: "servono almeno 16 caratteri" is true and useful.
+			Kind::FiscalCode { .. } => {
+				rule.pattern = None;
+				rule.hint = FISCAL_CODE.hint;
+			}
 			// Two length limits and the uppercasing, and nothing else: the closed list stays
 			// on the server, where it can explain itself. See [`Kind::Choice`].
 			Kind::Choice { hint, .. } => rule.hint = hint,
@@ -1491,6 +1518,56 @@ mod tests {
 
 		let errors = validate(&form, today());
 		assert!(errors.iter().any(|e| e.field == "fiscal_code"));
+	}
+
+	/// The fiscal code is judged on the server alone. If the browser were handed the pattern
+	/// again it would refuse the submission with its one sentence about the sixteen characters,
+	/// and the three that name the real problem would never be reached.
+	#[test]
+	fn the_browser_is_not_given_the_fiscal_code_pattern() {
+		for rule in RULES {
+			if !matches!(rule.field.kind, Kind::FiscalCode { .. }) {
+				continue;
+			}
+			let client = ClientRule::from(&rule.field, today()).unwrap();
+			assert!(
+				client.pattern.is_none(),
+				"{} would be pattern-checked in the browser",
+				rule.field.name
+			);
+			// The lengths do travel: "servono almeno 16 caratteri" is both true and useful.
+			assert_eq!(client.max_length, Some(16));
+		}
+	}
+
+	/// The order the three checks are asked in, which is what decides the sentence somebody
+	/// mistyping one character reads. A wrong name breaks the check character too, so asking
+	/// the arithmetic first would answer all three cases with "il codice fiscale non è valido".
+	#[test]
+	fn the_most_specific_fiscal_code_problem_is_the_one_reported() {
+		// Mario Rossi's code, with the surname it encodes replaced by somebody else's.
+		let named = check_code(
+			"BNCMRA85T10A562S",
+			Related {
+				last_name: Some("Rossi"),
+				first_name: Some("Mario"),
+				birth_date: Some("1985-12-10"),
+				..Related::default()
+			},
+		);
+		assert!(named.unwrap().contains("nome e al cognome"));
+
+		// And the same code with the right name but the day of birth one out.
+		let dated = check_code(
+			"RSSMRA85T11A562S",
+			Related {
+				last_name: Some("Rossi"),
+				first_name: Some("Mario"),
+				birth_date: Some("1985-12-10"),
+				..Related::default()
+			},
+		);
+		assert!(dated.unwrap().contains("data di nascita"));
 	}
 
 	/// What the page is handed has to cover every field the page shows, or a rule silently

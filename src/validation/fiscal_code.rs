@@ -3,13 +3,17 @@
 //! All of them run on the server only. The check character needs a lookup table and a modulo,
 //! the encoded birthday needs a calendar, and the encoded name needs the consonant rules
 //! below — reimplementing any of them in the browser would be the duplication this module set
-//! out to avoid, so the page validates the *shape* of the code and leaves these to the
-//! submission.
+//! out to avoid. The shape is judged here too, and for a different reason: the browser can
+//! match it, but a refused `pattern` is answered with one sentence about the sixteen
+//! characters and the submission never gets far enough for any of the three below to say
+//! something more useful.
 //!
 //! Between them they are what makes the field worth a check at all: the shape accepts almost
 //! any sixteen characters in the right arrangement, the checksum accepts any code that was
 //! ever issued to anybody, and only [`agrees_with_birth_date`] and [`agrees_with_name`] can
-//! tell that a perfectly valid code belongs to somebody else.
+//! tell that a perfectly valid code belongs to somebody else. They are asked in that order —
+//! name, date, then check character — because the first two can say *which* part of the code
+//! is wrong and the third cannot, and any single mistyped character breaks all three at once.
 
 use chrono::{Datelike, NaiveDate};
 
