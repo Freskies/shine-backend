@@ -115,12 +115,23 @@ function messageFor (input, rule) {
 	if (v.valueMissing) return "Questo campo è obbligatorio.";
 	if (v.tooShort) return `Servono almeno ${rule.minLength} caratteri.`;
 	if (v.tooLong) return `Non può superare i ${rule.maxLength} caratteri.`;
-	if (v.rangeUnderflow) return rule.minMessage || rule.hint;
-	if (v.rangeOverflow) return rule.maxMessage || rule.hint;
-	/* A date left half typed — a day and a month with no year — is `badInput`, and the hint a
-	   date rule carries is about its window, which has nothing to say about that. */
-	if (v.badInput && input.type === "date") return "Questa non è una data valida.";
-	if (v.patternMismatch || v.typeMismatch || v.badInput) return rule.hint;
+	if (v.patternMismatch || v.typeMismatch) return rule.hint;
+
+	/*
+	 * A date. Its window is the one rule with no attribute to become — the field is a text
+	 * input, so there is no `min` for the browser to enforce — and the two remaining checks are
+	 * made here, against the bounds the server resolved and with the sentences it wrote. The
+	 * pattern above has already established the shape, so the parse only asks whether those
+	 * digits are a day that exists: 31/02 satisfies the shape and nothing else.
+	 */
+	if (rule.min && input.value) {
+		const iso = isoFromTyped(input.value);
+		if (!iso) return "Questo giorno non esiste sul calendario.";
+		/* ISO dates compare as strings, so no calendar arithmetic is needed. */
+		if (iso < rule.min) return rule.minMessage || rule.hint;
+		if (iso > rule.max) return rule.maxMessage || rule.hint;
+	}
+
 	return "";
 }
 
@@ -153,9 +164,10 @@ function applyRules (root) {
 		if (rule.pattern) input.pattern = rule.pattern;
 		if (rule.minLength) input.minLength = rule.minLength;
 		if (rule.maxLength) input.maxLength = rule.maxLength;
-		if (rule.min) input.min = rule.min;
-		if (rule.max) input.max = rule.max;
 		input.title = rule.hint;
+		/* `rule.min` and `rule.max` are deliberately not assigned: a date window has no
+		   attribute on a text input. `messageFor` compares against them, and `initDateField`
+		   hands them to the picker. */
 
 		/* Province abbreviations and fiscal codes are matched against uppercase-only
 		   patterns, which is also what the server compares after normalising, so the field
@@ -190,12 +202,142 @@ function applyRules (root) {
 
 applyRules(document);
 
+/* DATE FIELDS */
+
 /*
- * The two birth dates need nothing beyond the loop above. They are `type="date"` inputs, so the
- * digits can be typed straight in and the picker is the browser's own, and `min`/`max` from the
- * rule are enforced by constraint validation like every other field on the page — the
- * eighteen-year window included, with the sentence explaining the minor toggle as its message.
+ * Each birth date is a text input the eight digits are typed into — the slashes are placed here,
+ * as the field fills — with a `type="date"` lying invisible over the calendar icon at its right
+ * whose only job is to open the platform picker.
+ *
+ * One `type="date"` and nothing else would be less code and was what stood here first. It
+ * cannot work: on a phone that control refuses the keyboard outright, so a birthday forty years
+ * back has to be travelled to through a spinner or a calendar rather than simply typed. So the
+ * text input is the field — it carries the name, the rule, the errors and the posted value — and
+ * the picker only writes into it.
  */
+
+/* dd/mm/yyyy → yyyy-mm-dd, or "" when those digits are not a day on the calendar. */
+function isoFromTyped (value) {
+	const [d, m, y] = value.trim().split("/");
+	if (!y) return "";
+	const iso = `${y}-${m}-${d}`;
+	const date = new Date(`${iso}T00:00:00`);
+	if (Number.isNaN(date.getTime())) return "";
+	/* `new Date` rolls 31/02 forward to 03/03 rather than refusing it, so the parts are read
+	   back off the date it produced and compared with the ones that went in. */
+	if (date.getMonth() + 1 !== Number(m) || date.getDate() !== Number(d)) return "";
+	return iso;
+}
+
+function typedFromIso (iso) {
+	const [y, m, d] = iso.split("-");
+	return `${d}/${m}/${y}`;
+}
+
+const digitsIn = (value) => value.replace(/[^0-9]/g, "");
+
+/* What the field looks like once filled, and what `.date-field__ghost` prints the missing tail of.
+   Its slashes sit where `maskDate` puts them, which is what lets the two be sliced at one index. */
+const DATE_TEMPLATE = "gg/mm/aaaa";
+
+/* Eight digits in, `gg/mm/aaaa` out: the applicant types numbers and never a separator, and
+   anything else — a pasted `10-12-1985`, a stray letter — loses everything but its digits. */
+function maskDate (value) {
+	const digits = digitsIn(value).slice(0, 8);
+	return [digits.slice(0, 2), digits.slice(2, 4), digits.slice(4, 8)]
+		.filter(part => part)
+		.join("/");
+}
+
+/* Where the caret belongs after the mask has run: still after the same digit, which is not the
+   same offset once a slash has been inserted in front of it. */
+function caretAfterDigits (value, count) {
+	if (count === 0) return 0;
+	let seen = 0;
+	for (let i = 0; i < value.length; i++) {
+		if (value[i] !== "/") seen++;
+		if (seen === count) return i + 1;
+	}
+	return value.length;
+}
+
+function initDateField (typed) {
+	const rule = RULES.get(typed.name);
+	const native = typed.parentElement.querySelector(".date-field__native");
+	if (!rule || !native) return;
+
+	/* The same window the field is judged against, so the picker cannot offer a day that would
+	   then be refused: the eighteen-year rule shapes what it shows rather than only rejecting
+	   what came out of it. */
+	native.min = rule.min;
+	native.max = rule.max;
+
+	/*
+	 * On a desktop, Chrome and Firefox open the picker from the calendar button drawn inside the
+	 * control and from nowhere else — and `appearance: none`, which is what stops WebKit sizing
+	 * this box back across the field, has taken that button away. So the click that lands here
+	 * asks for the picker itself. On a phone the tap opens it regardless, and a picker already
+	 * open ignores the second request.
+	 */
+	native.addEventListener("click", () => {
+		try {
+			native.showPicker();
+		} catch {
+			/* No `showPicker` (Safari before 16), or the call was not credited to a gesture. The
+			   control's own click behaviour is then the only way in, and it has already run. */
+		}
+	});
+
+	/*
+	 * The grey `gg/mm/aaaa`, built here rather than in the template: it exists only because of the
+	 * mask below, and the mask is what knows how much of it is left. Two spans, because the first
+	 * repeats what has been typed in transparent ink to push the second along — see the CSS.
+	 *
+	 * `placeholder` is dropped as this replaces it, the two would otherwise print the same word
+	 * over itself. It stays in the markup all the same: with this script not running, the field
+	 * still says what it wants.
+	 */
+	const ghost = document.createElement("span");
+	ghost.className = "date-field__ghost";
+	ghost.setAttribute("aria-hidden", "true");
+	const ghostTyped = document.createElement("span");
+	ghostTyped.className = "date-field__ghost-typed";
+	const ghostRest = document.createElement("span");
+	ghost.append(ghostTyped, ghostRest);
+	typed.parentElement.appendChild(ghost);
+	typed.removeAttribute("placeholder");
+
+	function syncGhost () {
+		ghostTyped.textContent = typed.value;
+		ghostRest.textContent = DATE_TEMPLATE.slice(typed.value.length);
+	}
+
+	syncGhost();
+
+	typed.addEventListener("input", () => {
+		const before = digitsIn(typed.value.slice(0, typed.selectionStart)).length;
+		typed.value = maskDate(typed.value);
+		const caret = caretAfterDigits(typed.value, before);
+		typed.setSelectionRange(caret, caret);
+		syncGhost();
+		/* Keeps the picker opening on the month being typed rather than on today. Empty while
+		   the date is incomplete, which is what leaves the picker on its own default. */
+		native.value = isoFromTyped(typed.value);
+	});
+
+	native.addEventListener("change", () => {
+		if (!native.value) return;
+		typed.value = typedFromIso(native.value);
+		/* A value set from script fires no event, and the `input` listener applyRules() left on
+		   the field is what drops the previous message and its sticky custom validity. */
+		typed.dispatchEvent(new Event("input", { bubbles: true }));
+		/* Then judged at once, as a typed date is on blur: the window is the picker's too, so
+		   what this can still catch is a field the applicant then leaves half corrected. */
+		showFieldError(typed, refreshValidity(typed, rule));
+	});
+}
+
+document.querySelectorAll(".date-field__typed").forEach(initDateField);
 
 /* PHASE NAVIGATION */
 
@@ -456,9 +598,11 @@ const minorSection = document.querySelector(".section-minor");
 const autonomySection = document.querySelector(".section-autonomy");
 
 /* `data-server-required` is excluded: the province fields are mandatory, but the sentence
-   they need when empty names EE and only the server has it. See `Kind::Choice`. */
-const CONDITIONAL_FIELD =
-	"input:not([type=checkbox]):not([type=hidden]):not([data-server-required])";
+   they need when empty names EE and only the server has it. See `Kind::Choice`. `tabindex="-1"`
+   is the date picker, which posts nothing and must never be made required: it is invisible, so
+   the browser would refuse the submission with a message it has nowhere to show. */
+const CONDITIONAL_FIELD = "input:not([type=checkbox]):not([type=hidden])"
+	+ ":not([data-server-required]):not([tabindex=\"-1\"])";
 const autonomyFields = [...autonomySection.querySelectorAll(CONDITIONAL_FIELD)];
 const minorFields = [...minorSection.querySelectorAll(CONDITIONAL_FIELD)]
 	.filter(field => !autonomySection.contains(field));
@@ -644,7 +788,10 @@ form.addEventListener("htmx:afterRequest", syncSubmitBtn);
  * Buttons and links keep their native behavior: tabbing onto "Conferma e invia" and
  * pressing Enter still submits.
  */
-const FOCUSABLE = "input:not([type=hidden]), select, textarea, button, a[href]";
+/* The date pickers are left out along with the hidden inputs: they are already out of the tab
+   order, and Enter should reach the next field rather than a calendar. */
+const FOCUSABLE = "input:not([type=hidden]):not([tabindex=\"-1\"]), select, textarea, button,"
+	+ " a[href]";
 
 form.addEventListener("keydown", (e) => {
 	if (e.key !== "Enter" || e.isComposing) return;

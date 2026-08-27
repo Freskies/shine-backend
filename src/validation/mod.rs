@@ -6,7 +6,10 @@
 //!   the browser can be bypassed, and the values end up in an official UISP document.
 //! - [`client_rules`] projects them into the JSON the enrolment page hands to
 //!   `enrollment.js`, which turns each entry into the native constraint attributes
-//!   (`pattern`, `minlength`, `min`, …) the browser already knows how to enforce.
+//!   (`pattern`, `minlength`, `maxlength`, …) the browser already knows how to enforce. The
+//!   one rule with no attribute to become is a date window: a date is typed into a text
+//!   input, which has no `min`, so the page compares against the resolved bounds itself and
+//!   answers with the very sentences [`Kind::Date`] carries.
 //!
 //! Adding or changing a rule in the table is therefore enough: the two sides cannot drift
 //! apart, and no round trip is spent on a check that is a pure function of what the
@@ -40,11 +43,14 @@ use serde::Serialize;
 use std::collections::HashMap;
 use std::sync::LazyLock;
 
-/// The format `type="date"` posts and `<input min|max>` expects.
+/// The format the resolved date windows travel to the browser in, because it is what
+/// `<input type="date" min|max>` expects — and the picker behind the calendar icon is one.
+///
+/// Not what any date is *typed*, *posted* or *printed* in. See [`ITALIAN_DATE`].
 const ISO: &str = "%Y-%m-%d";
 
-/// The format the membership document prints dates in, and the one the applicant types in the
-/// single field that is not a date input: "Ravenna, 17/08/2026".
+/// The format every date on this form is written in: typed by the applicant, posted, checked
+/// here, and printed on the membership document and in the two emails. "17/08/2026".
 const ITALIAN_DATE: &str = "%d/%m/%Y";
 
 /// Nobody enrolling in 2026 was born before this, and a date this old is a mistyped year
@@ -136,6 +142,15 @@ pub const EMAIL: Format = Format {
 pub const FISCAL_CODE: Format = Format {
 	pattern: r"[A-Z]{6}[0-9LMNPQRSTUV]{2}[ABCDEHLMPRST][0-9LMNPQRSTUV]{2}[A-Z][0-9LMNPQRSTUV]{3}[A-Z]",
 	hint: "Il codice fiscale è composto da 16 caratteri.",
+};
+
+/// A calendar day as it is typed: "17/08/2026".
+///
+/// Shape only. Whether those digits are a day that exists, and whether it falls inside the
+/// field's window, is [`Kind::Date`] — a regex can express neither.
+pub const DATE: Format = Format {
+	pattern: r"[0-9]{2}/[0-9]{2}/[0-9]{4}",
+	hint: "Scrivi la data così: 17/08/2026.",
 };
 
 /// "Ravenna, 17/08/2026" — the wording the membership document uses, and what the server
@@ -256,8 +271,9 @@ impl Kind {
 		match self {
 			Kind::Text(f) | Kind::Phone(f) => Some(f),
 			Kind::FiscalCode { .. } => Some(FISCAL_CODE),
+			Kind::Date { .. } => Some(DATE),
 			Kind::PlaceAndDate => Some(PLACE_AND_DATE),
-			Kind::Choice { .. } | Kind::Date { .. } | Kind::Signature => None,
+			Kind::Choice { .. } | Kind::Signature => None,
 		}
 	}
 
@@ -890,7 +906,7 @@ impl Field {
 				// not come back as two separate problems.
 				let declared = related
 					.birth_date
-					.and_then(|d| NaiveDate::parse_from_str(d.trim(), ISO).ok())
+					.and_then(|d| NaiveDate::parse_from_str(d.trim(), ITALIAN_DATE).ok())
 					.filter(|d| *d <= today);
 				if let Some(date) = declared
 					&& !fiscal_code::agrees_with_birth_date(value, date)
@@ -912,14 +928,17 @@ impl Field {
 				})
 			}
 
+			// The pattern above has already established `dd/mm/yyyy`, so the parse is only
+			// asking whether those digits are a day that exists — 31/02 satisfies the shape and
+			// nothing else — and what is left after it is the window.
 			Kind::Date {
 				min,
 				max,
 				too_early,
 				too_late,
 			} => {
-				let Ok(date) = NaiveDate::parse_from_str(value, ISO) else {
-					return Some(self.error("Questa non è una data valida."));
+				let Ok(date) = NaiveDate::parse_from_str(value, ITALIAN_DATE) else {
+					return Some(self.error("Questo giorno non esiste sul calendario."));
 				};
 				if date < min.resolve(today) {
 					return Some(self.error(too_early));
@@ -1063,7 +1082,7 @@ fn value_of<'a>(form: &'a MembershipForm, name: &str) -> Option<&'a str> {
 /// lists already turned into an alternation the `pattern` attribute understands.
 ///
 /// Serialized in `camelCase` so each key is already the name of the DOM property or
-/// attribute `enrollment.js` assigns it to.
+/// attribute `enrollment.js` assigns it to — with the one exception named on `min` below.
 #[derive(Serialize)]
 #[serde(rename_all = "camelCase")]
 struct ClientRule {
@@ -1077,6 +1096,11 @@ struct ClientRule {
 	min_length: Option<usize>,
 	#[serde(skip_serializing_if = "Option::is_none")]
 	max_length: Option<usize>,
+	/// The resolved date window, in ISO — the two keys that are *not* assigned to the field
+	/// they belong to. Only [`Kind::Date`] sends them, and a date is typed into a text input,
+	/// which has no `min` for the browser to enforce; the page compares against these itself,
+	/// and hands them to the `type="date"` behind the calendar icon so the picker cannot offer
+	/// a day the field would then refuse.
 	#[serde(skip_serializing_if = "Option::is_none")]
 	min: Option<String>,
 	#[serde(skip_serializing_if = "Option::is_none")]
@@ -1134,15 +1158,17 @@ impl ClientRule {
 				too_early,
 				too_late,
 			} => {
-				// A date input measures neither length nor pattern, and a stray
-				// `minlength` on one is just noise in the DOM.
+				// The pattern is exactly ten characters wide and nothing else matches it, so
+				// the two lengths would only add a second, worse sentence for the same
+				// failure: "servono almeno 10 caratteri" for a date half typed, where the
+				// pattern's own hint shows the shape it is missing.
 				rule.min_length = None;
 				rule.max_length = None;
 				rule.min = Some(min.resolve(today).format(ISO).to_string());
 				rule.max = Some(max.resolve(today).format(ISO).to_string());
 				rule.min_message = Some(too_early);
 				rule.max_message = Some(too_late);
-				rule.hint = too_late;
+				rule.hint = DATE.hint;
 			}
 			Kind::Signature => unreachable!("returned above"),
 		}
@@ -1295,12 +1321,12 @@ mod tests {
 			.field;
 
 		// Exactly eighteen today, and one day short of it.
-		assert!(check(&birth_date, "2008-08-25").is_none());
-		assert!(check(&birth_date, "2008-08-26").is_some());
+		assert!(check(&birth_date, "25/08/2008").is_none());
+		assert!(check(&birth_date, "26/08/2008").is_some());
 
-		assert!(check(&birth_date, "1920-01-01").is_none());
-		assert!(check(&birth_date, "1919-12-31").is_some());
-		assert!(check(&birth_date, "2026-08-25").is_some());
+		assert!(check(&birth_date, "01/01/1920").is_none());
+		assert!(check(&birth_date, "31/12/1919").is_some());
+		assert!(check(&birth_date, "25/08/2026").is_some());
 	}
 
 	/// And the mirror rule: a minor has to still be one.
@@ -1312,9 +1338,27 @@ mod tests {
 			.unwrap()
 			.field;
 
-		assert!(check(&birth_date, "2008-08-26").is_none());
-		assert!(check(&birth_date, "2008-08-25").is_some());
-		assert!(check(&birth_date, "2026-08-26").is_some());
+		assert!(check(&birth_date, "26/08/2008").is_none());
+		assert!(check(&birth_date, "25/08/2008").is_some());
+		assert!(check(&birth_date, "26/08/2026").is_some());
+	}
+
+	/// A date is typed, not picked from three lists that could only offer days that exist, so
+	/// the shape being right no longer means the day is.
+	#[test]
+	fn a_date_must_be_a_day_on_the_calendar() {
+		let birth_date = RULES
+			.iter()
+			.find(|r| r.field.name == "birth_date")
+			.unwrap()
+			.field;
+
+		assert!(check(&birth_date, "29/02/2000").is_none());
+		assert!(check(&birth_date, "29/02/1999").unwrap().contains("giorno"));
+		assert!(check(&birth_date, "31/04/1990").is_some());
+		// And the shape, which the pattern answers with the example it carries.
+		assert!(check(&birth_date, "1/1/1990").is_some());
+		assert!(check(&birth_date, "1990-01-01").is_some());
 	}
 
 	#[test]
@@ -1377,8 +1421,8 @@ mod tests {
 			..Related::default()
 		};
 
-		assert!(check_code("RSSMRA85T10A562S", born("1985-12-10")).is_none());
-		assert!(check_code("RSSMRA85T10A562S", born("1985-12-11")).is_some());
+		assert!(check_code("RSSMRA85T10A562S", born("10/12/1985")).is_none());
+		assert!(check_code("RSSMRA85T10A562S", born("11/12/1985")).is_some());
 		// An unusable date is somebody else's error to report.
 		assert!(check_code("RSSMRA85T10A562S", born("")).is_none());
 	}
@@ -1419,7 +1463,7 @@ mod tests {
 			first_name: "Mario".into(),
 			birth_place: "Milano".into(),
 			birth_province: "MI".into(),
-			birth_date: "1985-12-10".into(),
+			birth_date: "10/12/1985".into(),
 			residence_city: "Ravenna".into(),
 			residence_address: "Via Roma".into(),
 			residence_number: "12/A".into(),
@@ -1468,7 +1512,7 @@ mod tests {
 	fn normalize_clears_the_sections_the_toggles_turned_off() {
 		let mut form = adult_form();
 		form.minor_first_name = Some("Luca".into());
-		form.minor_birth_date = Some("2015-01-01".into());
+		form.minor_birth_date = Some("01/01/2015".into());
 		form.autonomy_signature = Some("data:image/png;base64,AAAA".into());
 
 		normalize(&mut form);
@@ -1497,7 +1541,7 @@ mod tests {
 		let mut form = adult_form();
 		form.residence_cap = "48".into();
 		form.phone = "123".into();
-		form.birth_date = "2020-01-01".into();
+		form.birth_date = "01/01/2020".into();
 		normalize(&mut form);
 
 		let errors = validate(&form, today());
@@ -1540,6 +1584,32 @@ mod tests {
 		}
 	}
 
+	/// The mirror of the test above, and the opposite answer. A date *is* pattern-checked in the
+	/// browser: there is nothing more specific the server could say about ten characters that
+	/// are not `dd/mm/yyyy`, so catching the shape before the round trip costs no sentence. What
+	/// an attribute cannot carry is the window, which is why the two bounds travel beside it.
+	#[test]
+	fn the_browser_is_given_the_date_pattern_and_the_window() {
+		let birth_date = RULES
+			.iter()
+			.find(|r| r.field.name == "birth_date")
+			.unwrap()
+			.field;
+		let client = ClientRule::from(&birth_date, today()).unwrap();
+
+		assert_eq!(client.pattern.as_deref(), Some(DATE.pattern));
+		assert_eq!(client.hint, DATE.hint);
+		// Eighteen years back from `today()`, and the floor as written.
+		assert_eq!(client.max.as_deref(), Some("2008-08-25"));
+		assert_eq!(client.min.as_deref(), Some(EARLIEST_BIRTH_DATE));
+		assert!(client.min_message.is_some());
+		assert!(client.max_message.is_some());
+		// The pattern matches ten characters and nothing else, so a sentence about the length
+		// could only ever arrive in place of the one that shows the shape.
+		assert_eq!(client.min_length, None);
+		assert_eq!(client.max_length, None);
+	}
+
 	/// The order the three checks are asked in, which is what decides the sentence somebody
 	/// mistyping one character reads. A wrong name breaks the check character too, so asking
 	/// the arithmetic first would answer all three cases with "il codice fiscale non è valido".
@@ -1551,7 +1621,7 @@ mod tests {
 			Related {
 				last_name: Some("Rossi"),
 				first_name: Some("Mario"),
-				birth_date: Some("1985-12-10"),
+				birth_date: Some("10/12/1985"),
 				..Related::default()
 			},
 		);
@@ -1563,7 +1633,7 @@ mod tests {
 			Related {
 				last_name: Some("Rossi"),
 				first_name: Some("Mario"),
-				birth_date: Some("1985-12-10"),
+				birth_date: Some("10/12/1985"),
 				..Related::default()
 			},
 		);

@@ -478,28 +478,111 @@
 }
 
 /* ---------------------------------------- */
-/* DATE INPUT                               */
+/* DATE FIELD                               */
 /* ---------------------------------------- */
 
 /*
- * The two birth dates. A `type="date"` inherits the rest from `.membership-form__input`; these
- * are the things it gets wrong on its own inside a narrow grid column.
+ * One box, two controls. `.date-field__typed` is the field — the name, the rule, the value, and
+ * the eight digits typed into it. `.date-field__native` is a `type="date"` lying invisible over
+ * the calendar icon at its right, and all it does is open the platform picker for whoever would
+ * rather choose than type.
+ *
+ * The obvious arrangement — one `type="date"` and nothing else — was tried and cannot work: on
+ * a phone that control refuses the keyboard outright, iOS offering a spinner and Android a
+ * calendar, so somebody who knows their own birthday still has to travel back forty years to
+ * reach it. Typing has to be the way in, and the picker the shortcut.
  */
-.membership-form__input--date {
+.date-field {
+	--icon-calendar: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23000' stroke-width='2' stroke-linecap='round'%3E%3Crect x='3' y='5' width='18' height='16' rx='2'/%3E%3Cpath d='M8 3v4M16 3v4M3 10h18'/%3E%3C/svg%3E");
+	position: relative;
+	display: flex;
+	/* A grid item is "never narrower than my contents" by default, and this one sits in the
+	   three-column row that used to be pushed past the edge of the form on iOS. */
+	min-width: 0;
+}
+
+.date-field__typed {
+	/* Room for the icon, so a typed date never runs underneath it. */
+	padding-right: 2.7rem;
+	/* Below 16px iOS zooms the page when the control takes focus, and does not zoom back. */
+	font-size: 1rem;
+	/* Digits of one width, so the grey remainder below does not shift as they are typed. */
+	font-variant-numeric: tabular-nums;
+}
+
+/*
+ * The grey `gg/mm/aaaa` the date is typed over. The eight digits are typed without separators,
+ * so the two slashes have to be on screen before they are reached: until they are, `1012` is a
+ * number, and where the mask is about to cut it is a guess.
+ *
+ * The part already typed is repeated here in transparent ink rather than measured, so the grey
+ * remainder begins exactly where the real text ends whatever its glyphs happen to be worth. Over
+ * the input rather than under it, so the field keeps its own background — white, or the orange of
+ * one that has been refused.
+ */
+.date-field__ghost {
+	position: absolute;
+	inset: 0;
+	display: flex;
+	align-items: center;
+	/* The input's own padding and border, so both texts start on the same column. */
+	padding: 0.6rem 2.7rem 0.6rem 0.8rem;
+	border: 1px solid transparent;
+	overflow: hidden;
+	font-family: var(--font-base), sans-serif;
+	font-size: 1rem;
+	font-variant-numeric: tabular-nums;
+	color: var(--color-dark-muted);
+	opacity: 0.55;
+	/* The input underneath is what takes the click and shows the caret. */
+	pointer-events: none;
+}
+
+.date-field__ghost-typed {
+	color: transparent;
+}
+
+/*
+ * Drawn as a mask rather than a coloured SVG, so the glyph takes the text colour instead of
+ * repeating a palette value that would then have to be kept in step with it.
+ */
+.date-field__icon {
+	position: absolute;
+	top: 50%;
+	right: 0.75rem;
+	width: 1.15rem;
+	height: 1.15rem;
+	transform: translateY(-50%);
+	background-color: currentColor;
+	opacity: 0.45;
+	-webkit-mask: var(--icon-calendar) center / contain no-repeat;
+	mask: var(--icon-calendar) center / contain no-repeat;
+	/* The input over it is what takes the tap. */
+	pointer-events: none;
+}
+
+/*
+ * Invisible, but rendered and sized to the icon it covers: `display: none` would take the tap
+ * target away with it, and a picker cannot be opened from a control the browser is not drawing.
+ */
+.date-field__native {
+	position: absolute;
+	top: 0;
+	right: 0;
 	/*
-	 * WebKit sizes the control from its own contents and then ignores `width: 100%`, which is
-	 * what used to push the row past the edge of the form on iOS. Dropping the native
-	 * appearance is what makes it obey its track; the picker itself is untouched.
+	 * WebKit sizes this control from its own contents and ignores `width` until the native
+	 * appearance is gone. That is not cosmetic here: at full width the box would reach back
+	 * across the field it sits on and, being invisible, swallow the taps meant for typing.
 	 */
 	appearance: none;
 	-webkit-appearance: none;
+	width: 2.7rem;
 	min-width: 0;
-	/* Below 16px iOS zooms the page when the control takes focus, and does not zoom back. */
-	font-size: 1rem;
-}
-
-/* The calendar button, which is the half of the control that is not typed into. */
-.membership-form__input--date::-webkit-calendar-picker-indicator {
+	height: 100%;
+	padding: 0;
+	border: 0;
+	background: transparent;
+	opacity: 0;
 	cursor: pointer;
 }
 

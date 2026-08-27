@@ -37,7 +37,7 @@ Static files under `static/` are served by `tower-http::ServeDir` at `/static`.
 `RULES` in `mod.rs` is the **single description of every enrolment field**: name, label, character-set pattern,
 lengths, date window, and when it is required. It is read twice — `validate()` enforces it on the POST, and
 `client_rules()` serializes it to JSON that `enrollment.js` turns into native constraint attributes (`pattern`,
-`minlength`, `min`/`max`, …). So no regex is written twice and there are **no per-field validation endpoints**.
+`minlength`, `maxlength`, …). So no regex is written twice and there are **no per-field validation endpoints**.
 
 Consequences worth knowing before touching it:
 
@@ -46,7 +46,11 @@ Consequences worth knowing before touching it:
   both sides add `^(?:…)$`.
 - `required` is deliberately *not* in the JSON. It stays in the markup and in `syncConditionalSections()`, the only
   party that knows whether the minor / autonomy sections are on screen.
-- Date bounds are resolved per request from `Local::now()`, so "at least 18 years old" moves with the calendar.
+- Date bounds are resolved per request from `Local::now()`, so "at least 18 years old" moves with the calendar. They
+  are the one pair of keys in the JSON that is *not* assigned to the field: dates are typed as `dd/mm/yyyy` into a
+  text input, which has no `min`, so `messageFor()` compares against them and `initDateField()` hands them to the
+  `type="date"` behind the calendar icon. Every date on this form — typed, posted, checked, printed on the PDF and in
+  the emails — is `dd/mm/yyyy`; ISO appears only in those two bounds, because the picker's attributes require it.
 - `normalize()` runs **before** `validate()` and before the emails. It trims, uppercases fiscal codes and province
   abbreviations, strips phone separators, and clears the sections the two toggles turned off. That last job used to
   live in `generator.rs`, where it ran after the emails were already rendered.

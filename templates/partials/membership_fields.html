@@ -33,15 +33,24 @@ src/validation/mod.rs. #}
 			<input class="membership-form__input" id="birth_province" name="birth_province" type="text"
 			       maxlength="2" placeholder="RA">
 		</div>
-		{# One control, not three lists: the digits can be typed straight in, and the browser's
-		own picker is there for whoever would rather click. `min` and `max` are applied by
-		`enrollment.js` from the same date window the rule carries, so the days it accepts are
-		the days the server accepts, and the value it posts is already the ISO format
-		`Kind::Date` reads. #}
+		{# One field, two ways in. The text input is the field: it carries the name, the rule and
+		the value, and the eight digits are typed straight into it — `enrollment.js` places the
+		two slashes. The `type="date"` beside it is posted under no name and judged by nobody;
+		it lies invisible over the calendar icon, and its only job is to open the platform
+		picker for whoever would rather choose than type. A bare `type="date"` cannot do this:
+		on a phone it refuses the keyboard outright, so somebody who knows their own birthday
+		still has to travel a spinner back forty years to reach it. #}
 		<div class="membership-form__field">
 			<label class="membership-form__label" for="birth_date">Data di nascita</label>
-			<input class="membership-form__input membership-form__input--date" id="birth_date"
-			       name="birth_date" type="date" autocomplete="bday" required>
+			<div class="date-field">
+				<input class="membership-form__input date-field__typed" id="birth_date"
+				       name="birth_date" type="text" inputmode="numeric"
+				       placeholder="gg/mm/aaaa" required>
+				<span class="date-field__icon" aria-hidden="true"></span>
+				{# `tabindex="-1"`, and no name: it is out of the tab order, out of the
+				submission, and out of the two selectors that hand out `required`. #}
+				<input class="date-field__native" type="date" tabindex="-1" aria-hidden="true">
+			</div>
 		</div>
 	</div>
 
@@ -141,8 +150,14 @@ src/validation/mod.rs. #}
 				<div class="membership-form__field">
 					<label class="membership-form__label" for="minor_birth_date">Data di nascita
 						del minore</label>
-					<input class="membership-form__input membership-form__input--date"
-					       id="minor_birth_date" name="minor_birth_date" type="date">
+					<div class="date-field">
+						<input class="membership-form__input date-field__typed"
+						       id="minor_birth_date" name="minor_birth_date" type="text"
+						       inputmode="numeric" placeholder="gg/mm/aaaa">
+						<span class="date-field__icon" aria-hidden="true"></span>
+						<input class="date-field__native" type="date" tabindex="-1"
+						       aria-hidden="true">
+					</div>
 				</div>
 			</div>
 
