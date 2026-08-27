@@ -16,9 +16,9 @@ use crate::handlers::enrollment::{
 use crate::handlers::showcase::{index_handler, privacy_policy_handler, statute_handler};
 use crate::state::AppState;
 use axum::Router;
-use axum::extract::DefaultBodyLimit;
+use axum::extract::{DefaultBodyLimit, Request};
 use axum::http::header::{CACHE_CONTROL, CONTENT_DISPOSITION, HeaderValue};
-use axum::middleware;
+use axum::middleware::{self, Next};
 use axum::response::Response;
 use axum::routing::{get, post};
 use std::net::SocketAddr;
@@ -51,12 +51,34 @@ async fn revalidate_static(mut response: Response) -> Response {
 /// The `download` attribute on an `<a>` is only a hint, and iOS WebKit — which every browser
 /// on the platform is built on — ignores it for cross-document navigation: the PDF opens in
 /// the viewer with no way to save it. `Content-Disposition: attachment` is the header the
-/// viewer does obey, so the decision is made here rather than in the markup. No `filename`
-/// is set: browsers then use the last path segment, which is already the name we want.
-async fn force_download(mut response: Response) -> Response {
+/// viewer does obey, so the decision is made here rather than in the markup.
+///
+/// The name is taken from the request rather than hard-coded, so it stays right for whatever
+/// else lands in the directory. A segment carrying anything but the plain file-name
+/// characters is dropped instead of escaped: the header would then be built from user input,
+/// and the bare `attachment` it falls back to is already correct — browsers use the last
+/// path segment when no name is given.
+async fn force_download(request: Request, next: Next) -> Response {
+	// The nested router sees the path with the mount prefix already stripped, so the last
+	// segment is the file name either way.
+	let disposition = request
+		.uri()
+		.path()
+		.rsplit('/')
+		.next()
+		.filter(|name| {
+			!name.is_empty()
+				&& name
+					.bytes()
+					.all(|b| b.is_ascii_alphanumeric() || matches!(b, b'.' | b'_' | b'-'))
+		})
+		.and_then(|name| HeaderValue::try_from(format!("attachment; filename=\"{name}\"")).ok())
+		.unwrap_or(HeaderValue::from_static("attachment"));
+
+	let mut response = next.run(request).await;
 	response
 		.headers_mut()
-		.insert(CONTENT_DISPOSITION, HeaderValue::from_static("attachment"));
+		.insert(CONTENT_DISPOSITION, disposition);
 	response
 }
 
@@ -114,7 +136,7 @@ async fn main() {
 	// header applies to the whole directory and nothing else.
 	let documents = Router::new()
 		.fallback_service(ServeDir::new("static/documents"))
-		.layer(middleware::map_response(force_download))
+		.layer(middleware::from_fn(force_download))
 		.layer(middleware::map_response(revalidate_static));
 
 	let app = Router::new()
