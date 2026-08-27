@@ -196,6 +196,15 @@
 						   class="btn btn--orange btn--sm fluid-shape">
 							Scarica richiesta per il medico
 						</a>
+						{# Rendered only for the browsers that ignore `download` on a PDF, decided
+						   server-side from the User-Agent so nothing flashes in and out. #}
+						{% if pdf_viewer_hint %}
+						<p class="steps-list__hint">
+							Su Firefox il PDF si apre nel visualizzatore invece di essere scaricato: per
+							salvarlo, usa l'icona di download del visualizzatore, oppure tieni premuto il
+							pulsante qui sopra e scegli «Scarica link».
+						</p>
+						{% endif %}
 					</div>
 				</li>
 				<li class="steps-list__item">
