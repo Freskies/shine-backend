@@ -405,10 +405,42 @@ function clearPreview () {
 	nextButton.disabled = true;
 }
 
+/* Whether the file matches the input's own `accept` list.
+
+   The browser enforces that attribute in the file picker and nowhere else: a dropped file
+   bypasses it entirely, and desktop pickers offer an "All files" escape hatch. So the list is
+   read back off the DOM and applied to those paths too, rather than restated here — the
+   markup stays the only place it lives, and adding a format there cannot leave this behind.
+
+   A file whose type the browser cannot name is let through on purpose: some Android WebViews
+   report nothing for an ordinary JPEG. This is a nudge, not the check — `validation::file_type`
+   reads the actual bytes on the server, which is the only party that can tell a renamed HEIC
+   from the JPEG it claims to be. */
+function accepted (file) {
+	if (!file.type) return true;
+	return certificate.accept.split(",").some((pattern) => {
+		pattern = pattern.trim();
+		if (!pattern) return false;
+		if (pattern.endsWith("/*")) return file.type.startsWith(pattern.slice(0, -1));
+		return file.type === pattern;
+	});
+}
+
 certificate.addEventListener("change", () => {
 	const file = certificate.files[0];
 	if (!file) {
 		clearPreview();
+		return;
+	}
+	/* Refused here rather than on submit: the certificate is on phase 1, so the server's
+	   rejection would otherwise arrive after two signatures and a full form. */
+	if (!accepted(file)) {
+		clearPreview();
+		certError.textContent = /heic|heif/i.test(file.type)
+			? "Le foto in formato HEIC non si aprono sul computer di chi le riceve. "
+			  + "Esportala in JPG, oppure carica un PDF."
+			: "Puoi caricare una foto JPG o PNG, oppure un PDF. Questo file è di un altro tipo.";
+		certError.hidden = false;
 		return;
 	}
 	showPreview(file);

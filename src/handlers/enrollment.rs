@@ -10,7 +10,7 @@ use crate::pdf::membership_2026_27::generator;
 use crate::pdf::membership_2026_27::templates::MembershipForm;
 use crate::render::HtmlTemplate;
 use crate::state::AppState;
-use crate::validation::{self, FieldError, Related};
+use crate::validation::{self, FieldError, Related, file_type};
 use tracing::{error, info, warn};
 
 /// Cap on the certificate photo. Phone cameras produce 3–8 MB, and the whole thing is
@@ -18,12 +18,14 @@ use tracing::{error, info, warn};
 /// anyone to post a 100 MB file.
 const MAX_CERTIFICATE_BYTES: usize = 12 * 1024 * 1024;
 
-/// What the certificate may be: a photo of the paper one, or the PDF a doctor emailed.
-///
-/// Checked by declared content type rather than by sniffing the bytes. The point is to stop
-/// somebody attaching a video by mistake, not to stop an attacker — nothing on this server
-/// opens the file, it is forwarded to a mailbox and read by a person.
-const CERTIFICATE_TYPES: [&str; 2] = ["image/", "application/pdf"];
+// What the certificate may be — a photo of the paper one, or the PDF a doctor emailed — is
+// decided by `validation::file_type`, from the bytes. There is deliberately no list of
+// accepted content types here: one used to live at this spot, matched with `starts_with`
+// against `["image/", "application/pdf"]`, and it accepted every claim a file picker can
+// make. `image/heic` is a truthful claim, so four iPhone photos reached the association as
+// attachments nobody could open; `application/octet-stream` is what some Android WebViews
+// send for an ordinary JPEG, so those were refused. Both are the same mistake — believing
+// the envelope instead of reading the letter.
 
 /// How many emergency contacts one enrolment may carry.
 ///
@@ -94,6 +96,9 @@ struct AssociationNotice<'a> {
 	form: &'a MembershipForm,
 	contacts: &'a [EmergencyContact],
 	certificate_name: &'a str,
+	/// Set when the attachment had to be renamed to match its own bytes. Printed, so a name
+	/// that differs from the one the applicant remembers sending has an explanation next to it.
+	certificate_renamed_from: Option<&'a str>,
 }
 
 // --- Handlers ---
@@ -135,6 +140,12 @@ struct Submission {
 	form: MembershipForm,
 	contacts: Vec<EmergencyContact>,
 	certificate: Upload,
+	/// What the certificate turned out to be, for the log line.
+	certificate_kind: file_type::Kind,
+	/// The name the file arrived under, when its extension disagreed with its bytes and the
+	/// server corrected it. Told to the association, so an attachment whose name does not
+	/// match what the applicant says they sent is explained rather than suspicious.
+	certificate_renamed_from: Option<String>,
 }
 
 /// Why an enrolment did not go through.
@@ -169,6 +180,8 @@ async fn parse_submission(mut multipart: Multipart) -> Result<Submission, Reject
 	let mut notes = Vec::new();
 	let mut applicant_email = String::new();
 	let mut certificate: Option<Upload> = None;
+	let mut certificate_kind = file_type::Kind::Unknown;
+	let mut certificate_renamed_from: Option<String> = None;
 
 	while let Some(field) = multipart
 		.next_field()
@@ -204,18 +217,29 @@ async fn parse_submission(mut multipart: Multipart) -> Result<Submission, Reject
 				))
 				.into());
 			}
-			if !CERTIFICATE_TYPES
-				.iter()
-				.any(|t| content_type.starts_with(t))
-			{
-				return Err(certificate_error(
-					"Carica un'immagine oppure un PDF: questo file è di un altro tipo.",
-				)
-				.into());
+
+			// The bytes decide, not `content_type`. A format the recipient could not open is
+			// refused here with instructions, rather than forwarded and discovered by hand.
+			let kind = file_type::sniff(&bytes);
+			if let Some(refusal) = kind.refusal() {
+				warn!(
+					declared = %content_type,
+					detected = kind.label(),
+					bytes = bytes.len(),
+					"certificate refused: the recipient could not open it"
+				);
+				return Err(certificate_error(refusal).into());
 			}
+
+			// Named and typed for what it is. A JPEG the picker called `image.tmp` reaches a
+			// mail client that would otherwise refuse to preview it, and the reverse — HEIC
+			// bytes under a `.jpg` name — is the shape the four broken files arrived in.
+			let (corrected, renamed) = file_type::with_extension(&filename, kind);
+			certificate_kind = kind;
+			certificate_renamed_from = renamed.then(|| filename.clone());
 			certificate = Some(Upload {
-				filename,
-				content_type,
+				filename: corrected,
+				content_type: kind.mime().to_string(),
 				bytes: bytes.to_vec(),
 			});
 			continue;
@@ -289,6 +313,8 @@ async fn parse_submission(mut multipart: Multipart) -> Result<Submission, Reject
 		form,
 		contacts,
 		certificate,
+		certificate_kind,
+		certificate_renamed_from,
 	})
 }
 
@@ -426,6 +452,10 @@ pub async fn enrollment_submit_handler(
 		email = %submission.applicant_email,
 		contacts = submission.contacts.len(),
 		certificate = %certificate_name,
+		// The format read from the bytes, so the next unopenable attachment is one grep away
+		// instead of something to reconstruct backwards from the mailbox.
+		certificate_type = submission.certificate_kind.label(),
+		certificate_renamed_from = submission.certificate_renamed_from.as_deref().unwrap_or("-"),
 		certificate_bytes = submission.certificate.bytes.len(),
 		minor = submission.form.is_minor.is_some(),
 		"enrollment received"
@@ -449,6 +479,7 @@ pub async fn enrollment_submit_handler(
 		form: &submission.form,
 		contacts: &submission.contacts,
 		certificate_name: &certificate_name,
+		certificate_renamed_from: submission.certificate_renamed_from.as_deref(),
 	})
 	.render()
 	{

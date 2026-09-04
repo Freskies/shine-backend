@@ -21,6 +21,10 @@
 //! the fiscal-code check character and its agreement with the declared birth date and with
 //! the declared name. See [`fiscal_code`].
 //!
+//! A fourth is outside the table altogether, because its subject is not a typed field: what
+//! the uploaded certificate actually is, read from its own bytes rather than believed from
+//! the content type the phone declared. See [`file_type`].
+//!
 //! Two more are server-only by choice rather than by necessity, both for the same reason —
 //! everything the browser could say about the field is worse than what the server says:
 //!
@@ -31,6 +35,7 @@
 //!   three above: the submission never reaches the server that would have named the real
 //!   problem. The whole field is now judged in one place, on the way in.
 
+pub mod file_type;
 mod fiscal_code;
 mod provinces;
 

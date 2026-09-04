@@ -46,14 +46,28 @@
 						<label id="certificate-filepick" class="wizard__filepick" for="certificate">
 							<span class="wizard__filepick-icon" aria-hidden="true">+</span>
 							<span class="wizard__filepick-text">Scegli un file o trascina qui</span>
-							<span class="wizard__filepick-hint">Immagine o PDF &middot; 1 file al massimo</span>
+							<span class="wizard__filepick-hint">Foto JPG/PNG o PDF &middot; 1 file al massimo</span>
 							{#
 							No `capture`: on a phone it sends the user straight to the camera with
 							no way back to the gallery or to a saved PDF. Without it the system
 							picker offers all three.
+
+							The types are listed one by one instead of `image/*`, which is what
+							sent four unopenable files to the association. Two reasons, both about
+							iOS: `image/*` matches `image/heic`, so a photo picked out of Files
+							rather than the photo library was selectable and arrived untranscoded;
+							and naming JPEG and PNG explicitly is what makes the photo-library
+							path convert a HEIC on the way out.
+
+							`image/heic` must NOT be added here, however much Android's picker
+							would like it: Safari 17+ reads it as permission to convert in the
+							other direction and turns ordinary JPEGs and PNGs *into* HEIC.
+
+							This is a nudge, not the check — `validation::file_type` reads the
+							bytes on the way in, and drag-and-drop ignores `accept` entirely.
 							#}
 							<input id="certificate" name="certificate" type="file"
-							       accept="image/*,application/pdf" required>
+							       accept="image/jpeg,image/png,application/pdf" required>
 						</label>
 
 						<div id="certificate-preview" class="wizard__preview" hidden>

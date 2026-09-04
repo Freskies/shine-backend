@@ -10,5 +10,16 @@ to the applicant, so hitting reply reaches them directly. #}
 		In allegato il modulo di tesseramento in PDF e la foto del certificato medico.
 	</p>
 
+	{# Only when the upload's extension disagreed with its actual bytes. Without this note
+	the attachment simply arrives under a name nobody recognizes. #}
+	{% if let Some(original) = certificate_renamed_from %}
+	<p style="margin:0 0 18px;padding:10px 12px;background:#fffbeb;border-left:3px solid #f59e0b;">
+		Nota tecnica: il certificato era stato caricato come <strong>{{ original }}</strong>,
+		ma i byte del file indicano un altro formato. L'abbiamo rinominato in
+		<strong>{{ certificate_name }}</strong> perché si apra correttamente: il contenuto
+		è intatto, è cambiato solo il nome dell'allegato.
+	</p>
+	{% endif %}
+
 	{% include "email/_data_table.html" %}
 </div>

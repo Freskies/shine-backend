@@ -55,7 +55,17 @@ Consequences worth knowing before touching it:
   abbreviations, strips phone separators, and clears the sections the two toggles turned off. That last job used to
   live in `generator.rs`, where it ran after the emails were already rendered.
 - Server-only checks (no browser counterpart, because a regex cannot express them): the fiscal-code check character
-  and its agreement with the declared birth date, in `fiscal_code.rs`.
+  and its agreement with the declared birth date, in `fiscal_code.rs`; and what the uploaded certificate *is*, in
+  `file_type.rs`.
+
+`file_type.rs` sniffs the certificate's magic bytes and ignores the content type the browser declared. It is outside
+`RULES` because its subject is a multipart part, not a typed field. Two things to know before touching it:
+
+- It decides three things at once: whether to refuse (`refusal()`, which returns the Italian sentence), what to rename
+  the attachment to (`with_extension()`), and what MIME type to attach it as (`mime()`). `openable()` and `refusal()`
+  are one decision spelled twice, and a test enforces that they agree.
+- The `accept` attribute on the file input is a *nudge*, not the check — drag-and-drop ignores it. Do **not** add
+  `image/heic` to it: Safari 17+ reads that as permission to convert JPEG/PNG *into* HEIC.
 
 Two failure paths, and they must not be merged: `enrollment_invalid()` returns the list of fields to fix plus an
 `HX-Trigger` naming them, while `enrollment_error()` is only for failures that are ours (PDF, SMTP, template) and is
