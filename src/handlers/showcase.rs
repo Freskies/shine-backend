@@ -31,6 +31,14 @@ pub async fn statute_handler() -> impl IntoResponse {
 	HtmlTemplate(StatuteTemplate)
 }
 
+#[derive(Template)]
+#[template(path = "showcase/equipment_use.html")]
+pub struct EquipmentUseTemplate;
+
+pub async fn equipment_use_handler() -> impl IntoResponse {
+	HtmlTemplate(EquipmentUseTemplate)
+}
+
 #[cfg(test)]
 mod tests {
 	use super::*;

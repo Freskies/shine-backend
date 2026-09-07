@@ -1,0 +1,91 @@
+{% extends "base.html" %}
+
+{% block title %}Utilizzo delle attrezzature — Shine Parkour ASD{% endblock %}
+
+{% block description %}Dichiarazione di Shine Parkour ASD sull'utilizzo delle attrezzature sportive mobili impiegate durante lezioni, dimostrazioni ed eventi di parkour.{% endblock %}
+
+{% block content %}
+<!--suppress LongLine -->
+<header class="header">
+	<div class="container header__container">
+		<a href="/" class="logo">
+			<img class="logo__mark" src="/static/logo_shine.svg" alt="Logo Shine">
+			Shine
+		</a>
+	</div>
+</header>
+
+<main class="main-wrapper">
+	<section class="section">
+		<div class="container container--narrow">
+			<!-- #legal-content is what htmx extracts (hx-select) into the global dialog -->
+			<article id="legal-content" class="legal">
+				<h1 class="heading-secondary">Dichiarazione sull'utilizzo delle attrezzature sportive</h1>
+
+				<p class="text-body">
+					Shine A.S.D. utilizza, durante alcune lezioni, dimostrazioni ed eventi, attrezzature mobili
+					appositamente realizzate per la pratica e l'insegnamento del parkour.
+				</p>
+				<p class="text-body">
+					Tali attrezzature possono comprendere strutture in legno, elementi modulari, pneumatici, sbarre e altri
+					ostacoli destinati allo svolgimento di attività motorie guidate.
+				</p>
+				<p class="text-body">
+					Le attrezzature sono state realizzate internamente dall'associazione e non costituiscono installazioni
+					certificate o destinate al libero utilizzo del pubblico.
+				</p>
+
+				<h2>Condizioni di utilizzo</h2>
+				<p class="text-body">
+					Il loro utilizzo è consentito esclusivamente:
+				</p>
+				<ul class="text-body">
+					<li>durante attività organizzate o autorizzate da Shine A.S.D.;</li>
+					<li>in presenza e sotto la supervisione diretta di tecnici incaricati dall'associazione;</li>
+					<li>secondo le indicazioni fornite dai tecnici responsabili;</li>
+					<li>dopo il corretto posizionamento e il controllo delle attrezzature;</li>
+					<li>per esercizi adeguati all'età, all'esperienza e alle capacità del partecipante.</li>
+				</ul>
+				<p class="text-body">
+					È vietato utilizzare, spostare, modificare o salire sulle attrezzature senza l'autorizzazione del
+					tecnico responsabile.
+				</p>
+				<p class="text-body">
+					Al termine delle attività, le attrezzature non devono essere considerate disponibili per il libero
+					utilizzo.
+				</p>
+
+				<h2>Controllo delle attrezzature</h2>
+				<p class="text-body">
+					Prima dell'impiego, Shine A.S.D. verifica il corretto montaggio, la stabilità e lo stato generale delle
+					attrezzature utilizzate.
+				</p>
+				<p class="text-body">
+					Qualora venga rilevato un danneggiamento, un deterioramento o qualsiasi condizione che possa
+					comprometterne l'impiego, l'attrezzatura viene esclusa dall'attività fino al ripristino delle condizioni
+					necessarie.
+				</p>
+
+				<h2>Responsabilità dei partecipanti</h2>
+				<p class="text-body">
+					I partecipanti sono tenuti a rispettare le istruzioni dei tecnici e a utilizzare esclusivamente le
+					attrezzature e i percorsi loro indicati.
+				</p>
+				<p class="text-body">
+					La supervisione dell'istruttore non elimina i rischi propri dell'attività motoria e della pratica del
+					parkour. Ogni esercizio viene pertanto proposto in maniera progressiva e proporzionata alle capacità del
+					partecipante.
+				</p>
+
+				<h2>Informazioni sull'associazione</h2>
+				<p class="text-body">
+					Shine A.S.D. è affiliata a UISP e svolge le proprie attività attraverso tecnici in possesso delle
+					qualifiche richieste per le rispettive attività.
+				</p>
+
+				<p class="legal__updated">Ultimo aggiornamento: settembre 2026</p>
+			</article>
+		</div>
+	</section>
+</main>
+{% endblock %}

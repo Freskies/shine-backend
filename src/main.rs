@@ -13,7 +13,9 @@ use crate::handlers::enrollment::enrollment_preview_sent_handler;
 use crate::handlers::enrollment::{
 	emergency_contact_row_handler, enrollment_handler, enrollment_submit_handler,
 };
-use crate::handlers::showcase::{index_handler, privacy_policy_handler, statute_handler};
+use crate::handlers::showcase::{
+	equipment_use_handler, index_handler, privacy_policy_handler, statute_handler,
+};
 use crate::state::AppState;
 use axum::Router;
 use axum::extract::{DefaultBodyLimit, Request};
@@ -148,6 +150,7 @@ async fn main() {
 		.route("/", get(index_handler))
 		.route("/privacy-policy", get(privacy_policy_handler))
 		.route("/statute", get(statute_handler))
+		.route("/equipment-use", get(equipment_use_handler))
 		.route("/enrollment", get(enrollment_handler))
 		.route(
 			"/enrollment",
