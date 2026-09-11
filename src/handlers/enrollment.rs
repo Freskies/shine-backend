@@ -1,6 +1,7 @@
 use askama::Template;
+use axum::extract::multipart::MultipartError;
 use axum::extract::{Multipart, Query, State};
-use axum::http::HeaderValue;
+use axum::http::{HeaderMap, HeaderValue, StatusCode};
 use axum::response::{Html, IntoResponse, Response};
 use chrono::{Local, NaiveDate};
 use urlencoding::encode;
@@ -182,11 +183,12 @@ async fn parse_submission(mut multipart: Multipart) -> Result<Submission, Reject
 	let mut certificate: Option<Upload> = None;
 	let mut certificate_kind = file_type::Kind::Unknown;
 	let mut certificate_renamed_from: Option<String> = None;
+	let mut declared_size: Option<usize> = None;
 
 	while let Some(field) = multipart
 		.next_field()
 		.await
-		.map_err(|e| Rejection::Internal(format!("malformed upload: {e}")))?
+		.map_err(|e| read_failure(e, "malformed upload"))?
 	{
 		let name = field.name().unwrap_or_default().to_string();
 
@@ -203,19 +205,13 @@ async fn parse_submission(mut multipart: Multipart) -> Result<Submission, Reject
 			let bytes = field
 				.bytes()
 				.await
-				.map_err(|e| Rejection::Internal(format!("could not read the photo: {e}")))?;
+				.map_err(|e| read_failure(e, "could not read the photo"))?;
 
 			if bytes.is_empty() {
 				continue;
 			}
 			if bytes.len() > MAX_CERTIFICATE_BYTES {
-				return Err(certificate_error(format!(
-					"Il file pesa {} MB: il massimo è {} MB. Scatta la foto a una \
-					 risoluzione più bassa, oppure carica il PDF.",
-					bytes.len() / (1024 * 1024),
-					MAX_CERTIFICATE_BYTES / (1024 * 1024)
-				))
-				.into());
+				return Err(certificate_error(oversize_message(Some(bytes.len()))).into());
 			}
 
 			// The bytes decide, not `content_type`. A format the recipient could not open is
@@ -227,6 +223,19 @@ async fn parse_submission(mut multipart: Multipart) -> Result<Submission, Reject
 					detected = kind.label(),
 					bytes = bytes.len(),
 					"certificate refused: the recipient could not open it"
+				);
+				return Err(certificate_error(refusal).into());
+			}
+
+			// Recognizing the format is not the same as receiving all of it: a photo cut short
+			// by the gallery it came out of has an impeccable header and no end marker. This is
+			// the check the two grey half-images got past.
+			if let Some(refusal) = file_type::truncation(&bytes, kind) {
+				warn!(
+					declared = %content_type,
+					detected = kind.label(),
+					bytes = bytes.len(),
+					"certificate refused: the file has no end marker"
 				);
 				return Err(certificate_error(refusal).into());
 			}
@@ -248,10 +257,13 @@ async fn parse_submission(mut multipart: Multipart) -> Result<Submission, Reject
 		let value = field
 			.text()
 			.await
-			.map_err(|e| Rejection::Internal(format!("could not read field {name}: {e}")))?;
+			.map_err(|e| read_failure(e, &format!("could not read field {name}")))?;
 
 		match name.as_str() {
 			"applicant_email" => applicant_email = value,
+			// What the browser said the file weighed when it was picked. Matched here rather
+			// than left to fall through, so it cannot reach the membership deserialization.
+			"certificate_size" => declared_size = value.trim().parse().ok(),
 			"contact_name" => names.push(value),
 			"contact_surname" => surnames.push(value),
 			"contact_phone" => phones.push(value),
@@ -308,6 +320,28 @@ async fn parse_submission(mut multipart: Multipart) -> Result<Submission, Reject
 		))
 	})?;
 
+	// The page knows how big the file was when it was picked — it prints the figure under the
+	// preview — so the two numbers can be compared. This is what tells a photo that arrived
+	// short from one that was already damaged on the phone before it was ever sent, which is
+	// the difference between looking at this server and telling the applicant to take the
+	// picture again. Absent or unparsable means no claim was made (a page with its script
+	// blocked), and nothing is inferred from silence.
+	//
+	// Logged, not refused, and deliberately: an Android picker that transcodes on the way out
+	// can report the size of the file it started from, so a mismatch is not proof of damage —
+	// while `file_type::truncation` above is, and has already turned away anything that ends
+	// mid-image. Refusing here would cost a good enrolment to restate something that check
+	// makes on the bytes themselves.
+	if let Some(declared) = declared_size.filter(|declared| *declared > 0) {
+		let received = certificate.bytes.len();
+		if declared != received {
+			warn!(
+				declared,
+				received, "certificate size differs from what the browser announced"
+			);
+		}
+	}
+
 	Ok(Submission {
 		applicant_email: applicant_email.trim().to_string(),
 		form,
@@ -329,6 +363,42 @@ fn certificate_error(message: impl Into<String>) -> FieldError {
 		label: "Certificato medico".to_string(),
 		message: message.into(),
 	}
+}
+
+/// The sentence for a file that is too heavy, with its own weight when we got to weigh it.
+///
+/// Two paths reach it and they must not disagree about the limit: the explicit check on the
+/// bytes, and the body limit tripping mid-stream — which happens before anything can be
+/// measured, hence the `Option`. The number comes from [`MAX_CERTIFICATE_BYTES`] either way,
+/// so the advice cannot drift from what the server actually accepts.
+fn oversize_message(received: Option<usize>) -> String {
+	let limit = MAX_CERTIFICATE_BYTES / (1024 * 1024);
+	let weight = match received {
+		Some(bytes) => format!("Il file pesa {} MB", bytes / (1024 * 1024)),
+		None => "Il file è troppo grande".to_string(),
+	};
+	format!(
+		"{weight}: il massimo è {limit} MB. Scatta la foto a una risoluzione più bassa, \
+		 oppure carica il PDF."
+	)
+}
+
+/// Sorts a failed multipart read into the right kind of rejection.
+///
+/// The upload cap in `main.rs` is a layer, so it trips while the body is being read rather than
+/// at a point this handler chooses: a photo bigger than `MAX_UPLOAD_BYTES` ends the stream
+/// here, with a `413` wrapped in an error that otherwise reads like a broken request. Left as
+/// [`Rejection::Internal`] it answered a 20 MB photo — which the 108-megapixel cameras on
+/// current Android phones produce without trying — with "if the problem persists, contact us",
+/// after the applicant had filled in the whole form, signed twice and waited out the upload.
+/// It is the certificate that is named whichever part tripped: it is the only part of this form
+/// big enough to be the reason.
+fn read_failure(error: MultipartError, context: &str) -> Rejection {
+	if error.status() == StatusCode::PAYLOAD_TOO_LARGE {
+		warn!(%error, context, "certificate refused: the upload cap cut the request");
+		return Rejection::from(certificate_error(oversize_message(None)));
+	}
+	Rejection::Internal(format!("{context}: {error}"))
 }
 
 /// Checks the four columns of every emergency-contact row.
@@ -410,10 +480,22 @@ pub async fn enrollment_preview_sent_handler(State(state): State<AppState>) -> R
 }
 
 /// Receives the whole enrolment, emails both copies, and returns the final step.
+///
+/// `Multipart` reads the body, so it has to come last among the extractors.
 pub async fn enrollment_submit_handler(
 	State(state): State<AppState>,
+	headers: HeaderMap,
 	multipart: Multipart,
 ) -> Response {
+	// Logged with the submission, because which browser produced a file is the first thing
+	// worth knowing about one that arrives damaged — and reconstructing it afterwards from a
+	// mailbox is impossible.
+	let user_agent = headers
+		.get(axum::http::header::USER_AGENT)
+		.and_then(|value| value.to_str().ok())
+		.unwrap_or("-")
+		.to_string();
+
 	let mut submission = match parse_submission(multipart).await {
 		Ok(s) => s,
 		Err(Rejection::Internal(detail)) => return enrollment_error(&detail),
@@ -458,6 +540,7 @@ pub async fn enrollment_submit_handler(
 		certificate_renamed_from = submission.certificate_renamed_from.as_deref().unwrap_or("-"),
 		certificate_bytes = submission.certificate.bytes.len(),
 		minor = submission.form.is_minor.is_some(),
+		%user_agent,
 		"enrollment received"
 	);
 
@@ -623,6 +706,25 @@ fn enrollment_invalid(errors: Vec<FieldError>) -> Response {
 #[cfg(test)]
 mod tests {
 	use super::*;
+
+	/// `enrollment.js` writes the picked file's size into this input by id, on the same line
+	/// that reveals the preview. Renaming or dropping it in the markup makes that assignment
+	/// throw — and the exception lands in the middle of `showPreview`, so the picker stops
+	/// showing anything and the "Avanti" button never enables. The page would still look
+	/// perfectly normal. Nothing else here would fail either: the field is optional on the
+	/// server by design, since a page with its script blocked makes no claim about the size.
+	#[tokio::test]
+	async fn the_form_carries_the_input_the_picker_writes_the_size_into() {
+		let response = enrollment_handler().await.into_response();
+		let body = axum::body::to_bytes(response.into_body(), usize::MAX)
+			.await
+			.unwrap();
+		let page = String::from_utf8(body.to_vec()).unwrap();
+
+		assert!(page.contains("id=\"certificate_size\""));
+		// The name is what reaches `parse_submission`, and it is matched there literally.
+		assert!(page.contains("name=\"certificate_size\""));
+	}
 
 	/// The messages are Italian and full of accents, and they now travel in a header. Nothing
 	/// in the browser would complain about a mangled one — the page would simply print

@@ -369,11 +369,22 @@ const preview = document.getElementById("certificate-preview");
 const previewContent = document.getElementById("certificate-preview-content");
 const previewName = document.getElementById("certificate-preview-name");
 const certError = document.getElementById("certificate-error");
+const certSize = document.getElementById("certificate_size");
 const nextButton = wizard.querySelector(".wizard__next");
+
+/* Must match MAX_CERTIFICATE_BYTES in src/handlers/enrollment.rs, which stays authoritative.
+   Checked here so the refusal arrives at the step that holds the picker, instead of after the
+   whole form, two signatures and a long upload — and so a photo above the body limit in
+   main.rs never gets to be cut off mid-request. */
+const MAX_CERTIFICATE_BYTES = 12 * 1024 * 1024;
 
 function showPreview (file) {
 	filepick.hidden = true;
 	certError.hidden = true;
+
+	/* Posted alongside the file so the server can compare it with what actually arrived: two
+	   certificates once turned up as grey half-images, and this is what names the cause. */
+	certSize.value = file.size;
 
 	previewName.textContent = `${file.name} (${(file.size / (1024 * 1024)).toFixed(1)} MB)`;
 	previewContent.replaceChildren();
@@ -398,6 +409,7 @@ function showPreview (file) {
 function clearPreview () {
 	const dt = new DataTransfer();
 	certificate.files = dt.files;
+	certSize.value = "";
 	previewContent.replaceChildren();
 	previewName.textContent = "";
 	preview.hidden = true;
@@ -416,13 +428,32 @@ function clearPreview () {
    report nothing for an ordinary JPEG. This is a nudge, not the check — `validation::file_type`
    reads the actual bytes on the server, which is the only party that can tell a renamed HEIC
    from the JPEG it claims to be. */
+
+/* The types an Android picker reaches for when it has nothing to say: a declaration of "some
+   bytes" is not a claim about the format, and `enrollment.rs` exists in its current shape
+   because an ordinary JPEG arrives announced like this. Refusing them here would block, on the
+   step before the form, files the server goes on to accept. */
+const OPAQUE_TYPES = ["application/octet-stream", "application/binary", "binary/octet-stream", "*/*"];
+
+/* Spellings of an accepted format that the `accept` list cannot carry. `image/jpg` is not a
+   registered MIME type — `image/jpeg` is — but several Android pickers report it anyway, and
+   turning away a JPEG over how it was spelled is the same mistake as trusting the envelope. */
+const TYPE_ALIASES = {
+	"image/jpg": "image/jpeg",
+	"image/pjpeg": "image/jpeg",
+	"image/x-png": "image/png",
+};
+
 function accepted (file) {
-	if (!file.type) return true;
+	const declared = (file.type || "").toLowerCase();
+	if (!declared || OPAQUE_TYPES.includes(declared)) return true;
+
+	const type = TYPE_ALIASES[declared] || declared;
 	return certificate.accept.split(",").some((pattern) => {
-		pattern = pattern.trim();
+		pattern = pattern.trim().toLowerCase();
 		if (!pattern) return false;
-		if (pattern.endsWith("/*")) return file.type.startsWith(pattern.slice(0, -1));
-		return file.type === pattern;
+		if (pattern.endsWith("/*")) return type.startsWith(pattern.slice(0, -1));
+		return type === pattern;
 	});
 }
 
@@ -432,8 +463,18 @@ certificate.addEventListener("change", () => {
 		clearPreview();
 		return;
 	}
-	/* Refused here rather than on submit: the certificate is on phase 1, so the server's
-	   rejection would otherwise arrive after two signatures and a full form. */
+	/* Both refusals happen here rather than on submit: the certificate is on phase 1, so the
+	   server's rejection would otherwise arrive after two signatures and a full form. */
+	if (file.size > MAX_CERTIFICATE_BYTES) {
+		clearPreview();
+		/* Same sentence as `oversize_message` in enrollment.rs — the server keeps the limit,
+		   this only delivers it sooner. */
+		certError.textContent = `Il file pesa ${(file.size / (1024 * 1024)).toFixed(0)} MB: `
+			+ `il massimo è ${MAX_CERTIFICATE_BYTES / (1024 * 1024)} MB. `
+			+ "Scatta la foto a una risoluzione più bassa, oppure carica il PDF.";
+		certError.hidden = false;
+		return;
+	}
 	if (!accepted(file)) {
 		clearPreview();
 		certError.textContent = /heic|heif/i.test(file.type)

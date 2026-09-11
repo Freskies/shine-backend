@@ -173,6 +173,50 @@ pub fn sniff(bytes: &[u8]) -> Kind {
 	Kind::Unknown
 }
 
+/// Whether `needle` appears anywhere in `haystack`.
+///
+/// Searched from the end, which is where every marker below belongs: on a complete 10 MB photo
+/// the answer is in the last handful of bytes, and only a truncated one is walked in full.
+fn contains(haystack: &[u8], needle: &[u8]) -> bool {
+	haystack.len() >= needle.len() && haystack.windows(needle.len()).rev().any(|w| w == needle)
+}
+
+/// Why this file looks unfinished, or `None` if it ends the way its format says it should.
+///
+/// [`sniff`] reads the first bytes, and a half-written file has those too: a photo handed over
+/// while the gallery was still transcoding it — or one Google Foto had not finished downloading
+/// from the cloud — opens with a perfectly valid header and then simply stops. Two of them
+/// reached the association as grey half-images, accepted, renamed and attached, because every
+/// check on the way in had only ever looked at the front of the file.
+///
+/// Only JPEG, PNG and PDF are tested. They are what actually arrives, and each ends with a
+/// marker that is mandatory and unambiguous; BMP and TIFF carry their extent in the header
+/// instead, and a GIF trailer is a single `0x3B` byte that trailing padding would fake. A
+/// format with nothing reliable to test is reported complete rather than guessed at — a false
+/// refusal here blocks an enrolment that was fine, which is worse than the file it would catch.
+pub fn truncation(bytes: &[u8], kind: Kind) -> Option<&'static str> {
+	let complete = match kind {
+		// `FF D9` cannot occur inside the compressed scan: a literal `FF` is stored there as
+		// `FF 00`, and the restart markers stop at `FF D7`. So its presence *anywhere* means the
+		// scan finished — and anywhere is what has to be asked, because Motion Photo, which
+		// every recent Android camera writes by default, appends a whole MP4 after the EOI.
+		Kind::Jpeg => contains(bytes, &[0xFF, 0xD9]),
+		// The chunk a PNG must close with. Matched by name: the four bytes are followed only by
+		// a CRC, and no earlier chunk may carry that name.
+		Kind::Png => contains(bytes, b"IEND"),
+		// Required at the end of every PDF, and repeated once per incremental update — so, as
+		// above, the question is whether one exists at all.
+		Kind::Pdf => contains(bytes, b"%%EOF"),
+		_ => true,
+	};
+
+	(!complete).then_some(
+		"Il file è arrivato incompleto: il telefono ne ha inviato solo una parte. Se hai scelto \
+		 la foto da Google Foto, aprila prima nell'app per scaricarla sul telefono, poi riprova — \
+		 oppure scattane una nuova.",
+	)
+}
+
 /// Puts `kind`'s own extension on `filename`, and says whether that changed anything.
 ///
 /// The attachment has to be named for what it is: a HEIC called `.jpg` is exactly the file
@@ -320,6 +364,70 @@ mod tests {
 		assert_eq!(sniff(b"R"), Kind::Unknown);
 		assert_eq!(sniff(b"RIFF"), Kind::Unknown);
 		assert_eq!(sniff(&[0xFF, 0xD8]), Kind::Unknown);
+	}
+
+	/// The two files this check was added for: a JPEG that opens correctly and then stops.
+	/// `sniff` calls both of these `Jpeg`, which is why the test is about `truncation`.
+	#[test]
+	fn a_half_written_photo_is_caught() {
+		let truncated = b"\xFF\xD8\xFF\xE0\x00\x10JFIF\x00\x01\x02\x03\x04\x05\x06\x07";
+		assert_eq!(
+			sniff(truncated),
+			Kind::Jpeg,
+			"the header is intact, as it was"
+		);
+
+		let refusal = truncation(truncated, Kind::Jpeg).expect("no EOI: this file is unfinished");
+		assert!(
+			refusal.contains("incompleto"),
+			"the applicant has to be told what is wrong: {refusal}"
+		);
+
+		let mut complete = truncated.to_vec();
+		complete.extend_from_slice(&[0xFF, 0xD9]);
+		assert_eq!(truncation(&complete, Kind::Jpeg), None);
+	}
+
+	/// Motion Photo — the Android camera default — appends an MP4 after the EOI, so the marker
+	/// is nowhere near the end of the file. Testing the last two bytes would refuse most of the
+	/// photos this form receives.
+	#[test]
+	fn an_android_motion_photo_is_not_mistaken_for_a_cut_one() {
+		let mut motion_photo = b"\xFF\xD8\xFF\xE0 scan \xFF\xD9".to_vec();
+		motion_photo.extend_from_slice(b"\x00\x00\x00\x18ftypmp42");
+		motion_photo.extend_from_slice(&[0x00; 64]);
+
+		assert_eq!(truncation(&motion_photo, Kind::Jpeg), None);
+	}
+
+	#[test]
+	fn png_and_pdf_are_checked_by_their_own_last_marker() {
+		assert!(truncation(b"\x89PNG\r\n\x1a\n\x00\x00\x00\rIHDR", Kind::Png).is_some());
+		assert_eq!(
+			truncation(b"\x89PNG\r\n\x1a\n...IEND\xae\x42\x60\x82", Kind::Png),
+			None
+		);
+
+		assert!(truncation(b"%PDF-1.7\n1 0 obj\n", Kind::Pdf).is_some());
+		assert_eq!(truncation(b"%PDF-1.7\n...\n%%EOF\n", Kind::Pdf), None);
+	}
+
+	/// The formats with no trailer worth testing must come out complete. Guessing at them would
+	/// refuse a submission that was fine, which is the one outcome worse than the grey photo.
+	#[test]
+	fn formats_without_an_end_marker_are_left_alone() {
+		for kind in ALL {
+			if matches!(kind, Kind::Jpeg | Kind::Png | Kind::Pdf) {
+				continue;
+			}
+			assert_eq!(
+				truncation(b"BM\x00\x00 whatever", kind),
+				None,
+				"{} has no end marker to judge it by",
+				kind.label()
+			);
+		}
+		assert_eq!(truncation(b"", Kind::Bmp), None);
 	}
 
 	/// A lie about the extension is corrected; the truth is left untouched, case and all.

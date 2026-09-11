@@ -64,8 +64,20 @@ Consequences worth knowing before touching it:
 - It decides three things at once: whether to refuse (`refusal()`, which returns the Italian sentence), what to rename
   the attachment to (`with_extension()`), and what MIME type to attach it as (`mime()`). `openable()` and `refusal()`
   are one decision spelled twice, and a test enforces that they agree.
+- `truncation()` is a fourth decision and is deliberately *not* on `Kind`: recognizing a format and receiving all of it
+  are different questions, and folding it in would break the invariant that test enforces. `sniff()` reads the front of
+  the file, which a half-written one has too — two JPEGs once arrived as grey half-images — so the accepted formats are
+  also asked for the marker they must end with (`FF D9`, `IEND`, `%%EOF`), searched across the whole file because
+  Android's Motion Photo appends an MP4 after the EOI. Formats with no reliable trailer are reported complete rather
+  than guessed at: a false refusal blocks an enrolment that was fine, which is worse than the file it would catch.
+  For the same reason the `certificate_size` the page posts is only *logged* when it disagrees with the bytes received —
+  a picker that transcodes can report the size of the file it started from, so a mismatch is a lead, not a verdict.
 - The `accept` attribute on the file input is a *nudge*, not the check — drag-and-drop ignores it. Do **not** add
   `image/heic` to it: Safari 17+ reads that as permission to convert JPEG/PNG *into* HEIC.
+- `accepted()` in `enrollment.js` applies that nudge client-side, and it has to stay as forgiving as the server: a type
+  the browser leaves empty or calls `application/octet-stream` carries no claim about the format, and `image/jpg` is an
+  Android spelling of `image/jpeg`. All of those are let through for the bytes to judge. Only a *recognized*
+  non-accepted type is refused there, which is what saves an iPhone HEIC the trip through the whole form.
 
 Two failure paths, and they must not be merged: `enrollment_invalid()` returns the list of fields to fix plus an
 `HX-Trigger` naming them, while `enrollment_error()` is only for failures that are ours (PDF, SMTP, template) and is

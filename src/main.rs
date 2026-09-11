@@ -73,12 +73,7 @@ async fn force_download(request: Request, next: Next) -> Response {
 		.path()
 		.rsplit('/')
 		.next()
-		.filter(|name| {
-			!name.is_empty()
-				&& name
-					.bytes()
-					.all(|b| b.is_ascii_alphanumeric() || matches!(b, b'.' | b'_' | b'-'))
-		})
+		.filter(|name| { !name.is_empty() && name.bytes().all(|b| b.is_ascii_alphanumeric() || matches!(b, b'.' | b'_' | b'-')) })
 		.and_then(|name| HeaderValue::try_from(format!("attachment; filename=\"{name}\"")).ok())
 		.unwrap_or(HeaderValue::from_static("attachment"));
 
@@ -104,9 +99,23 @@ fn init_tracing() {
 	tracing_subscriber::fmt()
 		.with_env_filter(filter)
 		.with_target(true)
-		// Wall-clock time only: these logs are read while debugging, not shipped anywhere.
-		.without_time()
+		.with_timer(LocalTime)
 		.init();
+}
+
+/// Stamps each line with the local date and time, in the format the rest of this project uses.
+///
+/// The default timer is UTC, and the crate's own local-time one needs another feature flag;
+/// chrono is already here for the enrolment dates. Not decoration: an enrolment is looked into
+/// days later, starting from an attachment in a mailbox, and a line that cannot be placed in
+/// time cannot be matched to the message it explains. Seconds are enough — nothing here is
+/// measured, only located.
+struct LocalTime;
+
+impl tracing_subscriber::fmt::time::FormatTime for LocalTime {
+	fn format_time(&self, w: &mut tracing_subscriber::fmt::format::Writer<'_>) -> std::fmt::Result {
+		write!(w, "{}", chrono::Local::now().format("%d/%m/%Y %H:%M:%S"))
+	}
 }
 
 #[tokio::main]
