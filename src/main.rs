@@ -73,7 +73,12 @@ async fn force_download(request: Request, next: Next) -> Response {
 		.path()
 		.rsplit('/')
 		.next()
-		.filter(|name| { !name.is_empty() && name.bytes().all(|b| b.is_ascii_alphanumeric() || matches!(b, b'.' | b'_' | b'-')) })
+		.filter(|name| {
+			!name.is_empty()
+				&& name
+					.bytes()
+					.all(|b| b.is_ascii_alphanumeric() || matches!(b, b'.' | b'_' | b'-'))
+		})
 		.and_then(|name| HeaderValue::try_from(format!("attachment; filename=\"{name}\"")).ok())
 		.unwrap_or(HeaderValue::from_static("attachment"));
 

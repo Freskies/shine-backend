@@ -2514,6 +2514,7 @@ dependencies = [
  "dotenvy",
  "fontdb 0.24.0",
  "lettre",
+ "png",
  "regex",
  "serde",
  "serde_html_form",

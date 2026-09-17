@@ -175,46 +175,256 @@ pub fn sniff(bytes: &[u8]) -> Kind {
 
 /// Whether `needle` appears anywhere in `haystack`.
 ///
-/// Searched from the end, which is where every marker below belongs: on a complete 10 MB photo
-/// the answer is in the last handful of bytes, and only a truncated one is walked in full.
+/// Searched from the end, for the one caller left: the PDF tail, where a `%%EOF` that is there
+/// at all is in the last handful of bytes.
 fn contains(haystack: &[u8], needle: &[u8]) -> bool {
 	haystack.len() >= needle.len() && haystack.windows(needle.len()).rev().any(|w| w == needle)
 }
 
-/// Why this file looks unfinished, or `None` if it ends the way its format says it should.
+/// What the bytes say about whether all of the file arrived.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum Completeness {
+	Complete,
+	/// The file stops before the format says it should. Carries the reason, for the log line:
+	/// the first false refusal has to be diagnosable from a log rather than from the applicant's
+	/// mailbox.
+	Truncated(&'static str),
+	/// The structure could not be followed to the end. Not the same claim as [`Self::Truncated`]
+	/// and deliberately not treated as one — see [`completeness`].
+	Unparsable(&'static str),
+}
+
+/// What an applicant is told about a file that stops early.
+///
+/// One sentence for every format, because the cause is the same one every time and it is not
+/// about the format: the phone handed over part of a file.
+pub const INCOMPLETE_FILE: &str = "Il file è arrivato incompleto: il telefono ne ha inviato \
+	 solo una parte. Se hai scelto la foto da Google Foto, aprila prima nell'app per scaricarla \
+	 sul telefono, poi riprova — oppure scattane una nuova.";
+
+/// Whether the file ends the way its own format says it must.
 ///
 /// [`sniff`] reads the first bytes, and a half-written file has those too: a photo handed over
 /// while the gallery was still transcoding it — or one Google Foto had not finished downloading
 /// from the cloud — opens with a perfectly valid header and then simply stops. Two of them
-/// reached the association as grey half-images, accepted, renamed and attached, because every
-/// check on the way in had only ever looked at the front of the file.
+/// reached the association as grey half-images, because every check on the way in had only ever
+/// looked at the front of the file.
 ///
-/// Only JPEG, PNG and PDF are tested. They are what actually arrives, and each ends with a
-/// marker that is mandatory and unambiguous; BMP and TIFF carry their extent in the header
-/// instead, and a GIF trailer is a single `0x3B` byte that trailing padding would fake. A
-/// format with nothing reliable to test is reported complete rather than guessed at — a false
-/// refusal here blocks an enrolment that was fine, which is worse than the file it would catch.
-pub fn truncation(bytes: &[u8], kind: Kind) -> Option<&'static str> {
-	let complete = match kind {
-		// `FF D9` cannot occur inside the compressed scan: a literal `FF` is stored there as
-		// `FF 00`, and the restart markers stop at `FF D7`. So its presence *anywhere* means the
-		// scan finished — and anywhere is what has to be asked, because Motion Photo, which
-		// every recent Android camera writes by default, appends a whole MP4 after the EOI.
-		Kind::Jpeg => contains(bytes, &[0xFF, 0xD9]),
-		// The chunk a PNG must close with. Matched by name: the four bytes are followed only by
-		// a CRC, and no earlier chunk may carry that name.
-		Kind::Png => contains(bytes, b"IEND"),
-		// Required at the end of every PDF, and repeated once per incremental update — so, as
-		// above, the question is whether one exists at all.
-		Kind::Pdf => contains(bytes, b"%%EOF"),
-		_ => true,
-	};
+/// The end marker is found by *walking the format*, and the walk stops at the first one that is
+/// structurally the end. Asking whether the marker appears anywhere — which is what this did
+/// until it was found not to work — cannot answer the question on the files this form actually
+/// receives: every phone-camera JPEG carries a complete thumbnail JPEG inside its EXIF segment,
+/// ending in `FF D9` within the first tens of KB, so a photo cut off mid-scan produced a match
+/// and was accepted. A linearized PDF is the same trap with `%%EOF`, which it repeats right
+/// after the first-page cross-reference near the *front* of the file. The whole-file search was
+/// not gratuitous, though, and what replaces it has to keep what it was for: Motion Photo — the
+/// Android camera default — appends an MP4 after the real EOI, and Apple and Samsung append
+/// whole secondary JPEGs, so the marker is nowhere near the end of a perfectly good photo.
+/// Stopping at the first structural EOI is what makes both cases come out right.
+///
+/// Only JPEG, PNG and PDF are walked. They are what arrives, and each says unambiguously where
+/// it ends; BMP and TIFF carry their extent in the header instead, and a GIF trailer is a single
+/// `0x3B` byte that trailing padding would fake. A format with nothing reliable to follow is
+/// reported [`Completeness::Complete`] rather than guessed at, and so is one whose structure
+/// does not parse: a false refusal blocks an enrolment that was fine, which is worse than the
+/// file it would catch.
+pub fn completeness(bytes: &[u8], kind: Kind) -> Completeness {
+	match kind {
+		Kind::Jpeg => jpeg(bytes),
+		Kind::Png => png(bytes),
+		Kind::Pdf => pdf(bytes),
+		_ => Completeness::Complete,
+	}
+}
 
-	(!complete).then_some(
-		"Il file è arrivato incompleto: il telefono ne ha inviato solo una parte. Se hai scelto \
-		 la foto da Google Foto, aprila prima nell'app per scaricarla sul telefono, poi riprova — \
-		 oppure scattane una nuova.",
-	)
+/// Walks the JPEG marker structure until the image ends, or until it cannot go on.
+fn jpeg(bytes: &[u8]) -> Completeness {
+	// `sniff` matched `FF D8 FF` at offset 0, so the SOI is right at the front. If it is ever
+	// loosened to hunt for an SOI further in, this has to start at the one it found.
+	let mut cursor = 2;
+
+	// Every turn of this loop advances the cursor by at least two bytes, so no real file needs
+	// more turns than that. The cap is a backstop for a branch that ever stops advancing: this
+	// runs inline in the request task, over up to 12 MB of bytes nobody here controls, where a
+	// non-advancing branch is a hung handler rather than a wrong answer.
+	for _ in 0..bytes.len() / 2 + 16 {
+		// A marker is `FF` followed by the byte naming it, with any number of `FF` fill bytes in
+		// between (T.81 B.1.1.2).
+		match bytes.get(cursor) {
+			None => return Completeness::Truncated("jpeg ends where a marker should start"),
+			Some(0xFF) => {}
+			Some(_) => return Completeness::Unparsable("jpeg is not at a marker"),
+		}
+		let mut at = cursor + 1;
+		while bytes.get(at) == Some(&0xFF) {
+			at += 1;
+		}
+		let Some(&marker) = bytes.get(at) else {
+			return Completeness::Truncated("jpeg ends on a marker with no name");
+		};
+		// Where this marker's own bytes end: its length, if it has one, starts here.
+		let payload = at + 1;
+
+		let next = match marker {
+			// The answer this walk exists to give. Everything after it — an appended MP4, a
+			// second JPEG, padding — is somebody else's file riding along, and none of it is
+			// this check's business.
+			0xD9 => return Completeness::Complete,
+			// Payload-less: TEM and the restart markers.
+			0x01 | 0xD0..=0xD7 => payload,
+			// A second SOI is either two files concatenated or a desync; walking into it would
+			// end up reporting the inner image's truncation as the outer one's.
+			0xD8 => return Completeness::Unparsable("jpeg carries a second SOI"),
+			// `FF 00` is a stuffed byte, which means the cursor is in image data, not on a
+			// marker.
+			0x00 => return Completeness::Unparsable("jpeg desynced onto a stuffed byte"),
+			// Arithmetic coding (SOF9–SOF11, SOF13–SOF15) and JPEG-LS do not stuff `FF 00`, so
+			// the rule `scan_end` relies on does not hold for them and their scan cannot be
+			// walked. Neither reaches this form in practice, and guessing would refuse a file
+			// that opens.
+			0xC9..=0xCB | 0xCD..=0xCF | 0xF7 => {
+				return Completeness::Unparsable("jpeg is not huffman-coded");
+			}
+			// Start of scan: a header of its own, and then the entropy-coded data, which is not
+			// length-prefixed and has to be scanned through.
+			0xDA => {
+				let header = match segment_end(bytes, payload) {
+					Ok(end) => end,
+					Err(why) => return why,
+				};
+				match scan_end(bytes, header) {
+					Some(end) => end,
+					None => return Completeness::Truncated("jpeg scan ends without a marker"),
+				}
+			}
+			// Everything else carries a length and is skipped whole — which is what makes the
+			// EXIF thumbnail invisible: APP1 is capped at 65533 bytes, so a thumbnail is always
+			// inside one segment, and its `FF D9` is never looked at.
+			_ => match segment_end(bytes, payload) {
+				Ok(end) => end,
+				Err(why) => return why,
+			},
+		};
+
+		debug_assert!(next > cursor, "the jpeg walk stopped advancing at {cursor}");
+		cursor = next;
+	}
+
+	Completeness::Unparsable("jpeg walk did not terminate")
+}
+
+/// Where the segment whose two-byte length starts at `at` ends, or why it cannot be skipped.
+fn segment_end(bytes: &[u8], at: usize) -> Result<usize, Completeness> {
+	let Some(length) = bytes.get(at..at + 2) else {
+		return Err(Completeness::Truncated("jpeg ends inside a segment length"));
+	};
+	let length = u16::from_be_bytes([length[0], length[1]]) as usize;
+
+	// `Ls` counts its own two bytes, so two is the smallest a real one can be — and a smaller
+	// value would leave the cursor where it was.
+	if length < 2 {
+		return Err(Completeness::Unparsable(
+			"jpeg segment declares an impossible length",
+		));
+	}
+	let end = at + length;
+	if end > bytes.len() {
+		return Err(Completeness::Truncated("jpeg segment overruns the buffer"));
+	}
+	Ok(end)
+}
+
+/// Where the entropy-coded data starting at `from` ends: the `FF` of the next marker.
+///
+/// Inside a Huffman scan a literal `FF` is stored as `FF 00` (T.81 B.1.1.5), and `FF D0`–`FF D7`
+/// are restart markers, so neither ends the scan. In theory everything else does — but a corrupt
+/// pair of bytes reading as a marker would then be skipped by a "length" that is really image
+/// data, and the file refused for it. So only the markers that may legally follow a scan are
+/// honored, and anything else is taken for what it almost certainly is: data.
+fn scan_end(bytes: &[u8], from: usize) -> Option<usize> {
+	let mut at = from;
+	while at + 1 < bytes.len() {
+		if bytes[at] != 0xFF {
+			at += 1;
+			continue;
+		}
+		let ends_the_scan = matches!(
+			bytes[at + 1],
+			// EOI, and the tables or frame header a further scan brings with it. A progressive
+			// image has several scans, with DHT/DQT/DRI/COM/APPn between them.
+			0xD9 | 0xC0..=0xCF | 0xDA | 0xDB | 0xDC | 0xDD | 0xDF | 0xE0..=0xEF | 0xFE
+		);
+		if ends_the_scan {
+			return Some(at);
+		}
+		at += 1;
+	}
+	None
+}
+
+/// Walks the PNG chunk chain to `IEND`.
+fn png(bytes: &[u8]) -> Completeness {
+	// Past the eight-byte signature `sniff` matched.
+	let mut cursor = 8;
+
+	loop {
+		let Some(header) = bytes.get(cursor..cursor + 8) else {
+			return Completeness::Truncated("png ends inside a chunk header");
+		};
+		let length = u32::from_be_bytes([header[0], header[1], header[2], header[3]]);
+		let name = &header[4..8];
+
+		// The spec caps a chunk at `2^31 - 1` and names it in four letters. Outside that, the
+		// number is not a length and the walk has nothing to follow — which is not the same as
+		// a file that arrived short.
+		if length > 0x7FFF_FFFF {
+			return Completeness::Unparsable("png chunk declares an impossible length");
+		}
+		if !name.iter().all(u8::is_ascii_alphabetic) {
+			return Completeness::Unparsable("png chunk is not named in four letters");
+		}
+		// Reached by walking, so a `tEXt` or `eXIf` chunk whose *data* spells IEND — or an
+		// `IDAT` whose compressed bytes happen to, which is a coin flip away on a big photo —
+		// cannot stand in for it.
+		if name == b"IEND" {
+			return Completeness::Complete;
+		}
+
+		// Header, data, and the four CRC bytes this walk does not verify: nothing here decodes
+		// the image, and whether the data is *correct* is not the question being asked.
+		let Some(next) = (cursor + 8).checked_add(length as usize + 4) else {
+			return Completeness::Unparsable("png chunk length does not fit an address");
+		};
+		if next > bytes.len() {
+			return Completeness::Truncated("png chunk overruns the buffer");
+		}
+
+		debug_assert!(next > cursor, "the png walk stopped advancing at {cursor}");
+		cursor = next;
+	}
+}
+
+/// Whether the PDF still has the `%%EOF` that belongs on its last line.
+fn pdf(bytes: &[u8]) -> Completeness {
+	// Trailing whitespace and NUL padding first: a storage or mail layer can add some, and
+	// truncation only ever removes bytes, so trimming costs no detection.
+	let end = bytes
+		.iter()
+		.rposition(|byte| !matches!(byte, 0x00 | b'\n' | b'\r' | b' ' | b'\t' | 0x0C))
+		.map_or(0, |at| at + 1);
+
+	// ISO 32000-1 §7.5.5 puts `%%EOF` on the last line, and readers look for it in the final
+	// 1024 bytes; the window is four times that, for the tools that append a little after it.
+	// A window is the whole point: a linearized PDF — "fast web view", which is what scanners
+	// and Acrobat produce — carries an earlier `%%EOF` right after the first-page
+	// cross-reference, so asking the whole file passes one that was cut in half. Incremental
+	// updates and signatures repeat it too, but theirs is the one at the end.
+	let tail = &bytes[end.saturating_sub(4096)..end];
+	if contains(tail, b"%%EOF") {
+		Completeness::Complete
+	} else {
+		Completeness::Truncated("pdf has no %%EOF in its tail")
+	}
 }
 
 /// Puts `kind`'s own extension on `filename`, and says whether that changed anything.
@@ -267,6 +477,106 @@ mod tests {
 		Kind::Svg,
 		Kind::Unknown,
 	];
+
+	/// A segment: `FF`, the marker, the two-byte length that counts itself, and the payload.
+	///
+	/// Every fixture here is built from this rather than written out, because the walk follows
+	/// the lengths now. The ones this replaced did not survive the change and could not: one of
+	/// them declared an 8307-byte APP0 inside a 30-byte file — invented lengths that a
+	/// whole-file search never had to notice.
+	fn segment(marker: u8, payload: &[u8]) -> Vec<u8> {
+		let mut out = vec![0xFF, marker];
+		out.extend_from_slice(&((payload.len() + 2) as u16).to_be_bytes());
+		out.extend_from_slice(payload);
+		out
+	}
+
+	/// A marker with nothing after it: SOI, EOI, RSTn, TEM.
+	fn marker(marker: u8) -> Vec<u8> {
+		vec![0xFF, marker]
+	}
+
+	/// Quantization table, frame header, Huffman table and the start-of-scan header: what every
+	/// baseline photo puts between its metadata and its image data. The contents are filler —
+	/// the walk reads the lengths and nothing else.
+	fn tables_and_sos() -> Vec<u8> {
+		[
+			segment(0xDB, &[0; 65]),
+			segment(
+				0xC0,
+				&[0x08, 0x0C, 0x00, 0x10, 0x00, 0x03, 0x01, 0x22, 0x00],
+			),
+			segment(0xC4, &[0; 29]),
+			segment(
+				0xDA,
+				&[0x03, 0x01, 0x00, 0x02, 0x11, 0x03, 0x11, 0x00, 0x3F, 0x00],
+			),
+		]
+		.concat()
+	}
+
+	/// Image data, carrying the two sequences that must not be taken for the end of it: a
+	/// stuffed `FF 00`, and a restart marker.
+	fn scan() -> Vec<u8> {
+		vec![0x12, 0x34, 0xFF, 0x00, 0x56, 0xFF, 0xD0, 0x78, 0x9A]
+	}
+
+	/// The metadata a phone camera writes: an EXIF segment carrying a *complete thumbnail JPEG*,
+	/// and the MPF segment announcing the secondary images appended after the primary one.
+	fn camera_metadata() -> Vec<u8> {
+		let thumbnail = [
+			marker(0xD8),
+			segment(0xDB, &[0; 65]),
+			segment(0xC0, &[0x08, 0x00, 0x78, 0x00, 0xA0, 0x01, 0x11, 0x00]),
+			segment(0xDA, &[0x01, 0x01, 0x00, 0x00, 0x3F, 0x00]),
+			vec![0xAB, 0xFF, 0x00, 0xCD],
+			// The marker the check this replaced found and took for the photograph's own.
+			marker(0xD9),
+		]
+		.concat();
+
+		let mut exif = b"Exif\x00\x00".to_vec();
+		// The TIFF header the IFDs hang off, then the thumbnail IFD1 points at.
+		exif.extend_from_slice(&[0x49, 0x49, 0x2A, 0x00, 0x08, 0x00, 0x00, 0x00]);
+		exif.extend_from_slice(&thumbnail);
+
+		[
+			segment(0xE1, &exif),
+			segment(0xE2, b"MPF\x00 two more images follow this one"),
+		]
+		.concat()
+	}
+
+	/// A whole photo as a phone hands it over.
+	fn camera_photo() -> Vec<u8> {
+		[
+			marker(0xD8),
+			camera_metadata(),
+			tables_and_sos(),
+			scan(),
+			marker(0xD9),
+		]
+		.concat()
+	}
+
+	/// Length, type, data, and four bytes where the CRC goes. The walk does not verify it —
+	/// nothing here decodes the image, and whether the data is *correct* is not the question —
+	/// so the filler is deliberate and has to stay filler.
+	fn png_chunk(name: &[u8; 4], data: &[u8]) -> Vec<u8> {
+		let mut out = (data.len() as u32).to_be_bytes().to_vec();
+		out.extend_from_slice(name);
+		out.extend_from_slice(data);
+		out.extend_from_slice(b"crc0");
+		out
+	}
+
+	fn png_file(chunks: &[Vec<u8>]) -> Vec<u8> {
+		let mut out = b"\x89PNG\r\n\x1a\n".to_vec();
+		for chunk in chunks {
+			out.extend_from_slice(chunk);
+		}
+		out
+	}
 
 	/// [`Kind::openable`] and [`Kind::refusal`] are two spellings of one decision, and the
 	/// handler only consults the second. A format added to the first without a sentence in the
@@ -364,56 +674,397 @@ mod tests {
 		assert_eq!(sniff(b"R"), Kind::Unknown);
 		assert_eq!(sniff(b"RIFF"), Kind::Unknown);
 		assert_eq!(sniff(&[0xFF, 0xD8]), Kind::Unknown);
+
+		// The walks are handed the `kind` by their caller, so each has to hold up on bytes that
+		// could never have produced it.
+		for kind in [Kind::Jpeg, Kind::Png, Kind::Pdf] {
+			assert!(matches!(
+				completeness(b"", kind),
+				Completeness::Truncated(_)
+			));
+			assert!(matches!(
+				completeness(&[0xFF], kind),
+				Completeness::Truncated(_) | Completeness::Unparsable(_)
+			));
+		}
+	}
+
+	/// The file that made this rewrite necessary, and the reason the check it replaced never
+	/// stopped one: a photo cut off mid-scan, whose EXIF thumbnail is a whole JPEG and ends the
+	/// way the photograph was supposed to.
+	#[test]
+	fn a_camera_photo_cut_mid_scan_is_caught_despite_its_exif_thumbnail() {
+		let cut = [marker(0xD8), camera_metadata(), tables_and_sos(), scan()].concat();
+
+		assert!(
+			contains(&cut, &[0xFF, 0xD9]),
+			"this is not the file that was getting through"
+		);
+		assert_eq!(sniff(&cut), Kind::Jpeg, "the header is intact, as it was");
+		assert!(matches!(
+			completeness(&cut, Kind::Jpeg),
+			Completeness::Truncated(_)
+		));
+
+		// The same photo, all of it.
+		assert_eq!(
+			completeness(&camera_photo(), Kind::Jpeg),
+			Completeness::Complete
+		);
 	}
 
 	/// The two files this check was added for: a JPEG that opens correctly and then stops.
-	/// `sniff` calls both of these `Jpeg`, which is why the test is about `truncation`.
 	#[test]
 	fn a_half_written_photo_is_caught() {
-		let truncated = b"\xFF\xD8\xFF\xE0\x00\x10JFIF\x00\x01\x02\x03\x04\x05\x06\x07";
+		let truncated = [marker(0xD8), tables_and_sos(), scan()].concat();
 		assert_eq!(
-			sniff(truncated),
+			sniff(&truncated),
 			Kind::Jpeg,
 			"the header is intact, as it was"
 		);
 
-		let refusal = truncation(truncated, Kind::Jpeg).expect("no EOI: this file is unfinished");
+		let refusal = match completeness(&truncated, Kind::Jpeg) {
+			Completeness::Truncated(reason) => reason,
+			other => panic!("no EOI: this file is unfinished, not {other:?}"),
+		};
 		assert!(
-			refusal.contains("incompleto"),
-			"the applicant has to be told what is wrong: {refusal}"
+			!refusal.is_empty(),
+			"the log line has to say which way it was unfinished"
+		);
+		assert!(
+			INCOMPLETE_FILE.contains("incompleto"),
+			"the applicant has to be told what is wrong: {INCOMPLETE_FILE}"
 		);
 
-		let mut complete = truncated.to_vec();
-		complete.extend_from_slice(&[0xFF, 0xD9]);
-		assert_eq!(truncation(&complete, Kind::Jpeg), None);
+		let complete = [truncated, marker(0xD9)].concat();
+		assert_eq!(completeness(&complete, Kind::Jpeg), Completeness::Complete);
 	}
 
 	/// Motion Photo — the Android camera default — appends an MP4 after the EOI, so the marker
 	/// is nowhere near the end of the file. Testing the last two bytes would refuse most of the
-	/// photos this form receives.
+	/// photos this form receives, which is why the walk stops at the first structural EOI
+	/// instead of looking at where the file happens to end.
 	#[test]
 	fn an_android_motion_photo_is_not_mistaken_for_a_cut_one() {
-		let mut motion_photo = b"\xFF\xD8\xFF\xE0 scan \xFF\xD9".to_vec();
-		motion_photo.extend_from_slice(b"\x00\x00\x00\x18ftypmp42");
-		motion_photo.extend_from_slice(&[0x00; 64]);
+		let trailer = [b"\x00\x00\x00\x18ftypmp42".to_vec(), vec![0x00; 64]].concat();
+		let motion_photo = [camera_photo(), trailer].concat();
 
-		assert_eq!(truncation(&motion_photo, Kind::Jpeg), None);
+		assert_eq!(
+			completeness(&motion_photo, Kind::Jpeg),
+			Completeness::Complete
+		);
+	}
+
+	/// What the MPF segment announces: Apple's HDR gain map, or the other lens' frame, appended
+	/// as a whole second JPEG behind the first one's EOI.
+	#[test]
+	fn a_secondary_jpeg_appended_after_the_eoi_is_still_complete() {
+		let with_gain_map = [camera_photo(), camera_photo()].concat();
+
+		assert_eq!(
+			completeness(&with_gain_map, Kind::Jpeg),
+			Completeness::Complete
+		);
+	}
+
+	/// A progressive photo has several scans with tables between them. Stopping at the first
+	/// marker that follows image data would call every one of them complete halfway through.
+	#[test]
+	fn a_progressive_photo_is_walked_scan_by_scan() {
+		let scans = [
+			segment(0xDB, &[0; 65]),
+			segment(
+				0xC2,
+				&[0x08, 0x0C, 0x00, 0x10, 0x00, 0x03, 0x01, 0x22, 0x00],
+			),
+			segment(0xC4, &[0; 29]),
+			segment(0xDA, &[0x01, 0x01, 0x00, 0x00, 0x3F, 0x00]),
+			scan(),
+			segment(0xC4, &[0; 29]),
+			segment(0xDA, &[0x01, 0x01, 0x00, 0x01, 0x3F, 0x00]),
+			scan(),
+		]
+		.concat();
+
+		let complete = [marker(0xD8), scans.clone(), marker(0xD9)].concat();
+		assert_eq!(completeness(&complete, Kind::Jpeg), Completeness::Complete);
+
+		// Cut after the second scan's header: the first pass decodes into a blurred image, and
+		// the rest never arrived.
+		let cut = [marker(0xD8), scans[..scans.len() - scan().len()].to_vec()].concat();
+		assert!(matches!(
+			completeness(&cut, Kind::Jpeg),
+			Completeness::Truncated(_)
+		));
+	}
+
+	/// The sequences inside image data that look like the end of it and are not: a stuffed `FF`,
+	/// the restart markers, and the fill bytes allowed before a real marker.
+	#[test]
+	fn stuffed_bytes_and_restart_markers_do_not_end_a_scan() {
+		let data = vec![
+			0xFF, 0x00, // a literal FF, as the scan has to store it
+			0xFF, 0x00, 0xD9, // which is how an FF D9 gets *into* the image data
+			0xFF, 0xD0, 0xFF, 0xD7, // restart markers
+			0x11, 0x22, //
+			0xFF, 0xFF, 0xFF, 0xD9, // fill bytes, then the EOI that counts
+		];
+		let photo = [marker(0xD8), tables_and_sos(), data].concat();
+		assert_eq!(completeness(&photo, Kind::Jpeg), Completeness::Complete);
+
+		let cut = [
+			marker(0xD8),
+			tables_and_sos(),
+			vec![0xFF, 0x00, 0xFF, 0x00, 0xD9, 0xFF, 0xD0, 0x11],
+		]
+		.concat();
+		assert!(matches!(
+			completeness(&cut, Kind::Jpeg),
+			Completeness::Truncated(_)
+		));
+	}
+
+	/// A colour profile is split across several APP2 segments whose payloads are arbitrary
+	/// bytes — `FF D8` and `FF D9` among them.
+	#[test]
+	fn an_icc_profile_split_across_segments_is_skipped_whole() {
+		let chunk = |index: u8| {
+			let mut payload = b"ICC_PROFILE\x00".to_vec();
+			payload.extend_from_slice(&[index, 0x02]);
+			payload.extend_from_slice(&[0xFF, 0xD8, 0xFF, 0xD9, 0xFF, 0xDA]);
+			segment(0xE2, &payload)
+		};
+
+		let photo = [
+			marker(0xD8),
+			chunk(1),
+			chunk(2),
+			tables_and_sos(),
+			scan(),
+			marker(0xD9),
+		]
+		.concat();
+
+		assert_eq!(completeness(&photo, Kind::Jpeg), Completeness::Complete);
+	}
+
+	/// Shapes the walk cannot follow, all of which come out accepted. A structure this code does
+	/// not understand is not evidence that bytes are missing, and refusing on a guess costs an
+	/// enrolment that was fine — which is the one outcome worse than the grey photo.
+	#[test]
+	fn a_jpeg_the_walk_cannot_follow_is_let_through() {
+		let cases: [(&str, Vec<u8>); 5] = [
+			// Junk between two segments, so the cursor lands on something that is not a marker.
+			(
+				"desynced",
+				[
+					marker(0xD8),
+					segment(0xE1, b"Exif\x00\x00"),
+					vec![0x2A, 0x11],
+					tables_and_sos(),
+					scan(),
+				]
+				.concat(),
+			),
+			// A length below the two bytes it counts itself, which would also leave the cursor
+			// where it was.
+			(
+				"length of zero",
+				[marker(0xD8), vec![0xFF, 0xE1, 0x00, 0x00], scan()].concat(),
+			),
+			(
+				"length of one",
+				[marker(0xD8), vec![0xFF, 0xE1, 0x00, 0x01], scan()].concat(),
+			),
+			// Arithmetic coding does not stuff `FF 00`, so `FF 4A` is legal image data there and
+			// the scan cannot be walked at all.
+			(
+				"arithmetic-coded",
+				[
+					marker(0xD8),
+					segment(
+						0xC9,
+						&[0x08, 0x0C, 0x00, 0x10, 0x00, 0x03, 0x01, 0x22, 0x00],
+					),
+					segment(0xDA, &[0x01, 0x01, 0x00, 0x00, 0x3F, 0x00]),
+					scan(),
+				]
+				.concat(),
+			),
+			// Two files concatenated: walking into the second would report its truncation as the
+			// first one's.
+			(
+				"second SOI",
+				[
+					marker(0xD8),
+					segment(0xE1, b"Exif\x00\x00"),
+					marker(0xD8),
+					tables_and_sos(),
+					scan(),
+					marker(0xD9),
+				]
+				.concat(),
+			),
+		];
+
+		for (name, bytes) in cases {
+			let verdict = completeness(&bytes, Kind::Jpeg);
+			assert!(
+				matches!(verdict, Completeness::Unparsable(_)),
+				"the {name} file was judged, and it should not have been: {verdict:?}"
+			);
+		}
+	}
+
+	/// Every possible cut point of one photo, in a single loop: nothing before the EOI may come
+	/// out complete, and everything from the EOI on must. It is also what proves the walk always
+	/// terminates and never panics, wherever the bytes happen to stop.
+	#[test]
+	fn truncating_a_photo_anywhere_never_reports_complete() {
+		let photo = camera_photo();
+		let trailer = [b"\x00\x00\x00\x18ftypmp42".to_vec(), vec![0x00; 32]].concat();
+		let motion_photo = [photo.clone(), trailer].concat();
+
+		for cut in 0..photo.len() {
+			assert_ne!(
+				completeness(&photo[..cut], Kind::Jpeg),
+				Completeness::Complete,
+				"a photo cut at {cut} of {} came out whole",
+				photo.len()
+			);
+		}
+		// Past the EOI the rest is a passenger: a Motion Photo whose MP4 never finished
+		// uploading is still a photograph that opens.
+		for cut in photo.len()..=motion_photo.len() {
+			assert_eq!(
+				completeness(&motion_photo[..cut], Kind::Jpeg),
+				Completeness::Complete,
+				"a photo carrying {} bytes of its trailer came out short",
+				cut - photo.len()
+			);
+		}
 	}
 
 	#[test]
-	fn png_and_pdf_are_checked_by_their_own_last_marker() {
-		assert!(truncation(b"\x89PNG\r\n\x1a\n\x00\x00\x00\rIHDR", Kind::Png).is_some());
-		assert_eq!(
-			truncation(b"\x89PNG\r\n\x1a\n...IEND\xae\x42\x60\x82", Kind::Png),
-			None
-		);
+	fn a_png_is_walked_to_its_iend() {
+		let complete = png_file(&[
+			png_chunk(b"IHDR", &[0; 13]),
+			png_chunk(b"IDAT", b"compressed image data"),
+			png_chunk(b"IEND", b""),
+		]);
+		assert_eq!(completeness(&complete, Kind::Png), Completeness::Complete);
 
-		assert!(truncation(b"%PDF-1.7\n1 0 obj\n", Kind::Pdf).is_some());
-		assert_eq!(truncation(b"%PDF-1.7\n...\n%%EOF\n", Kind::Pdf), None);
+		let mut cut = png_file(&[png_chunk(b"IHDR", &[0; 13])]);
+		cut.extend_from_slice(&40_000u32.to_be_bytes());
+		cut.extend_from_slice(b"IDAT");
+		cut.extend_from_slice(b"the rest of this chunk never arrived");
+		assert!(matches!(
+			completeness(&cut, Kind::Png),
+			Completeness::Truncated(_)
+		));
 	}
 
-	/// The formats with no trailer worth testing must come out complete. Guessing at them would
-	/// refuse a submission that was fine, which is the one outcome worse than the grey photo.
+	/// The PNG side of the thumbnail trap: a text chunk whose *data* spells the name of the
+	/// chunk the file has to end with. Compressed image data can spell it by chance too, which
+	/// on a photo-sized file is not a remote possibility.
+	#[test]
+	fn a_chunk_that_merely_spells_iend_does_not_pass_for_it() {
+		let mut cut = png_file(&[
+			png_chunk(b"IHDR", &[0; 13]),
+			png_chunk(b"iTXt", b"Comment\x00IEND, and then the file stops"),
+		]);
+		assert!(
+			contains(&cut, b"IEND"),
+			"this is not the file that was getting through"
+		);
+
+		cut.extend_from_slice(&40_000u32.to_be_bytes());
+		cut.extend_from_slice(b"IDAT");
+		cut.extend_from_slice(b"cut");
+		assert!(matches!(
+			completeness(&cut, Kind::Png),
+			Completeness::Truncated(_)
+		));
+	}
+
+	#[test]
+	fn an_animated_png_and_its_odd_chunks_are_walked_too() {
+		let apng = png_file(&[
+			png_chunk(b"IHDR", &[0; 13]),
+			png_chunk(b"acTL", &[0; 8]),
+			png_chunk(b"fcTL", &[0; 26]),
+			// A zero-length chunk is legal, and must not stall the walk.
+			png_chunk(b"IDAT", b""),
+			png_chunk(b"fdAT", &[0; 4]),
+			png_chunk(b"IEND", b""),
+		]);
+		assert_eq!(completeness(&apng, Kind::Png), Completeness::Complete);
+
+		// Bytes after IEND: the walk stops there and never sees them.
+		let padded = [apng, vec![0x00; 16]].concat();
+		assert_eq!(completeness(&padded, Kind::Png), Completeness::Complete);
+	}
+
+	/// A length or a name outside what the spec allows says the walk has lost the chain, not
+	/// that bytes are missing. `FF FF FF FF` would also run the cursor past what an address can
+	/// hold, which in a debug build is a panic rather than a wrong answer.
+	#[test]
+	fn a_png_the_walk_cannot_follow_is_let_through() {
+		let mut impossible_length = png_file(&[png_chunk(b"IHDR", &[0; 13])]);
+		impossible_length.extend_from_slice(&[0xFF, 0xFF, 0xFF, 0xFF]);
+		impossible_length.extend_from_slice(b"IDAT");
+		assert!(matches!(
+			completeness(&impossible_length, Kind::Png),
+			Completeness::Unparsable(_)
+		));
+
+		let mut unnamed = png_file(&[png_chunk(b"IHDR", &[0; 13])]);
+		unnamed.extend_from_slice(&4u32.to_be_bytes());
+		unnamed.extend_from_slice(&[0x00, 0x11, 0x22, 0x33]);
+		unnamed.extend_from_slice(b"data");
+		assert!(matches!(
+			completeness(&unnamed, Kind::Png),
+			Completeness::Unparsable(_)
+		));
+	}
+
+	/// A linearized PDF — "fast web view", which is what a scanner or Acrobat produces — puts a
+	/// cross-reference and a `%%EOF` for the first page at the *front* of the file. So asking
+	/// whether the file contains one at all accepts a download that stopped in the middle.
+	#[test]
+	fn a_linearized_pdf_cut_in_half_is_caught_despite_its_first_page_eof() {
+		let mut cut =
+			b"%PDF-1.6\n<< /Linearized 1 /L 82304 /O 12 >>\nxref\n0 12\ntrailer\n<< /Size 12 >>\n\
+			  startxref\n0\n%%EOF\n"
+				.to_vec();
+		cut.extend_from_slice(&vec![b'x'; 8192]);
+
+		assert!(
+			contains(&cut, b"%%EOF"),
+			"this is not the file that was getting through"
+		);
+		assert_eq!(sniff(&cut), Kind::Pdf);
+		assert!(matches!(
+			completeness(&cut, Kind::Pdf),
+			Completeness::Truncated(_)
+		));
+	}
+
+	#[test]
+	fn a_pdf_that_ends_where_it_should_is_complete() {
+		// Two revisions, as an incremental update or a signature leaves behind: the marker that
+		// counts is the last one.
+		let updated = b"%PDF-1.7\n...\nstartxref\n0\n%%EOF\n...\nstartxref\n120\n%%EOF\n";
+		assert_eq!(completeness(updated, Kind::Pdf), Completeness::Complete);
+
+		// Padding added after the marker by whatever carried the file. Truncation only ever
+		// removes bytes, so this is trimmed before the tail is measured.
+		let padded = [b"%PDF-1.7\n...\n%%EOF\n".to_vec(), vec![0x00; 3000]].concat();
+		assert_eq!(completeness(&padded, Kind::Pdf), Completeness::Complete);
+	}
+
+	/// The formats with no trailer worth following must come out complete. Guessing at them
+	/// would refuse a submission that was fine.
 	#[test]
 	fn formats_without_an_end_marker_are_left_alone() {
 		for kind in ALL {
@@ -421,13 +1072,13 @@ mod tests {
 				continue;
 			}
 			assert_eq!(
-				truncation(b"BM\x00\x00 whatever", kind),
-				None,
+				completeness(b"BM\x00\x00 whatever", kind),
+				Completeness::Complete,
 				"{} has no end marker to judge it by",
 				kind.label()
 			);
 		}
-		assert_eq!(truncation(b"", Kind::Bmp), None);
+		assert_eq!(completeness(b"", Kind::Bmp), Completeness::Complete);
 	}
 
 	/// A lie about the extension is corrected; the truth is left untouched, case and all.

@@ -228,16 +228,33 @@ async fn parse_submission(mut multipart: Multipart) -> Result<Submission, Reject
 			}
 
 			// Recognizing the format is not the same as receiving all of it: a photo cut short
-			// by the gallery it came out of has an impeccable header and no end marker. This is
-			// the check the two grey half-images got past.
-			if let Some(refusal) = file_type::truncation(&bytes, kind) {
-				warn!(
+			// by the gallery it came out of has an impeccable header and no end marker. The walk
+			// follows the format's own structure and stops at the first marker that is
+			// structurally the end — which is what tells an EXIF thumbnail's `FF D9` from the
+			// photograph's, and what keeps a Motion Photo's appended MP4 out of the question.
+			match file_type::completeness(&bytes, kind) {
+				file_type::Completeness::Complete => {}
+				file_type::Completeness::Truncated(reason) => {
+					warn!(
+						declared = %content_type,
+						detected = kind.label(),
+						bytes = bytes.len(),
+						reason,
+						"certificate refused: the file is not all there"
+					);
+					return Err(certificate_error(file_type::INCOMPLETE_FILE).into());
+				}
+				// Accepted on purpose: a structure that cannot be followed is not evidence that
+				// bytes are missing, and a false refusal costs an enrolment that was fine.
+				// Logged because it is the only way to see this check quietly losing its grip —
+				// a rising count here means files are going through unexamined.
+				file_type::Completeness::Unparsable(reason) => warn!(
 					declared = %content_type,
 					detected = kind.label(),
 					bytes = bytes.len(),
-					"certificate refused: the file has no end marker"
-				);
-				return Err(certificate_error(refusal).into());
+					reason,
+					"certificate accepted without a completeness check"
+				),
 			}
 
 			// Named and typed for what it is. A JPEG the picker called `image.tmp` reaches a
@@ -320,18 +337,14 @@ async fn parse_submission(mut multipart: Multipart) -> Result<Submission, Reject
 		))
 	})?;
 
-	// The page knows how big the file was when it was picked — it prints the figure under the
-	// preview — so the two numbers can be compared. This is what tells a photo that arrived
-	// short from one that was already damaged on the phone before it was ever sent, which is
-	// the difference between looking at this server and telling the applicant to take the
-	// picture again. Absent or unparsable means no claim was made (a page with its script
-	// blocked), and nothing is inferred from silence.
+	// The page reads the file when it is picked and posts the length of what it read — the same
+	// bytes it then sends — so these two numbers are one number measured at both ends of the
+	// wire. A disagreement is therefore about the transport, this server included, and no longer
+	// about the phone, which is what it used to have to be read as. Absent or unparsable means
+	// no claim was made (a page with its script blocked), and nothing is inferred from silence.
 	//
-	// Logged, not refused, and deliberately: an Android picker that transcodes on the way out
-	// can report the size of the file it started from, so a mismatch is not proof of damage —
-	// while `file_type::truncation` above is, and has already turned away anything that ends
-	// mid-image. Refusing here would cost a good enrolment to restate something that check
-	// makes on the bytes themselves.
+	// Logged, not refused: `file_type::completeness` above is the gate, and it judges the bytes
+	// themselves rather than a figure that travelled alongside them.
 	if let Some(declared) = declared_size.filter(|declared| *declared > 0) {
 		let received = certificate.bytes.len();
 		if declared != received {
@@ -707,12 +720,13 @@ fn enrollment_invalid(errors: Vec<FieldError>) -> Response {
 mod tests {
 	use super::*;
 
-	/// `enrollment.js` writes the picked file's size into this input by id, on the same line
-	/// that reveals the preview. Renaming or dropping it in the markup makes that assignment
-	/// throw — and the exception lands in the middle of `showPreview`, so the picker stops
-	/// showing anything and the "Avanti" button never enables. The page would still look
-	/// perfectly normal. Nothing else here would fail either: the field is optional on the
-	/// server by design, since a page with its script blocked makes no claim about the size.
+	/// `enrollment.js` writes the length of the bytes it read into this input by id, in the
+	/// change listener that also keeps them. Renaming or dropping it in the markup makes that
+	/// assignment throw — and it throws *before* the bytes are stored and the "Avanti" button
+	/// is enabled, so the picker takes the photo and the step can then never be left. The page
+	/// would still look perfectly normal. Nothing else here would fail either: the field is
+	/// optional on the server by design, since a page with its script blocked makes no claim
+	/// about the size.
 	#[tokio::test]
 	async fn the_form_carries_the_input_the_picker_writes_the_size_into() {
 		let response = enrollment_handler().await.into_response();

@@ -38,6 +38,7 @@
 pub mod file_type;
 mod fiscal_code;
 mod provinces;
+pub mod signature;
 
 use provinces::PROVINCES;
 
@@ -47,6 +48,7 @@ use regex::Regex;
 use serde::Serialize;
 use std::collections::HashMap;
 use std::sync::LazyLock;
+use tracing::warn;
 
 /// The format the resolved date windows travel to the browser in, because it is what
 /// `<input type="date" min|max>` expects — and the picker behind the calendar icon is one.
@@ -262,11 +264,12 @@ pub enum Kind {
 	},
 	/// A place and a date in one line, as the membership document prints them.
 	PlaceAndDate,
-	/// A canvas data URL.
+	/// A canvas data URL, judged on how much ink is in it. See [`signature`].
 	///
-	/// Absent from the client rules: a hidden input has nothing for the browser to
-	/// constrain, and whether the pad has strokes is something `enrollment.js` already
-	/// reports next to the canvas itself.
+	/// It carries no constraint attribute — a hidden input has nothing for the browser to
+	/// enforce — but it does travel to the page: `enrollment.js` measures the canvas the same
+	/// way before serializing it, against the threshold in the rules JSON, so the pad and this
+	/// server cannot disagree about what counts as signed.
 	Signature,
 }
 
@@ -967,10 +970,38 @@ impl Field {
 					.then(|| self.error("Questo giorno non esiste sul calendario."))
 			}
 
-			// A canvas that was drawn on serializes to a `data:` URL. The bytes themselves
-			// are decoded by the PDF generator, which is where a corrupt one would surface.
-			Kind::Signature => (!value.starts_with("data:image/png;base64,"))
-				.then(|| self.error("Traccia la firma nel riquadro prima di inviare.")),
+			// A canvas that was drawn on serializes to a `data:` URL — and so does one that was
+			// not, which is why the prefix is only half the check. What is actually in the box
+			// is counted from the bytes; see [`signature`] for the two documents that arrived
+			// with an empty signature line because nothing here used to ask.
+			Kind::Signature => {
+				if !value.starts_with("data:image/png;base64,") {
+					return Some(self.error(signature::BLANK));
+				}
+				match signature::check(value) {
+					signature::Verdict::Signed => None,
+					signature::Verdict::Blank => Some(self.error(signature::BLANK)),
+					// Ours to see, not the applicant's to explain: the page serialized
+					// something this server cannot read, and the only way out is to sign again.
+					signature::Verdict::Unreadable(reason) => {
+						warn!(
+							field = self.name,
+							reason, "signature refused: the canvas would not decode"
+						);
+						Some(self.error(signature::UNREADABLE))
+					}
+					// Accepted on purpose — see [`signature::check`] — and logged, because a
+					// count that starts climbing here means signatures are going through
+					// unexamined.
+					signature::Verdict::Unmeasurable(reason) => {
+						warn!(
+							field = self.name,
+							reason, "signature accepted without an ink count"
+						);
+						None
+					}
+				}
+			}
 		}
 	}
 }
@@ -1119,15 +1150,15 @@ struct ClientRule {
 	/// uppercase-only pattern it is judged against.
 	#[serde(skip_serializing_if = "std::ops::Not::not")]
 	uppercase: bool,
+	/// The share of the pad a signature has to cover, for the two canvases and nothing else.
+	/// `enrollment.js` counts the ink in the canvas against it before serializing, which is the
+	/// same count [`signature::check`] then makes on the bytes that arrive.
+	#[serde(skip_serializing_if = "Option::is_none")]
+	min_ink_ratio: Option<f32>,
 }
 
 impl ClientRule {
 	fn from(field: &Field, today: NaiveDate) -> Option<Self> {
-		// Nothing for the browser to constrain on a hidden input.
-		if matches!(field.kind, Kind::Signature) {
-			return None;
-		}
-
 		let mut rule = ClientRule {
 			name: field.name,
 			hint: "",
@@ -1139,6 +1170,7 @@ impl ClientRule {
 			min_message: None,
 			max_message: None,
 			uppercase: field.kind.is_uppercase(),
+			min_ink_ratio: None,
 		};
 
 		match field.kind {
@@ -1175,7 +1207,16 @@ impl ClientRule {
 				rule.max_message = Some(too_late);
 				rule.hint = DATE.hint;
 			}
-			Kind::Signature => unreachable!("returned above"),
+			// The threshold and the sentence, and neither length: the value is a data URL in a
+			// hidden input, so "servono almeno 1 caratteri" describes nothing anybody typed and
+			// the browser has no way to enforce it anyway. What the page does with this is count
+			// the ink in the canvas, which is the one rule the two sides have to share.
+			Kind::Signature => {
+				rule.min_length = None;
+				rule.max_length = None;
+				rule.min_ink_ratio = Some(signature::MIN_INK_RATIO);
+				rule.hint = signature::BLANK;
+			}
 		}
 
 		Some(rule)
@@ -1493,7 +1534,9 @@ mod tests {
 			consent_publication: false,
 			commute_alone: None,
 			place_and_date: "  Ravenna, 25/08/2026  ".into(),
-			signature: "data:image/png;base64,AAAA".into(),
+			// A real drawn canvas, because that is what the field holds and what is judged:
+			// this used to be four base64 characters, which is not a PNG at all.
+			signature: signature::fixture::signed(),
 			autonomy_place_and_date: None,
 			autonomy_signature: None,
 		}
@@ -1518,7 +1561,7 @@ mod tests {
 		let mut form = adult_form();
 		form.minor_first_name = Some("Luca".into());
 		form.minor_birth_date = Some("01/01/2015".into());
-		form.autonomy_signature = Some("data:image/png;base64,AAAA".into());
+		form.autonomy_signature = Some(signature::fixture::signed());
 
 		normalize(&mut form);
 
@@ -1651,9 +1694,6 @@ mod tests {
 	fn the_client_rules_cover_every_visible_field() {
 		let json = client_rules(today());
 		for field in RULES.iter().map(|r| &r.field).chain(LOOSE_FIELDS) {
-			if matches!(field.kind, Kind::Signature) {
-				continue;
-			}
 			assert!(
 				json.contains(&format!("\"name\":\"{}\"", field.name)),
 				"{} is missing from the client rules",
@@ -1664,5 +1704,75 @@ mod tests {
 			!json.contains('<'),
 			"the JSON is not safe inside a <script>"
 		);
+	}
+
+	/// The bug this check exists for. Two membership documents arrived with an empty signature
+	/// line: the pad had serialized a canvas nobody had drawn on, and a blank PNG satisfied
+	/// every rule in this table on the way in.
+	#[test]
+	fn an_unsigned_pad_does_not_pass() {
+		let mut form = adult_form();
+		form.signature = signature::fixture::untouched();
+		normalize(&mut form);
+
+		let errors = validate(&form, today());
+		let signature_error = errors.iter().find(|e| e.field == "signature");
+		assert!(
+			signature_error.is_some(),
+			"an empty signature box went through"
+		);
+		// And it is the applicant's to fix, with the sentence that says what to do.
+		assert_eq!(signature_error.unwrap().message, signature::BLANK);
+	}
+
+	/// The second pad is mandatory exactly when the minor makes the trip alone — the same
+	/// condition that makes the rest of that section mandatory — and it is judged by the same
+	/// count as the first one.
+	#[test]
+	fn an_unsigned_autonomy_pad_only_counts_when_the_toggle_is_on() {
+		// Untouched, and the toggle is off: the section does not apply, `normalize` clears it,
+		// and nobody is asked about a box they were never shown.
+		let mut without = adult_form();
+		without.autonomy_signature = Some(signature::fixture::untouched());
+		normalize(&mut without);
+		assert_eq!(without.autonomy_signature, None);
+		assert!(
+			!validate(&without, today())
+				.iter()
+				.any(|e| e.field == "autonomy_signature")
+		);
+
+		// Ticked, and now the empty box is a problem.
+		let mut with = adult_form();
+		with.autonomy_signature = Some(signature::fixture::untouched());
+		with.is_minor = Some("true".into());
+		with.commute_alone = Some("true".into());
+		normalize(&mut with);
+		assert!(
+			validate(&with, today())
+				.iter()
+				.any(|e| e.field == "autonomy_signature")
+		);
+	}
+
+	/// The page measures the canvas before serializing it, so it has to be given the same
+	/// threshold the server counts against — and the same sentence, so a pad refused in the
+	/// browser reads exactly like one refused on submit.
+	#[test]
+	fn the_page_is_given_the_ink_threshold() {
+		let signature_field = RULES
+			.iter()
+			.find(|r| r.field.name == "signature")
+			.unwrap()
+			.field;
+		let client = ClientRule::from(&signature_field, today()).unwrap();
+
+		assert_eq!(client.min_ink_ratio, Some(signature::MIN_INK_RATIO));
+		assert_eq!(client.hint, signature::BLANK);
+		// A hidden input has no constraint validation, so a length would only describe a data
+		// URL nobody typed.
+		assert_eq!(client.min_length, None);
+		assert_eq!(client.max_length, None);
+		assert_eq!(client.pattern, None);
 	}
 }

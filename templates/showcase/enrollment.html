@@ -71,13 +71,13 @@
 						</label>
 
 						{#
-						What the browser said the file weighed when it was picked, filled in by
-						`enrollment.js`. The server compares it with the bytes that actually
-						arrive and logs any disagreement: a photo cut short on the way up is
-						otherwise indistinguishable from one that was already damaged on the
-						phone, and only one of those two is ours to look into. A signal, not a
-						gate — the check that refuses an unfinished file reads the bytes. Empty
-						when the script did not run, which the server reads as "no claim".
+						How many bytes `enrollment.js` managed to read out of the chosen file —
+						which are also the bytes it posts, in place of the file input's own copy.
+						The server compares the figure with what arrives and logs any
+						disagreement: measured at both ends of one wire, the two can only differ
+						if something was lost in between. A signal, not a gate — the check that
+						refuses an unfinished file walks the bytes. Empty when the script did not
+						run, which the server reads as "no claim".
 						#}
 						<input id="certificate_size" name="certificate_size" type="hidden">
 

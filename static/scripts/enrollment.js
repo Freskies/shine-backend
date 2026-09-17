@@ -156,8 +156,8 @@ function applyRules (root) {
 		   below must not stack up on the inputs that were already there. */
 		if (!rule || input.dataset.ruled) continue;
 		/* The two signatures. A hidden input is exempt from constraint validation, so there is
-		   nothing for the browser to enforce and no `blur` to enforce it on; whether the pad
-		   was drawn on is reported by `canSubmit` instead. */
+		   nothing for the browser to enforce and no `blur` to enforce it on: their rule is the
+		   share of the pad the ink has to cover, and `initPad` is what reads it. */
 		if (input.type === "hidden") continue;
 		input.dataset.ruled = "1";
 
@@ -353,9 +353,13 @@ wizard.addEventListener("click", (e) => {
 	if (!target) return;
 
 	const next = target.dataset.gotoPhase;
-	/* Going forward runs the browser's own validation on phase 1 only. */
-	if (next === "2" && !document.getElementById("certificate").files.length) {
-		alert("Scegli prima la foto del certificato medico.");
+	/* Going forward runs the browser's own validation on phase 1 only. The certificate has to
+	   have been *read*, not merely chosen: `picked` below is what gets posted, and until the
+	   read lands there is nothing to send. */
+	if (next === "2" && !picked) {
+		alert(certificate.files.length
+			? "Attendi il controllo della foto del certificato medico."
+			: "Scegli prima la foto del certificato medico.");
 		return;
 	}
 	goToPhase(next);
@@ -378,15 +382,35 @@ const nextButton = wizard.querySelector(".wizard__next");
    main.rs never gets to be cut off mid-request. */
 const MAX_CERTIFICATE_BYTES = 12 * 1024 * 1024;
 
+/*
+ * The bytes of the chosen file, read at the moment it was chosen, and what actually gets posted.
+ *
+ * Not an optimization. The `File` in a file input is a *reference* to a copy the operating system
+ * holds, and it is read when the form is serialized — by which point this form has been filled
+ * in and signed twice. On iOS that copy may be gone by then, or may never have been finished:
+ * Safari hands over a photo it was still transcoding out of HEIC, or one iCloud had not
+ * downloaded, and what leaves the phone is a valid header followed by nothing. Android's
+ * pickers do the same with a Google Foto file that is still in the cloud. That is how the grey
+ * half-images arrived — a well-formed upload of an ill-formed file, which is why nothing along
+ * the way looked broken.
+ *
+ * Reading here does two things: the failure surfaces on the step that holds the picker, while
+ * the applicant still has the photo in front of them, and what is posted is this copy rather
+ * than a second reading of a file that may have moved on.
+ */
+let picked = null;
+
+/* Which read an answer belongs to. A second pick while one is still in flight must not have its
+   preview and its bytes overwritten by the first one finishing. */
+let reading = 0;
+
 function showPreview (file) {
 	filepick.hidden = true;
 	certError.hidden = true;
 
-	/* Posted alongside the file so the server can compare it with what actually arrived: two
-	   certificates once turned up as grey half-images, and this is what names the cause. */
-	certSize.value = file.size;
-
-	previewName.textContent = `${file.name} (${(file.size / (1024 * 1024)).toFixed(1)} MB)`;
+	/* Named, not yet weighed: the figure that goes under the preview is the length of the bytes
+	   that could actually be read, which is what the change listener below establishes. */
+	previewName.textContent = `${file.name} — controllo del file…`;
 	previewContent.replaceChildren();
 
 	if (file.type.startsWith("image/")) {
@@ -403,12 +427,17 @@ function showPreview (file) {
 	}
 
 	preview.hidden = false;
-	nextButton.disabled = false;
+	/* And the step cannot be left until those bytes are in hand. */
+	nextButton.disabled = true;
 }
 
 function clearPreview () {
 	const dt = new DataTransfer();
 	certificate.files = dt.files;
+	picked = null;
+	/* Abandons whatever read is in flight, so it cannot resurrect a preview of a file the
+	   applicant has just removed. */
+	reading++;
 	certSize.value = "";
 	previewContent.replaceChildren();
 	previewName.textContent = "";
@@ -457,7 +486,7 @@ function accepted (file) {
 	});
 }
 
-certificate.addEventListener("change", () => {
+certificate.addEventListener("change", async () => {
 	const file = certificate.files[0];
 	if (!file) {
 		clearPreview();
@@ -484,8 +513,55 @@ certificate.addEventListener("change", () => {
 		certError.hidden = false;
 		return;
 	}
+
 	showPreview(file);
+
+	/* On a 12 MB photo the read takes a moment, and until it lands there is nothing to post.
+	   `turn` is what makes a second pick during that moment win over the first. */
+	const turn = ++reading;
+
+	let bytes;
+	try {
+		bytes = await file.arrayBuffer();
+	} catch {
+		if (turn !== reading) return;
+		unreadable("Non è stato possibile leggere il file dal telefono.");
+		return;
+	}
+	if (turn !== reading) return;
+
+	/* Nothing came back at all: there is nothing to post, and nothing to judge either, so this
+	   is the same dead end as a read that threw. */
+	if (!bytes.byteLength) {
+		unreadable("Il telefono non ha fornito il file.");
+		return;
+	}
+
+	/* A copy of its own, so what is posted no longer depends on the original still being there.
+	   The type is carried across as the browser reported it — the bytes are what the server
+	   judges, and an empty or wrong claim is not this script's to correct.
+
+	   Kept even when it came back *short* of `file.size`, deliberately. That disagreement is
+	   between what a file says it weighs and the bytes behind it, and only one of the two is
+	   evidence: the server walks the bytes and turns away a photo that stops mid-image, whatever
+	   any size claim said. Refusing here on the claim would risk turning away a picker quirk
+	   instead, and an applicant who cannot get off phase 1 does not enrol at all — worse than a
+	   refusal that arrives later and is right. The figure posted below is the length actually
+	   read, so a file that came up short is still there to be seen in the logs. */
+	picked = new File([bytes], file.name, { type: file.type });
+	certSize.value = bytes.byteLength;
+	previewName.textContent = `${file.name} (${(bytes.byteLength / (1024 * 1024)).toFixed(1)} MB)`;
+	nextButton.disabled = false;
 });
+
+/* The file could not be read whole. Both causes have the same way out, and it is not obvious
+   enough to leave unsaid: the photo has to be on the phone, not in the cloud account behind it. */
+function unreadable (cause) {
+	clearPreview();
+	certError.textContent = `${cause} Se la foto è su iCloud o su Google Foto, aprila prima `
+		+ "nell'app per scaricarla sul telefono, poi riprova — oppure scattane una nuova.";
+	certError.hidden = false;
+}
 
 document.getElementById("certificate-remove").addEventListener("click", clearPreview);
 
@@ -552,69 +628,123 @@ syncContactLimit();
 
 /* SIGNATURE PADS */
 
+/*
+ * A pad keeps its strokes, not its pixels, and what counts as signed is measured rather than
+ * remembered.
+ *
+ * Both halves of that are the same bug, and it reached the association twice: two membership
+ * documents arrived with the autonomy signature drawn and the mandatory one an empty line. The
+ * pad used to report a boolean set on the first pointer move — which a finger dragged across the
+ * box on its way to scrolling the page sets just as readily, since `.signature-box` carries
+ * `touch-action: none` — and it used to preserve the strokes around the wipe that assigning
+ * `width` causes by copying the *pixels*. That only works while the pixels are still there to
+ * copy: a browser that had already dropped the backing store (iOS does that under memory
+ * pressure, and this page also holds the preview of a photo of up to 12 MB) handed back an empty
+ * copy, and the flag survived it. Either way an untouched-looking canvas serialized to a
+ * perfectly well-formed PNG, which passed every check on the way in and printed as a blank line.
+ *
+ * So the points are the record, in fractions of the box so they survive a rotation or a
+ * re-measure, the canvas is re-rendered from them whenever it may have been wiped — including
+ * immediately before it is serialized, the one moment that has to be right — and the ink in that
+ * bitmap is counted against the same threshold the server counts against. See
+ * `validation::signature`.
+ */
 function initPad (canvasId, inputId, errorId) {
 	const canvas = document.getElementById(canvasId);
 	if (!canvas) return null;
 	const ctx = canvas.getContext("2d");
 	const error = document.getElementById(errorId);
-	let drawing = false, drawn = false;
+	/* The sentence the markup carries is for a pad nobody touched. The rule's own hint covers
+	   the other case — a mark too small to be a signature — and is the same sentence the server
+	   answers with, so a pad refused here reads like one refused on submit. */
+	const untouched = error.textContent;
+	const rule = RULES.get(inputId);
+	/* Same share of the box `signature::MIN_INK_RATIO` requires, handed over in the rules JSON
+	   so it is not written twice. The fallback matches it: a page whose rule went missing must
+	   not start accepting blank pads. */
+	const minInkRatio = rule?.minInkRatio ?? 0.003;
+
+	/* One entry per stroke, each a list of `{x, y}` in fractions of the box. */
+	const strokes = [];
+	let drawing = false;
+
+	function style () {
+		ctx.lineWidth = 2;
+		ctx.lineCap = "round";
+		ctx.lineJoin = "round";
+	}
+
+	/* Point coordinates in CSS pixels, which is what the scaled context draws in. */
+	const cssX = (p) => p.x * canvas.offsetWidth;
+	const cssY = (p) => p.y * canvas.offsetHeight;
+
+	/* Draws every stroke again, from the points. Cheap, and the only way back from a canvas
+	   whose contents the browser decided it did not need. */
+	function render () {
+		if (canvas.offsetWidth === 0) return;
+		ctx.clearRect(0, 0, canvas.offsetWidth, canvas.offsetHeight);
+		style();
+		for (const stroke of strokes) {
+			ctx.beginPath();
+			ctx.moveTo(cssX(stroke[0]), cssY(stroke[0]));
+			for (const point of stroke.slice(1)) ctx.lineTo(cssX(point), cssY(point));
+			/* A stroke of one point is a tap, which `lineCap: round` only draws as a dot if the
+			   path goes somewhere. */
+			if (stroke.length === 1) ctx.lineTo(cssX(stroke[0]), cssY(stroke[0]));
+			ctx.stroke();
+		}
+	}
 
 	/*
-	 * Assigning `width` or `height` wipes the canvas — even when the number written is the
-	 * one already there — and this runs on every phase change. That is how a refused
-	 * submission used to erase a signature the hidden input was still carrying: the applicant
-	 * saw an empty box and sent the stroke anyway. So an unchanged box is left alone, and a
-	 * box that really did change gets its strokes drawn back.
+	 * Assigning `width` or `height` wipes the canvas — even when the number written is the one
+	 * already there — and this runs on every phase change, so an unchanged box is left alone.
+	 * Either way the strokes are drawn again afterwards: nothing here depends on what was in
+	 * the canvas a moment ago.
 	 */
 	function resize () {
 		if (canvas.offsetWidth === 0) return;
 		const ratio = Math.max(window.devicePixelRatio || 1, 1);
-		const width = canvas.offsetWidth * ratio;
-		const height = canvas.offsetHeight * ratio;
-		if (canvas.width === width && canvas.height === height) return;
+		const width = Math.round(canvas.offsetWidth * ratio);
+		const height = Math.round(canvas.offsetHeight * ratio);
 
-		/* Copied before the wipe, because the canvas is the only place the strokes exist. */
-		let previous = null;
-		if (drawn) {
-			previous = document.createElement("canvas");
-			previous.width = canvas.width;
-			previous.height = canvas.height;
-			previous.getContext("2d").drawImage(canvas, 0, 0);
+		if (canvas.width !== width || canvas.height !== height) {
+			canvas.width = width;
+			canvas.height = height;
+			/* The wipe also resets the transform, so this scale does not stack up across
+			   calls. */
+			ctx.scale(ratio, ratio);
 		}
-
-		canvas.width = width;
-		canvas.height = height;
-		/* The wipe also resets the transform, so this scale does not stack up across calls. */
-		ctx.scale(ratio, ratio);
-		ctx.lineWidth = 2;
-		ctx.lineCap = "round";
-		/* In CSS pixels, since the context is scaled: the old box is stretched over the new
-		   one, which is what a rotated phone should show. */
-		if (previous) ctx.drawImage(previous, 0, 0, canvas.offsetWidth, canvas.offsetHeight);
+		render();
 	}
 
 	setTimeout(resize, 100);
 
 	const pos = (e) => {
 		const r = canvas.getBoundingClientRect();
-		const clientX = e.touches ? e.touches[0].clientX : e.clientX;
-		const clientY = e.touches ? e.touches[0].clientY : e.clientY;
-		return { x: clientX - r.left, y: clientY - r.top };
+		const touch = e.touches ? e.touches[0] : e;
+		return { x: (touch.clientX - r.left) / r.width, y: (touch.clientY - r.top) / r.height };
 	};
 
 	const start = (e) => {
 		drawing = true;
-		const p = pos(e);
-		ctx.beginPath();
-		ctx.moveTo(p.x, p.y);
+		strokes.push([pos(e)]);
+		style();
 	};
 
 	const draw = (e) => {
 		if (!drawing) return;
-		const p = pos(e);
-		ctx.lineTo(p.x, p.y);
+		const stroke = strokes[strokes.length - 1];
+		const from = stroke[stroke.length - 1];
+		const to = pos(e);
+		stroke.push(to);
+
+		/* The segment alone, not the whole pad: a full render on every pointer move would grow
+		   heavier with each stroke. `render` is for the moments the canvas was wiped. */
+		ctx.beginPath();
+		ctx.moveTo(cssX(from), cssY(from));
+		ctx.lineTo(cssX(to), cssY(to));
 		ctx.stroke();
-		drawn = true;
+
 		error.hidden = true;
 		if (e.cancelable) e.preventDefault();
 	};
@@ -630,18 +760,43 @@ function initPad (canvasId, inputId, errorId) {
 	canvas.addEventListener("touchmove", draw, { passive: false });
 	window.addEventListener("touchend", end);
 
+	/*
+	 * The share of the pad that is painted, read off the bitmap that is about to be posted.
+	 *
+	 * Alpha and nothing else: the pad is never given a background, so transparency *is* the
+	 * empty box. The floor mirrors `INK_ALPHA` in src/validation/signature.rs — the strokes are
+	 * antialiased, so their edges arrive as partial alpha.
+	 */
+	function inkRatio () {
+		if (!canvas.width || !canvas.height) return 0;
+		const { data } = ctx.getImageData(0, 0, canvas.width, canvas.height);
+		let ink = 0;
+		for (let i = 3; i < data.length; i += 4) if (data[i] >= 32) ink++;
+		return ink / (canvas.width * canvas.height);
+	}
+
 	return {
 		resize,
 		error,
 		clear () {
+			strokes.length = 0;
 			ctx.clearRect(0, 0, canvas.width, canvas.height);
-			drawn = false;
 			document.getElementById(inputId).value = "";
 		},
+		/*
+		 * Serializes the pad and says whether it is a signature. The hidden input is emptied
+		 * when it is not: a value left over from an earlier attempt would otherwise be posted
+		 * for a box that has since been cleared.
+		 */
 		save () {
-			document.getElementById(inputId).value = drawn ? canvas.toDataURL("image/png") : "";
+			/* Re-drawn first, so the bytes measured below and the bytes posted are the strokes
+			   the applicant actually made — whatever the browser did with the canvas since. */
+			render();
+			const signed = inkRatio() >= minInkRatio;
+			document.getElementById(inputId).value = signed ? canvas.toDataURL("image/png") : "";
+			if (!signed) error.textContent = strokes.length ? rule?.hint || untouched : untouched;
+			return signed;
 		},
-		hasDrawn: () => drawn,
 	};
 }
 
@@ -720,14 +875,24 @@ function fail (error) {
  * consent checkboxes are not form controls, so they are checked here.
  */
 function canSubmit () {
+	/* Its own message lives on phase 1, next to the picker, so the wizard has to go back there
+	   for it to be seen. Without the bytes there is nothing to send — and the file input's own
+	   copy, which is what the form would fall back to, is precisely what must not be trusted. */
+	if (!picked) {
+		certError.textContent = "Manca la foto del certificato medico: scegliila di nuovo.";
+		goToPhase(1);
+		return fail(certError);
+	}
+
 	if (!(consentStatute.checked && consentPrivacy.checked)) return fail(consentError);
 
-	mainPad?.save();
-	if (mainPad && !mainPad.hasDrawn()) return fail(mainPad.error);
+	/* `save` is what serializes each pad, and it answers whether what it serialized is a
+	   signature rather than whether the box was touched. Without this the form went out with a
+	   blank PNG in it, which is the whole reason the count exists. */
+	if (mainPad && !mainPad.save()) return fail(mainPad.error);
 
 	if (isMinor.checked && commuteAlone.checked) {
-		autonomyPad?.save();
-		if (autonomyPad && !autonomyPad.hasDrawn()) return fail(autonomyPad.error);
+		if (autonomyPad && !autonomyPad.save()) return fail(autonomyPad.error);
 	} else {
 		/* A toggle ticked and then unticked must not leave its signature behind. */
 		document.getElementById("autonomy_signature").value = "";
@@ -751,6 +916,12 @@ form.addEventListener("htmx:configRequest", (evt) => {
 	 */
 	evt.detail.parameters["signature"] = document.getElementById("signature").value;
 	evt.detail.parameters["autonomy_signature"] = document.getElementById("autonomy_signature").value;
+
+	/* The part HTMX just built for the file input is a fresh reading of the picked file, taken
+	   now — long after the photo was chosen, and on iOS possibly of a copy that no longer exists
+	   whole. Replaced with the bytes read on phase 1, which `canSubmit` has already established
+	   are there. */
+	evt.detail.parameters.set("certificate", picked);
 });
 
 /*

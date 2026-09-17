@@ -1,4 +1,5 @@
 use super::templates::MembershipForm;
+use crate::validation::signature;
 use askama::Template;
 use base64::Engine;
 use std::sync::OnceLock;
@@ -151,9 +152,17 @@ fn typst_escape_str_opt(s: Option<String>) -> Option<String> {
 	s.map(typst_escape_str)
 }
 
-/// True when the browser sent a non-empty canvas data URL.
+/// True when there is a signature in the canvas the browser sent.
+///
+/// The same count `crate::validation` makes on the way in, asked again here because this is the
+/// last gate before the document is printed: a blank pad serializes to a well-formed PNG, and
+/// Typst would lay it out as an empty signature line without complaining. Two membership
+/// documents went out that way. A PNG that cannot be measured is left to the check further down,
+/// which is the one that decides whether the bytes are an image at all.
 fn is_drawn_signature(value: &str) -> bool {
-	!value.trim().is_empty() && value.contains(',')
+	!value.trim().is_empty()
+		&& value.contains(',')
+		&& !matches!(signature::check(value), signature::Verdict::Blank)
 }
 
 pub fn generate(mut form: MembershipForm) -> Result<Vec<u8>, String> {

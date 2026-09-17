@@ -14,6 +14,10 @@ typst-layout = "0.15.1"
 typst-pdf = "0.15.1"
 fontdb = "0.24.0"
 base64 = "0.23.1"
+# Reads the two canvas signatures, to count the ink in them: a pad that was never drawn on
+# serializes to a well-formed PNG, and that is the only way to tell. Already in the lock file as
+# a dependency of typst, so it costs no compilation of its own. See `validation::signature`.
+png = "0.18.1"
 lettre = { version = "0.11", default-features = false, features = ["builder", "smtp-transport", "tokio1-rustls-tls", "rustls-native-certs", "hostname", "tracing"] }
 dotenvy = "0.15.7"
 urlencoding = "2.1.3"

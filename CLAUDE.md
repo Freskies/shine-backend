@@ -55,8 +55,8 @@ Consequences worth knowing before touching it:
   abbreviations, strips phone separators, and clears the sections the two toggles turned off. That last job used to
   live in `generator.rs`, where it ran after the emails were already rendered.
 - Server-only checks (no browser counterpart, because a regex cannot express them): the fiscal-code check character
-  and its agreement with the declared birth date, in `fiscal_code.rs`; and what the uploaded certificate *is*, in
-  `file_type.rs`.
+  and its agreement with the declared birth date, in `fiscal_code.rs`; whether a signature pad has any ink in it, in
+  `signature.rs`; and what the uploaded certificate *is*, in `file_type.rs`.
 
 `file_type.rs` sniffs the certificate's magic bytes and ignores the content type the browser declared. It is outside
 `RULES` because its subject is a multipart part, not a typed field. Two things to know before touching it:
@@ -64,20 +64,47 @@ Consequences worth knowing before touching it:
 - It decides three things at once: whether to refuse (`refusal()`, which returns the Italian sentence), what to rename
   the attachment to (`with_extension()`), and what MIME type to attach it as (`mime()`). `openable()` and `refusal()`
   are one decision spelled twice, and a test enforces that they agree.
-- `truncation()` is a fourth decision and is deliberately *not* on `Kind`: recognizing a format and receiving all of it
+- `completeness()` is a fourth decision and is deliberately *not* on `Kind`: recognizing a format and receiving all of it
   are different questions, and folding it in would break the invariant that test enforces. `sniff()` reads the front of
-  the file, which a half-written one has too — two JPEGs once arrived as grey half-images — so the accepted formats are
-  also asked for the marker they must end with (`FF D9`, `IEND`, `%%EOF`), searched across the whole file because
-  Android's Motion Photo appends an MP4 after the EOI. Formats with no reliable trailer are reported complete rather
-  than guessed at: a false refusal blocks an enrolment that was fine, which is worse than the file it would catch.
-  For the same reason the `certificate_size` the page posts is only *logged* when it disagrees with the bytes received —
-  a picker that transcodes can report the size of the file it started from, so a mismatch is a lead, not a verdict.
+  the file, which a half-written one has too — two JPEGs once arrived as grey half-images — so JPEG, PNG and PDF are
+  also **walked** to the marker they must end with. Walked, not searched: asking whether `FF D9` appears *anywhere*
+  (which is what this did until certificates kept arriving broken anyway) cannot work, because every phone-camera JPEG
+  carries a complete thumbnail JPEG inside its EXIF segment that ends in exactly that, and a linearized PDF repeats
+  `%%EOF` near its *front*, after the first-page cross-reference. Testing the file's last bytes instead is the opposite
+  mistake: Motion Photo appends an MP4 after the real EOI and Apple and Samsung append whole secondary JPEGs. So the
+  walk follows each format's own structure — marker lengths for JPEG, the chunk chain for PNG, a trailing window for
+  PDF — and stops at the first end marker that is *structurally* the end, which is what makes both cases come out
+  right. A file whose structure cannot be followed comes back `Unparsable` and is accepted with a log line, as are the
+  formats with no reliable trailer: a false refusal blocks an enrolment that was fine, which is worse than the file it
+  would catch. `enrollment.js` reads the picked file's bytes on phase 1 and posts *those* instead of the file input's
+  own copy — an iOS copy can be gone or unfinished by submit time, which is how a well-formed upload of an ill-formed
+  file happens — so `certificate_size` is now the same number measured at both ends of the wire, and a disagreement
+  (still only *logged*) points at the transport rather than the phone.
 - The `accept` attribute on the file input is a *nudge*, not the check — drag-and-drop ignores it. Do **not** add
   `image/heic` to it: Safari 17+ reads that as permission to convert JPEG/PNG *into* HEIC.
 - `accepted()` in `enrollment.js` applies that nudge client-side, and it has to stay as forgiving as the server: a type
   the browser leaves empty or calls `application/octet-stream` carries no claim about the format, and `image/jpg` is an
   Android spelling of `image/jpeg`. All of those are let through for the bytes to judge. Only a *recognized*
   non-accepted type is refused there, which is what saves an iPhone HEIC the trip through the whole form.
+
+`signature.rs` decodes the two canvas data URLs and counts the painted pixels, because "the applicant signed" and
+"the browser sent a PNG" are different facts and only the second one used to be checked. Two membership documents
+reached the association with an empty signature line: the pad reported *drawn* from a flag set on the first pointer
+move — which a finger dragged across the box sets too, since `.signature-box` carries `touch-action: none` — and it
+preserved the strokes around the wipe that assigning `canvas.width` causes by copying the **pixels**, which comes back
+empty if the browser had already dropped the backing store. Both produce a well-formed, blank PNG, and Typst lays one
+out as a blank line without complaining. So:
+
+- The pad in `enrollment.js` now keeps its **strokes**, in fractions of the box, and re-renders from them on resize and
+  immediately before serializing. Nothing depends on the pixels having survived.
+- `MIN_INK_RATIO` is the one rule, and it travels to the page as `minInkRatio` in the rules JSON — the first entry
+  there that is not a constraint attribute for a visible input. `save()` counts the canvas with `getImageData`, and
+  `signature::check()` counts the decoded PNG the same way, so both ends judge the same artefact by the same number.
+  The pad is never given a background, which is what makes alpha alone enough: transparency *is* the empty box.
+- The escapes follow `file_type.rs`: a PNG with no alpha channel cannot have ink told from background, so it is
+  accepted with a log line rather than guessed at, and the threshold sits low — a cross or an initial is a signature.
+- `is_drawn_signature()` in `generator.rs` asks the same question again, as the last gate before the document is
+  printed, and is what keeps the unconditional `image("signature.png")` in the `.typ` honest.
 
 Two failure paths, and they must not be merged: `enrollment_invalid()` returns the list of fields to fix plus an
 `HX-Trigger` naming them, while `enrollment_error()` is only for failures that are ours (PDF, SMTP, template) and is
